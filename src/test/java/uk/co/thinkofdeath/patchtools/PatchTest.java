@@ -60,7 +60,7 @@ public class PatchTest {
                 res.newInstance()
         );
 
-        assertEquals(result, "Hello jim");
+        assertEquals("Hello jim", result);
     }
 
 

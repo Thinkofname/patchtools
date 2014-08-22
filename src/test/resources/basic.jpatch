@@ -1,0 +1,18 @@
+// Test basic patch
+
+/*
+    Patching BasicClass
+*/
+
+// . == detect
+
+.class ~Basic
+
+    .method hello ()L/java/lang/String;
+        // - == remove
+        -ldc "Hello bob"
+        // + == add
+        +ldc "Hello jim"
+        .areturn
+    .endmethod
+.endclass

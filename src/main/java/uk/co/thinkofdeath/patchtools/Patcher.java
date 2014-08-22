@@ -1,9 +1,6 @@
 package uk.co.thinkofdeath.patchtools;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 import static uk.co.thinkofdeath.patchtools.temp.NYI.nyi;
@@ -25,6 +22,11 @@ public class Patcher {
     }
 
     public void apply(BufferedReader reader) {
+        try (BufferedReader ignored = reader) {
+
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
         nyi();
     }
 
