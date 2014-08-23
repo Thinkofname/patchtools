@@ -3,8 +3,6 @@ package uk.co.thinkofdeath.patchtools;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
-import static uk.co.thinkofdeath.patchtools.temp.NYI.nyi;
-
 public class Patcher {
 
     private final ClassSet classSet;
@@ -27,7 +25,6 @@ public class Patcher {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        nyi();
     }
 
     public ClassSet getClasses() {

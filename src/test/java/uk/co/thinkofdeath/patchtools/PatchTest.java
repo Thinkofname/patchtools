@@ -5,6 +5,7 @@ import sun.invoke.anon.AnonymousClassLoader;
 import sun.misc.Unsafe;
 import uk.co.thinkofdeath.patchtools.testcode.Basic2Class;
 import uk.co.thinkofdeath.patchtools.testcode.BasicClass;
+import uk.co.thinkofdeath.patchtools.wrappers.ClassPathWrapper;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -17,7 +18,7 @@ public class PatchTest {
 
     @Test
     public void classSetBasic() throws IOException {
-        ClassSet classSet = new ClassSet();
+        ClassSet classSet = new ClassSet(new ClassPathWrapper());
         classSet.add(
                 AnonymousClassLoader.readClassFile(BasicClass.class)
         );
@@ -39,7 +40,7 @@ public class PatchTest {
                 getUnsafe(),
                 getClass()
         );
-        ClassSet classSet = new ClassSet();
+        ClassSet classSet = new ClassSet(new ClassPathWrapper());
         classSet.add(
                 AnonymousClassLoader.readClassFile(BasicClass.class)
         );
@@ -56,7 +57,7 @@ public class PatchTest {
         byte[] clz = classSet.getClass("uk/co/thinkofdeath/patchtools/testcode/BasicClass");
         Class<?> res = cl.loadClass(clz);
 
-        String result = (String) res.getMethod("hello", String.class).invoke(
+        String result = (String) res.getMethod("hello").invoke(
                 res.newInstance()
         );
 
@@ -65,6 +66,7 @@ public class PatchTest {
 
 
     private static Unsafe unsafe;
+
     public static Unsafe getUnsafe() {
         if (unsafe == null) {
             try {

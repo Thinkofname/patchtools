@@ -1,11 +1,7 @@
 // Test basic patch
-
-/*
-    Patching BasicClass
-*/
+// Patching BasicClass
 
 // . == detect
-
 .class ~Basic
 
     .method hello ()L/java/lang/String;
