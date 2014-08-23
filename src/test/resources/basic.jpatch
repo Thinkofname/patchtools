@@ -10,5 +10,5 @@
         // + == add
         +ldc "Hello jim"
         .areturn
-    .endmethod
-.endclass
+    .end-method
+.end-class
