@@ -1,13 +1,12 @@
 package uk.co.thinkofdeath.patchtools;
 
+import com.google.common.io.ByteStreams;
 import org.junit.Test;
-import sun.invoke.anon.AnonymousClassLoader;
 import sun.misc.Unsafe;
-import uk.co.thinkofdeath.patchtools.testcode.Basic2Class;
-import uk.co.thinkofdeath.patchtools.testcode.BasicClass;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassPathWrapper;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
@@ -20,10 +19,10 @@ public class PatchTest {
     public void classSetBasic() throws IOException {
         ClassSet classSet = new ClassSet(new ClassPathWrapper());
         classSet.add(
-                AnonymousClassLoader.readClassFile(BasicClass.class)
+                getClass("uk/co/thinkofdeath/patchtools/testcode/BasicClass")
         );
         classSet.add(
-                AnonymousClassLoader.readClassFile(Basic2Class.class)
+                getClass("uk/co/thinkofdeath/patchtools/testcode/Basic2Class")
         );
 
         for (String clazz : classSet) {
@@ -36,16 +35,12 @@ public class PatchTest {
 
     @Test
     public void basicPatch() throws Exception {
-        AnonymousClassLoader cl = AnonymousClassLoader.make(
-                getUnsafe(),
-                getClass()
-        );
         ClassSet classSet = new ClassSet(new ClassPathWrapper());
         classSet.add(
-                AnonymousClassLoader.readClassFile(Basic2Class.class)
+                getClass("uk/co/thinkofdeath/patchtools/testcode/BasicClass")
         );
         classSet.add(
-                AnonymousClassLoader.readClassFile(BasicClass.class)
+                getClass("uk/co/thinkofdeath/patchtools/testcode/Basic2Class")
         );
 
         Patcher patcher = new Patcher(classSet);
@@ -55,7 +50,7 @@ public class PatchTest {
         );
 
         byte[] clz = classSet.getClass("uk/co/thinkofdeath/patchtools/testcode/BasicClass");
-        Class<?> res = cl.loadClass(clz);
+        Class<?> res = getUnsafe().defineClass("uk/co/thinkofdeath/patchtools/testcode/BasicClass", clz, 0, clz.length, getClass().getClassLoader(), null);
 
         assertEquals("Hello jim", res.getMethod("hello").invoke(
                 res.newInstance()
@@ -66,6 +61,15 @@ public class PatchTest {
         assertEquals("Cake", res.getMethod("create").invoke(
                 null
         ).toString());
+    }
+
+    public static byte[] getClass(String name) {
+        try (InputStream inputStream = PatchTest.class.getResourceAsStream("/" + name + ".class")) {
+            return ByteStreams.toByteArray(inputStream);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 
