@@ -2,13 +2,10 @@ package uk.co.thinkofdeath.patchtools;
 
 import com.google.common.io.ByteStreams;
 import org.junit.Test;
-import sun.misc.Unsafe;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassPathWrapper;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -49,8 +46,8 @@ public class PatchTest {
                 getClass().getResourceAsStream("/basic.jpatch")
         );
 
-        byte[] clz = classSet.getClass("uk/co/thinkofdeath/patchtools/testcode/BasicClass");
-        Class<?> res = getUnsafe().defineClass("uk/co/thinkofdeath/patchtools/testcode/BasicClass", clz, 0, clz.length, getClass().getClassLoader(), null);
+        ClassSetLoader loader = new ClassSetLoader(classSet);
+        Class<?> res = loader.loadClass("uk.co.thinkofdeath.patchtools.testcode.BasicClass");
 
         assertEquals("Hello jim", res.getMethod("hello").invoke(
                 res.newInstance()
@@ -70,22 +67,5 @@ public class PatchTest {
             e.printStackTrace();
         }
         return null;
-    }
-
-
-    private static Unsafe unsafe;
-
-    public static Unsafe getUnsafe() {
-        if (unsafe == null) {
-            try {
-                Constructor<Unsafe> unsafeConstructor;
-                unsafeConstructor = Unsafe.class.getDeclaredConstructor();
-                unsafeConstructor.setAccessible(true);
-                unsafe = unsafeConstructor.newInstance();
-            } catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return unsafe;
     }
 }

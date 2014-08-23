@@ -55,7 +55,7 @@ public class ClassSet implements Iterable<String> {
     public byte[] getClass(String name) {
         ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
         ClassWrapper wrapper = classes.get(name);
-        if (wrapper.isHidden()) {
+        if (wrapper == null || wrapper.isHidden()) {
             return null;
         }
         wrapper.getNode().accept(classWriter);
