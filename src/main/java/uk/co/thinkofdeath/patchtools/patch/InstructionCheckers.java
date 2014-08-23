@@ -17,6 +17,10 @@ public class InstructionCheckers {
         LdcInsnNode ldcInsnNode = (LdcInsnNode) insn;
         String cst = Joiner.on(' ').join(patchInstruction.params);
 
+        if (cst.equals("*")) {
+            return;
+        }
+
         if (ldcInsnNode.cst instanceof String) {
             if (!cst.startsWith("\"") || !cst.endsWith("\"")) {
                 throw new PatchVerifyException();
