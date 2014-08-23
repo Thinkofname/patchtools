@@ -32,6 +32,7 @@ public class PatchTest {
 
     @Test
     public void basicPatch() throws Exception {
+        long start = System.nanoTime();
         ClassSet classSet = new ClassSet(new ClassPathWrapper());
         classSet.add(
                 getClass("uk/co/thinkofdeath/patchtools/testcode/BasicClass")
@@ -45,6 +46,7 @@ public class PatchTest {
         patcher.apply(
                 getClass().getResourceAsStream("/basic.jpatch")
         );
+        System.out.println("Time: " + (System.nanoTime() - start) + "ns");
 
         ClassSetLoader loader = new ClassSetLoader(classSet);
         Class<?> res = loader.loadClass("uk.co.thinkofdeath.patchtools.testcode.BasicClass");

@@ -6,19 +6,25 @@ import uk.co.thinkofdeath.patchtools.ClassSet;
 public class FieldWrapper {
 
     private final ClassSet classSet;
-    private final FieldNode node;
+    private final String name;
+    private final String desc;
 
     public FieldWrapper(ClassWrapper classWrapper, FieldNode node) {
         this.classSet = classWrapper.getClassSet();
-        this.node = node;
+        name = node.name;
+        desc = node.desc;
     }
 
-    public FieldNode getNode() {
-        return node;
+    public String getName() {
+        return name;
+    }
+
+    public String getDesc() {
+        return desc;
     }
 
     @Override
     public String toString() {
-        return "FieldWrapper{" + node.name + "}";
+        return "FieldWrapper{" + name + "}";
     }
 }

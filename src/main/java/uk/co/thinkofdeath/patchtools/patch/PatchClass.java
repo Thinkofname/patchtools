@@ -73,20 +73,20 @@ public class PatchClass {
                 }
                 mappedDesc.append(")");
                 updatedTypeString(classSet, scope, mappedDesc, desc.getReturnType());
-                MethodWrapper methodWrapper = new MethodWrapper(classWrapper,
-                        new MethodNode(Opcodes.ASM5,
-                                Opcodes.ACC_PUBLIC,
-                                m.getIdent().getName(),
-                                mappedDesc.toString(),
-                                null, null));
+                MethodNode node = new MethodNode(Opcodes.ASM5,
+                        Opcodes.ACC_PUBLIC,
+                        m.getIdent().getName(),
+                        mappedDesc.toString(),
+                        null, null);
+                MethodWrapper methodWrapper = new MethodWrapper(classWrapper, node);
                 scope.putMethod(methodWrapper, m.getIdent().getName());
                 classWrapper.getMethods().add(methodWrapper);
-                classWrapper.getNode().methods.add(methodWrapper.getNode());
+                classWrapper.getNode().methods.add(node);
             }
 
             MethodWrapper methodWrapper = scope.getMethod(classWrapper, m.getIdent().getName());
 
-            m.apply(classSet, scope, methodWrapper);
+            m.apply(classSet, scope, classWrapper.getMethodNode(methodWrapper));
         });
     }
 
@@ -121,12 +121,12 @@ public class PatchClass {
 
             MethodWrapper methodWrapper = scope.getMethod(classWrapper, m.getIdent().getName());
             if (!m.getIdent().isWeak()
-                    && !methodWrapper.getNode().name.equals(m.getIdent().getName())) {
+                    && !methodWrapper.getName().equals(m.getIdent().getName())) {
                 throw new PatchVerifyException();
             }
 
             Type patchDesc = m.getDesc();
-            Type desc = Type.getMethodType(methodWrapper.getNode().desc);
+            Type desc = Type.getMethodType(methodWrapper.getDesc());
 
             if (patchDesc.getArgumentTypes().length != desc.getArgumentTypes().length) {
                 throw new PatchVerifyException();
@@ -141,7 +141,7 @@ public class PatchClass {
 
             checkTypes(classSet, scope, patchDesc.getReturnType(), desc.getReturnType());
 
-            m.checkInstructions(classSet, scope, methodWrapper);
+            m.checkInstructions(classSet, scope, classWrapper.getMethodNode(methodWrapper));
         });
     }
 

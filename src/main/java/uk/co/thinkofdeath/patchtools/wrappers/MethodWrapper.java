@@ -10,16 +10,22 @@ public class MethodWrapper {
 
     private final ClassSet classSet;
     private final Set<ClassWrapper> classWrappers = new HashSet<>();
-    private final MethodNode node;
+    private final String name;
+    private final String desc;
 
     public MethodWrapper(ClassWrapper classWrapper, MethodNode node) {
         this.classSet = classWrapper.getClassSet();
-        this.node = node;
         classWrappers.add(classWrapper);
+        name = node.name;
+        desc = node.desc;
     }
 
-    public MethodNode getNode() {
-        return node;
+    public String getName() {
+        return name;
+    }
+
+    public String getDesc() {
+        return desc;
     }
 
     public boolean has(ClassWrapper classWrapper) {
@@ -28,6 +34,6 @@ public class MethodWrapper {
 
     @Override
     public String toString() {
-        return "MethodWrapper{" + node.name + node.desc + "}";
+        return "MethodWrapper{" + name + desc + "}";
     }
 }

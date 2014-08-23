@@ -1,6 +1,7 @@
 package uk.co.thinkofdeath.patchtools.wrappers;
 
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.ClassSet;
 
 import java.util.ArrayList;
@@ -39,6 +40,13 @@ public class ClassWrapper {
 
     public List<MethodWrapper> getMethods() {
         return methods;
+    }
+
+    public MethodNode getMethodNode(MethodWrapper wrapper) {
+        return node.methods.stream()
+                .filter(m -> m.name.equals(wrapper.getName())
+                        && m.desc.equals(wrapper.getDesc()))
+                .findFirst().orElse(null);
     }
 
     public List<FieldWrapper> getFields() {

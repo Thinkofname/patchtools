@@ -8,7 +8,6 @@ import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.ClassSet;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.PatchVerifyException;
-import uk.co.thinkofdeath.patchtools.wrappers.MethodWrapper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -81,9 +80,8 @@ public class PatchMethod {
         return isStatic;
     }
 
-    public void apply(ClassSet classSet, PatchScope scope, MethodWrapper methodWrapper) {
+    public void apply(ClassSet classSet, PatchScope scope, MethodNode methodNode) {
         int position = 0;
-        MethodNode methodNode = methodWrapper.getNode();
         methodNode.access &= ~Opcodes.ACC_STATIC;
         if (isStatic) {
             methodNode.access |= Opcodes.ACC_STATIC;
@@ -143,9 +141,8 @@ public class PatchMethod {
         }
     }
 
-    public void checkInstructions(ClassSet classSet, PatchScope scope, MethodWrapper methodWrapper) {
+    public void checkInstructions(ClassSet classSet, PatchScope scope, MethodNode methodNode) {
         int position = 0;
-        MethodNode methodNode = methodWrapper.getNode();
         InsnList insns = methodNode.instructions;
 
         if (((methodNode.access & Opcodes.ACC_STATIC) == 0) == isStatic) {
