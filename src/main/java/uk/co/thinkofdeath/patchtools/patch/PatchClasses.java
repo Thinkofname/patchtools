@@ -25,4 +25,8 @@ public class PatchClasses {
             }
         }
     }
+
+    public List<PatchClass> getClasses() {
+        return classes;
+    }
 }

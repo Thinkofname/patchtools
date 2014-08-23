@@ -12,4 +12,12 @@ public class Ident {
         }
         name = val;
     }
+
+    public boolean isWeak() {
+        return weak;
+    }
+
+    public String getName() {
+        return name;
+    }
 }

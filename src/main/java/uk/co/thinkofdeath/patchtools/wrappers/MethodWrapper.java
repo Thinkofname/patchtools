@@ -21,4 +21,13 @@ public class MethodWrapper {
     public MethodNode getNode() {
         return node;
     }
+
+    public boolean has(ClassWrapper classWrapper) {
+        return classWrappers.contains(classWrapper);
+    }
+
+    @Override
+    public String toString() {
+        return "MethodWrapper{" + node.name + node.desc + "}";
+    }
 }

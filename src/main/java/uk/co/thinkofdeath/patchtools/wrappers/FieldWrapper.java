@@ -16,4 +16,9 @@ public class FieldWrapper {
     public FieldNode getNode() {
         return node;
     }
+
+    @Override
+    public String toString() {
+        return "FieldWrapper{" + node.name + "}";
+    }
 }

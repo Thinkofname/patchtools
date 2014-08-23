@@ -42,10 +42,10 @@ public class PatchTest {
         );
         ClassSet classSet = new ClassSet(new ClassPathWrapper());
         classSet.add(
-                AnonymousClassLoader.readClassFile(BasicClass.class)
+                AnonymousClassLoader.readClassFile(Basic2Class.class)
         );
         classSet.add(
-                AnonymousClassLoader.readClassFile(Basic2Class.class)
+                AnonymousClassLoader.readClassFile(BasicClass.class)
         );
 
         Patcher patcher = new Patcher(classSet);
@@ -60,6 +60,8 @@ public class PatchTest {
         String result = (String) res.getMethod("hello").invoke(
                 res.newInstance()
         );
+
+        System.out.println(result);
 
         assertEquals("Hello jim", result);
     }

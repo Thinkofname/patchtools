@@ -62,7 +62,7 @@ public class ClassSet implements Iterable<String> {
         return classWriter.toByteArray();
     }
 
-    public ClassWrapper getClassNode(String name) {
+    public ClassWrapper getClassWrapper(String name) {
         return classes.get(name);
     }
 

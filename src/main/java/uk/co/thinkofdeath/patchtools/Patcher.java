@@ -1,5 +1,6 @@
 package uk.co.thinkofdeath.patchtools;
 
+import uk.co.thinkofdeath.patchtools.matching.MatchGenerator;
 import uk.co.thinkofdeath.patchtools.patch.PatchClasses;
 
 import java.io.*;
@@ -22,11 +23,29 @@ public class Patcher {
     }
 
     public void apply(BufferedReader reader) {
+        apply(reader, new PatchScope());
+    }
+
+    public void apply(BufferedReader reader, PatchScope patchScope) {
+        PatchClasses patchClasses;
         try (BufferedReader ignored = reader) {
-            new PatchClasses(reader);
+            patchClasses = new PatchClasses(reader);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+        MatchGenerator generator = new MatchGenerator(classSet, patchClasses, patchScope);
+        PatchScope foundScope = generator.apply(scope -> {
+            System.out.println("Trying: " + scope);
+            try {
+                patchClasses.getClasses().forEach(c -> c.check(scope, classSet));
+                return true;
+            } catch (PatchVerifyException e) {
+                e.printStackTrace();
+                return false;
+            }
+        });
+        System.out.println("Found: " + foundScope);
+        patchClasses.getClasses().forEach(c -> c.apply(foundScope, classSet));
     }
 
     public ClassSet getClasses() {

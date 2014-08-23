@@ -4,11 +4,13 @@
 // . == detect
 .class ~Basic
 
-    .method hello ()L/java/lang/String;
+    .method hello ()Ljava/lang/String;
+        .any
         // - == remove
         -ldc "Hello bob"
         // + == add
         +ldc "Hello jim"
         .areturn
+        .any
     .end-method
 .end-class

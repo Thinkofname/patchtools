@@ -36,4 +36,17 @@ public class ClassWrapper {
     public ClassSet getClassSet() {
         return classSet;
     }
+
+    public List<MethodWrapper> getMethods() {
+        return methods;
+    }
+
+    public List<FieldWrapper> getFields() {
+        return fields;
+    }
+
+    @Override
+    public String toString() {
+        return "ClassWrapper{" + node.name + "}";
+    }
 }
