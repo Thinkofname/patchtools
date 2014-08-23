@@ -57,13 +57,15 @@ public class PatchTest {
         byte[] clz = classSet.getClass("uk/co/thinkofdeath/patchtools/testcode/BasicClass");
         Class<?> res = cl.loadClass(clz);
 
-        String result = (String) res.getMethod("hello").invoke(
+        assertEquals("Hello jim", res.getMethod("hello").invoke(
                 res.newInstance()
-        );
-
-        System.out.println(result);
-
-        assertEquals("Hello jim", result);
+        ));
+        assertEquals("Hello world", res.getMethod("addedMethod").invoke(
+                res.newInstance()
+        ));
+        assertEquals("Cake", res.getMethod("create").invoke(
+                null
+        ).toString());
     }
 
 
@@ -72,7 +74,7 @@ public class PatchTest {
     public static Unsafe getUnsafe() {
         if (unsafe == null) {
             try {
-                Constructor<Unsafe> unsafeConstructor = null;
+                Constructor<Unsafe> unsafeConstructor;
                 unsafeConstructor = Unsafe.class.getDeclaredConstructor();
                 unsafeConstructor.setAccessible(true);
                 unsafe = unsafeConstructor.newInstance();

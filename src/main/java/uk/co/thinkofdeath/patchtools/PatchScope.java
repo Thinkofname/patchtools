@@ -26,12 +26,20 @@ public class PatchScope {
                 '}';
     }
 
+    public boolean hasClass(ClassWrapper classWrapper) {
+        return classMappings.containsValue(classWrapper);
+    }
+
     public void putClass(ClassWrapper classWrapper, String name) {
         classMappings.put(name, classWrapper);
     }
 
     public ClassWrapper getClass(String name) {
         return classMappings.get(name);
+    }
+
+    public boolean hasMethod(MethodWrapper methodWrapper) {
+        return methodMappings.containsKey(methodWrapper);
     }
 
     public void putMethod(MethodWrapper methodWrapper, String name) {

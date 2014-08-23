@@ -1,5 +1,6 @@
 package uk.co.thinkofdeath.patchtools.patch;
 
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
@@ -20,15 +21,21 @@ public class PatchMethod {
     private Ident ident;
     private String desc;
     private Mode mode;
+    private boolean isStatic;
 
     private List<PatchInstruction> instructions = new ArrayList<>();
 
     public PatchMethod(PatchClass owner, Command mCommand, BufferedReader reader) throws IOException {
         this.owner = owner;
-        if (mCommand.args.length != 2) throw new IllegalArgumentException();
+        if (mCommand.args.length < 2) throw new IllegalArgumentException();
         ident = new Ident(mCommand.args[0]);
         mode = mCommand.mode;
         desc = mCommand.args[1];
+        if (mCommand.args.length >= 3) {
+            if (mCommand.args[2].equals("static")) {
+                isStatic = true;
+            }
+        }
 
         String line;
         while ((line = reader.readLine()) != null) {
@@ -70,9 +77,17 @@ public class PatchMethod {
         return instructions;
     }
 
+    public boolean isStatic() {
+        return isStatic;
+    }
+
     public void apply(ClassSet classSet, PatchScope scope, MethodWrapper methodWrapper) {
         int position = 0;
         MethodNode methodNode = methodWrapper.getNode();
+        methodNode.access &= ~Opcodes.ACC_STATIC;
+        if (isStatic) {
+            methodNode.access |= Opcodes.ACC_STATIC;
+        }
         InsnList insns = methodNode.instructions;
         boolean wildcard = false;
 
@@ -80,8 +95,13 @@ public class PatchMethod {
         for (int i = 0; i < instructions.size(); i++) {
             PatchInstruction patchInstruction = instructions.get(i);
             if (patchInstruction.mode == Mode.ADD) {
-                insns.insert(insns.get(0), patchInstruction.instruction.getCreator()
-                        .create(classSet, scope, patchInstruction));
+                AbstractInsnNode newIn = patchInstruction.instruction.getCreator()
+                        .create(classSet, scope, patchInstruction);
+                if (position - 1 >= 0) {
+                    insns.insert(insns.get(position - 1), newIn);
+                } else {
+                    insns.insert(newIn);
+                }
                 position++;
                 continue;
             }
@@ -128,6 +148,10 @@ public class PatchMethod {
         MethodNode methodNode = methodWrapper.getNode();
         InsnList insns = methodNode.instructions;
 
+        if (((methodNode.access & Opcodes.ACC_STATIC) == 0) == isStatic) {
+            throw new PatchVerifyException("Expected " + (isStatic ? "static" : "non-static"));
+        }
+
         boolean wildcard = false;
         check:
         for (int i = 0; i < instructions.size(); i++) {
@@ -150,7 +174,6 @@ public class PatchMethod {
                     break;
                 }
                 AbstractInsnNode insn = insns.get(position);
-                System.out.println(insn.getClass().getSimpleName() + " : " + patchInstruction.instruction);
 
                 try {
                     patchInstruction.instruction.getChecker()

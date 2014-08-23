@@ -40,7 +40,6 @@ public class Patcher {
                 patchClasses.getClasses().forEach(c -> c.check(scope, classSet));
                 return true;
             } catch (PatchVerifyException e) {
-                e.printStackTrace();
                 return false;
             }
         });

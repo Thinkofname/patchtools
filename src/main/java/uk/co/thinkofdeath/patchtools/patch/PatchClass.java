@@ -1,6 +1,8 @@
 package uk.co.thinkofdeath.patchtools.patch;
 
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.ClassSet;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.PatchVerifyException;
@@ -63,12 +65,48 @@ public class PatchClass {
         ClassWrapper classWrapper = scope.getClass(ident.getName());
 
         methods.forEach(m -> {
-            if (m.getMode() == Mode.ADD) throw new UnsupportedOperationException("NYI");
+            if (m.getMode() == Mode.ADD) {
+                StringBuilder mappedDesc = new StringBuilder("(");
+                Type desc = m.getDesc();
+                for (Type type : desc.getArgumentTypes()) {
+                    updatedTypeString(classSet, scope, mappedDesc, type);
+                }
+                mappedDesc.append(")");
+                updatedTypeString(classSet, scope, mappedDesc, desc.getReturnType());
+                MethodWrapper methodWrapper = new MethodWrapper(classWrapper,
+                        new MethodNode(Opcodes.ASM5,
+                                Opcodes.ACC_PUBLIC,
+                                m.getIdent().getName(),
+                                mappedDesc.toString(),
+                                null, null));
+                scope.putMethod(methodWrapper, m.getIdent().getName());
+                classWrapper.getMethods().add(methodWrapper);
+                classWrapper.getNode().methods.add(methodWrapper.getNode());
+            }
 
             MethodWrapper methodWrapper = scope.getMethod(classWrapper, m.getIdent().getName());
 
             m.apply(classSet, scope, methodWrapper);
         });
+    }
+
+    private void updatedTypeString(ClassSet classSet, PatchScope scope, StringBuilder builder, Type type) {
+        if (type.getSort() == Type.OBJECT) {
+            builder.append("L");
+            Ident id = new Ident(type.getInternalName());
+            String cls = id.getName();
+            if (id.isWeak()) {
+                ClassWrapper ptcls = scope.getClass(cls);
+                cls = ptcls.getNode().name;
+            }
+            builder.append(cls);
+            builder.append(";");
+        } else if (type.getSort() == Type.ARRAY) {
+            builder.append("[");
+            updatedTypeString(classSet, scope, builder, type.getElementType());
+        } else {
+            builder.append(type.getDescriptor());
+        }
     }
 
     public void check(PatchScope scope, ClassSet classSet) {
@@ -128,15 +166,7 @@ public class PatchClass {
                 throw new PatchVerifyException(cls + " : " + t.getInternalName());
             }
         } else if (pt.getSort() == Type.ARRAY) {
-            Ident id = new Ident(pt.getElementType().getInternalName());
-            String cls = id.getName();
-            if (id.isWeak()) {
-                ClassWrapper ptcls = scope.getClass(cls);
-                cls = ptcls.getNode().name;
-            }
-            if (!cls.equals(t.getElementType().getInternalName())) {
-                throw new PatchVerifyException();
-            }
+            checkTypes(classSet, scope, pt.getElementType(), t.getElementType());
         } else {
             if (!pt.equals(t)) {
                 throw new PatchVerifyException();

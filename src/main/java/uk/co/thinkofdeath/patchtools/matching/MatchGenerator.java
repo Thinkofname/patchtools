@@ -55,6 +55,9 @@ public class MatchGenerator {
                         if (classes.length <= index) {
                             throw new IllegalStateException();
                         }
+                        if (newScope.hasClass(classSet.getClassWrapper(classes[index]))) {
+                            throw new IllegalStateException();
+                        }
                         newScope.putClass(classSet.getClassWrapper(classes[index]), pc.getIdent().getName());
                     } else if (v instanceof PatchMethod) {
                         PatchMethod pm = (PatchMethod) v;
@@ -63,10 +66,14 @@ public class MatchGenerator {
                         if (methods.size() <= index) {
                             throw new IllegalStateException();
                         }
+                        if (newScope.hasMethod(methods.get(index))) {
+                            throw new IllegalStateException();
+                        }
                         newScope.putMethod(methods.get(index), pm.getIdent().getName());
                     }
                 });
             } catch (IllegalStateException e) {
+                tick();
                 continue;
             }
 
@@ -74,30 +81,48 @@ public class MatchGenerator {
                 return newScope;
             }
 
-            for (int i = tickList.size() - 1; i >= 0; i--) {
-                Object val = tickList.get(i);
-                int index = state.get(val);
-                index++;
-                if (val instanceof PatchClass) {
-                    if (index >= classSet.classes().length) {
-                        index = 0;
-                        state.put(val, index);
-                        continue;
-                    }
-                } else if (val instanceof PatchMethod) {
-                    PatchMethod pm = (PatchMethod) val;
-                    ClassWrapper cls = newScope.getClass(pm.getOwner().getIdent().getName());
-                    if (index >= cls.getMethods().size()) {
-                        index = 0;
-                        state.put(val, index);
-                        continue;
-                    }
-                }
-                state.put(val, index);
+            if (tick()) {
                 continue main;
             }
             return null;
         }
+    }
+
+    private boolean tick() {
+        for (int i = tickList.size() - 1; i >= 0; i--) {
+            Object val = tickList.get(i);
+            int index = state.get(val);
+            index++;
+            if (val instanceof PatchClass) {
+                if (index >= classSet.classes().length) {
+                    index = 0;
+                    state.put(val, index);
+                    continue;
+                }
+            } else if (val instanceof PatchMethod) {
+                PatchMethod pm = (PatchMethod) val;
+                PatchClass owner = nearestClass(i);
+                ClassWrapper cls = classSet.getClassWrapper(classSet.classes()[state.get(owner)]);
+                if (index >= cls.getMethods().size()) {
+                    index = 0;
+                    state.put(val, index);
+                    continue;
+                }
+            }
+            state.put(val, index);
+            return true;
+        }
+        return false;
+    }
+
+    private PatchClass nearestClass(int i) {
+        for (; i >= 0; i--) {
+            Object val = tickList.get(i);
+            if (val instanceof PatchClass) {
+                return (PatchClass) val;
+            }
+        }
+        return null;
     }
 
     private int getState(Object o) {
