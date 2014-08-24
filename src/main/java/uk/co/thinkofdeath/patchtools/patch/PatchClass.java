@@ -25,6 +25,7 @@ import java.util.Objects;
 // TODO: Disassembler
 public class PatchClass {
 
+    private String type;
     private Ident ident;
     private Mode mode;
     private List<Command> superCommands = new ArrayList<>();
@@ -35,6 +36,7 @@ public class PatchClass {
 
     public PatchClass(Command clCommand, BufferedReader reader) throws IOException {
         if (clCommand.args.length != 1) throw new IllegalArgumentException();
+        type = clCommand.name;
         ident = new Ident(clCommand.args[0]);
         mode = clCommand.mode;
         String line;
@@ -294,6 +296,23 @@ public class PatchClass {
             throw new PatchVerifyException();
         }
 
+        int mask = 0;
+        switch (type) {
+            case "class":
+                break;
+            case "interface":
+                mask = Opcodes.ACC_INTERFACE;
+                break;
+            case "enum":
+                mask = Opcodes.ACC_ENUM;
+                break;
+            default:
+                throw new IllegalArgumentException(type);
+        }
+
+        if (mask != 0 && (classWrapper.getNode().access & mask) == 0) {
+            throw new PatchVerifyException();
+        }
 
         for (Command superCommand : superCommands) {
             if (superCommand.mode != Mode.ADD) {

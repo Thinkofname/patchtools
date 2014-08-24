@@ -17,6 +17,8 @@ public class PatchClasses {
 
             Command command = Command.from(line);
             switch (command.name) {
+                case "interface":
+                case "enum":
                 case "class":
                     classes.add(new PatchClass(command, reader));
                     break;
