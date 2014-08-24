@@ -74,7 +74,7 @@ public class PatchClass {
                 mappedDesc.append(")");
                 updatedTypeString(classSet, scope, mappedDesc, desc.getReturnType());
                 MethodNode node = new MethodNode(Opcodes.ASM5,
-                        Opcodes.ACC_PUBLIC,
+                        Opcodes.ACC_PUBLIC | (m.isStatic() ? Opcodes.ACC_STATIC : 0),
                         m.getIdent().getName(),
                         mappedDesc.toString(),
                         null, null);
