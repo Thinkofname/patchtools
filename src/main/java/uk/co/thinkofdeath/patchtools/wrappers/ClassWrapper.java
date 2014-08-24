@@ -2,13 +2,10 @@ package uk.co.thinkofdeath.patchtools.wrappers;
 
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
-import uk.co.thinkofdeath.patchtools.ClassSet;
 
 import java.util.ArrayList;
 import java.util.List;
 
-// TODO:
-// - Inheritance
 public class ClassWrapper {
 
     private final ClassNode node;
@@ -18,12 +15,20 @@ public class ClassWrapper {
     private final List<FieldWrapper> fields = new ArrayList<>();
 
     public ClassWrapper(ClassSet classSet, ClassNode node) {
+        this(classSet, node, false);
+    }
+
+    public ClassWrapper(ClassSet classSet, ClassNode node, boolean hidden) {
         this.classSet = classSet;
         this.node = node;
-        hidden = false;
+        this.hidden = hidden;
 
         node.methods.forEach(v -> methods.add(new MethodWrapper(this, v)));
         node.fields.forEach(v -> fields.add(new FieldWrapper(this, v)));
+        if (hidden) {
+            methods.forEach(v -> v.hidden = true);
+            fields.forEach(v -> v.hidden = true);
+        }
     }
 
     public ClassNode getNode() {
@@ -40,6 +45,15 @@ public class ClassWrapper {
 
     public List<MethodWrapper> getMethods() {
         return methods;
+    }
+
+    public MethodWrapper[] getMethods(boolean stripHidden) {
+        if (stripHidden) {
+            return getMethods().stream()
+                    .filter(m -> !m.isHidden())
+                    .toArray(MethodWrapper[]::new);
+        }
+        return getMethods().toArray(new MethodWrapper[getMethods().size()]);
     }
 
     public MethodNode getMethodNode(MethodWrapper wrapper) {

@@ -2,6 +2,7 @@ package uk.co.thinkofdeath.patchtools;
 
 import uk.co.thinkofdeath.patchtools.matching.MatchGenerator;
 import uk.co.thinkofdeath.patchtools.patch.PatchClasses;
+import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -12,6 +13,7 @@ public class Patcher {
 
     public Patcher(ClassSet classSet) {
         this.classSet = classSet;
+        classSet.simplify();
     }
 
     public void apply(InputStream inputStream) {

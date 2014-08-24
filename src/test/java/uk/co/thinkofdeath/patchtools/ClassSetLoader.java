@@ -1,6 +1,7 @@
 package uk.co.thinkofdeath.patchtools;
 
 import com.google.common.collect.Maps;
+import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 import java.util.Map;
 

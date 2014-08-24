@@ -1,13 +1,13 @@
 package uk.co.thinkofdeath.patchtools.wrappers;
 
 import org.objectweb.asm.tree.FieldNode;
-import uk.co.thinkofdeath.patchtools.ClassSet;
 
 public class FieldWrapper {
 
     private final ClassSet classSet;
     private final String name;
     private final String desc;
+    public boolean hidden;
 
     public FieldWrapper(ClassWrapper classWrapper, FieldNode node) {
         this.classSet = classWrapper.getClassSet();
@@ -21,6 +21,10 @@ public class FieldWrapper {
 
     public String getDesc() {
         return desc;
+    }
+
+    public boolean isHidden() {
+        return hidden;
     }
 
     @Override

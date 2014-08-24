@@ -5,8 +5,8 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.LdcInsnNode;
-import uk.co.thinkofdeath.patchtools.ClassSet;
 import uk.co.thinkofdeath.patchtools.PatchScope;
+import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 public class InstructionCreators {
 

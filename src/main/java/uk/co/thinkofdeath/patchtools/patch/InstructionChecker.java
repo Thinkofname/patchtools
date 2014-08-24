@@ -1,8 +1,8 @@
 package uk.co.thinkofdeath.patchtools.patch;
 
 import org.objectweb.asm.tree.AbstractInsnNode;
-import uk.co.thinkofdeath.patchtools.ClassSet;
 import uk.co.thinkofdeath.patchtools.PatchScope;
+import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 public interface InstructionChecker {
 

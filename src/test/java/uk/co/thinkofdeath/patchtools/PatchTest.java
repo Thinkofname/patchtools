@@ -3,6 +3,7 @@ package uk.co.thinkofdeath.patchtools;
 import com.google.common.io.ByteStreams;
 import org.junit.Test;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassPathWrapper;
+import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 import java.io.IOException;
 import java.io.InputStream;

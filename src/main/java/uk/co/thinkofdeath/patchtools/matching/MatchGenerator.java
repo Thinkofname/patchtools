@@ -1,11 +1,11 @@
 package uk.co.thinkofdeath.patchtools.matching;
 
-import uk.co.thinkofdeath.patchtools.ClassSet;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.patch.Mode;
 import uk.co.thinkofdeath.patchtools.patch.PatchClass;
 import uk.co.thinkofdeath.patchtools.patch.PatchClasses;
 import uk.co.thinkofdeath.patchtools.patch.PatchMethod;
+import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.MethodWrapper;
 
@@ -43,7 +43,6 @@ public class MatchGenerator {
     }
 
     public PatchScope apply(Predicate<PatchScope> test) {
-        main:
         while (true) {
             PatchScope newScope = scope.duplicate();
             try {
@@ -51,7 +50,7 @@ public class MatchGenerator {
                     int index = getState(v);
                     if (v instanceof PatchClass) {
                         PatchClass pc = (PatchClass) v;
-                        String[] classes = classSet.classes();
+                        String[] classes = classSet.classes(true);
                         if (classes.length <= index) {
                             throw new IllegalStateException();
                         }
@@ -62,19 +61,21 @@ public class MatchGenerator {
                     } else if (v instanceof PatchMethod) {
                         PatchMethod pm = (PatchMethod) v;
                         ClassWrapper cls = newScope.getClass(pm.getOwner().getIdent().getName());
-                        List<MethodWrapper> methods = cls.getMethods();
-                        if (methods.size() <= index) {
+                        MethodWrapper[] methods = cls.getMethods(true);
+                        if (methods.length <= index) {
                             throw new IllegalStateException();
                         }
-                        if (newScope.hasMethod(methods.get(index))) {
+                        if (newScope.hasMethod(methods[index])) {
                             throw new IllegalStateException();
                         }
-                        newScope.putMethod(methods.get(index), pm.getIdent().getName());
+                        newScope.putMethod(methods[index], pm.getIdent().getName());
                     }
                 });
             } catch (IllegalStateException e) {
-                tick();
-                continue;
+                if (tick()) {
+                    continue;
+                }
+                return null;
             }
 
             if (test.test(newScope)) {
@@ -82,7 +83,7 @@ public class MatchGenerator {
             }
 
             if (tick()) {
-                continue main;
+                continue;
             }
             return null;
         }
@@ -91,21 +92,26 @@ public class MatchGenerator {
     private boolean tick() {
         for (int i = tickList.size() - 1; i >= 0; i--) {
             Object val = tickList.get(i);
-            int index = state.get(val);
+            int index = getState(val);
             index++;
             if (val instanceof PatchClass) {
-                if (index >= classSet.classes().length) {
+                if (index >= classSet.classes(true).length) {
                     index = 0;
                     state.put(val, index);
+                    if (i == 0) {
+                        break;
+                    }
                     continue;
                 }
             } else if (val instanceof PatchMethod) {
-                PatchMethod pm = (PatchMethod) val;
                 PatchClass owner = nearestClass(i);
-                ClassWrapper cls = classSet.getClassWrapper(classSet.classes()[state.get(owner)]);
-                if (index >= cls.getMethods().size()) {
+                ClassWrapper cls = classSet.getClassWrapper(classSet.classes(true)[getState(owner)]);
+                if (index >= cls.getMethods(true).length) {
                     index = 0;
                     state.put(val, index);
+                    if (i == 0) {
+                        break;
+                    }
                     continue;
                 }
             }
