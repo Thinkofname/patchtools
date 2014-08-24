@@ -131,6 +131,18 @@ public class PatchTest {
 
         ClassSetLoader loader = new ClassSetLoader(classSet);
         Class<?> res = loader.loadClass("uk.co.thinkofdeath.patchtools.testcode.BasicField");
+
+        try {
+            res.getField("test");
+            fail();
+        } catch (NoSuchFieldException ignored) {
+
+        }
+        try {
+            res.getField("addedField");
+        } catch (NoSuchFieldException ignored) {
+            fail();
+        }
     }
 
     public static byte[] getClass(String name) {

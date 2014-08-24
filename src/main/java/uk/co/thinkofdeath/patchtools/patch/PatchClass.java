@@ -145,6 +145,38 @@ public class PatchClass {
             }
         }
 
+
+        fields.forEach(f -> {
+            if (f.getMode() == Mode.MATCH) return;
+
+            if (f.getMode() == Mode.REMOVE) {
+                FieldWrapper fieldWrapper = scope.getField(classWrapper,
+                        f.getIdent().getName(),
+                        f.getDesc().getDescriptor());
+                classWrapper.getNode().fields.remove(
+                        classWrapper.getFieldNode(fieldWrapper)
+                );
+            } else {
+                StringBuilder mappedDesc = new StringBuilder();
+                Type desc = f.getDesc();
+                updatedTypeString(classSet, scope, mappedDesc, desc);
+
+                int access = (f.isPrivate() ? Opcodes.ACC_PRIVATE : Opcodes.ACC_PUBLIC)
+                        | (f.isStatic() ? Opcodes.ACC_STATIC : 0);
+
+
+                FieldNode node = new FieldNode(Opcodes.ASM5,
+                        access,
+                        f.getIdent().getName(),
+                        mappedDesc.toString(),
+                        null, f.getValue());
+                FieldWrapper fieldWrapper = new FieldWrapper(classWrapper, node);
+                scope.putField(fieldWrapper, f.getIdent().getName(), f.getDesc().getDescriptor());
+                classWrapper.getFields().add(fieldWrapper);
+                classWrapper.getNode().fields.add(node);
+            }
+        });
+
         methods.forEach(m -> {
             if (m.getMode() == Mode.ADD) {
                 StringBuilder mappedDesc = new StringBuilder("(");
