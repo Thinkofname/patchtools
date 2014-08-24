@@ -32,6 +32,10 @@ public class MethodWrapper {
         return desc;
     }
 
+    public void add(ClassWrapper classWrapper) {
+        classWrappers.add(classWrapper);
+    }
+
     public boolean has(ClassWrapper classWrapper) {
         return classWrappers.contains(classWrapper);
     }

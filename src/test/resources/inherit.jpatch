@@ -1,0 +1,20 @@
+
+.class ~A
+
+    .method ~myMethod ()Ljava/lang/String;
+        .any
+        .ldc "testing"
+        .areturn
+        .any
+    .end-method
+
+.end-class
+
+.class ~B
+    .extends ~A
+
+    +method ~myMethod ()Ljava/lang/String;
+        +ldc "abc"
+        +areturn
+    +end-method
+.end-class

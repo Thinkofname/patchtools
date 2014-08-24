@@ -78,6 +78,24 @@ public class PatchTest {
         assertEquals("Bye jim", res.getMethod("test").invoke(null));
     }
 
+    @Test
+    public void inherit() throws Exception {
+        ClassSet classSet = new ClassSet(new ClassPathWrapper());
+        classSet.add(getClass("uk/co/thinkofdeath/patchtools/testcode/InheritTestA"));
+        classSet.add(getClass("uk/co/thinkofdeath/patchtools/testcode/InheritTestB"));
+
+        Patcher patcher = new Patcher(classSet);
+
+        patcher.apply(
+                getClass().getResourceAsStream("/inherit.jpatch")
+        );
+
+        ClassSetLoader loader = new ClassSetLoader(classSet);
+        Class<?> res = loader.loadClass("uk.co.thinkofdeath.patchtools.testcode.InheritTestB");
+
+        assertEquals("abc", res.getMethod("method").invoke(res.newInstance()));
+    }
+
     public static byte[] getClass(String name) {
         try (InputStream inputStream = PatchTest.class.getResourceAsStream("/" + name + ".class")) {
             return ByteStreams.toByteArray(inputStream);

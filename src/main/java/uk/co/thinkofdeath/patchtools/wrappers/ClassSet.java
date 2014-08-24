@@ -56,9 +56,16 @@ public class ClassSet implements Iterable<String> {
             if (cl == null) throw new RuntimeException(clazz);
             classes.put(cl.getNode().name, cl);
         }
+        final ClassWrapper finalCl = cl;
         MethodWrapper target = cl.getMethods().stream()
                 .filter(m -> m.getName().equals(methodWrapper.getName())
                         && m.getDesc().equals(methodWrapper.getDesc()))
+                .filter(m -> {
+                    MethodNode node = finalCl.getMethodNode(m);
+                    return (((node.access & Opcodes.ACC_PUBLIC) != 0
+                            || (node.access & Opcodes.ACC_PROTECTED) != 0)
+                            && (node.access & Opcodes.ACC_STATIC) == 0);
+                })
                 .findFirst().orElse(null);
         if (target != null) {
             if (target.isHidden()) {
@@ -66,6 +73,7 @@ public class ClassSet implements Iterable<String> {
             }
             cl.getMethods().remove(target);
             cl.getMethods().add(methodWrapper);
+            methodWrapper.add(cl);
         }
         for (String inter : cl.getNode().interfaces) {
             replaceMethod(methodWrapper, inter);
