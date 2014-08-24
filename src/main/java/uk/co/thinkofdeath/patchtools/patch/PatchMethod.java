@@ -43,9 +43,9 @@ public class PatchMethod {
 
             Command command = Command.from(line);
             if (mode == Mode.ADD && command.mode != Mode.ADD) {
-                throw new IllegalArgumentException("In added classes everything must be +");
+                throw new IllegalArgumentException("In added methods everything must be +");
             } else if (mode == Mode.REMOVE && command.mode != Mode.REMOVE) {
-                throw new IllegalArgumentException("In removed classes everything must be -");
+                throw new IllegalArgumentException("In removed methods everything must be -");
             }
             if (command.name.equals("end-method")) {
                 return;

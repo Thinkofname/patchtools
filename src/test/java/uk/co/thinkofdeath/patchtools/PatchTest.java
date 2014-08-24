@@ -8,8 +8,7 @@ import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class PatchTest {
 
@@ -94,6 +93,29 @@ public class PatchTest {
         Class<?> res = loader.loadClass("uk.co.thinkofdeath.patchtools.testcode.InheritTestB");
 
         assertEquals("abc", res.getMethod("method").invoke(res.newInstance()));
+    }
+
+    @Test
+    public void interTest() throws Exception {
+        ClassSet classSet = new ClassSet(new ClassPathWrapper());
+        classSet.add(getClass("uk/co/thinkofdeath/patchtools/testcode/InterfaceTestClass"));
+        classSet.add(getClass("uk/co/thinkofdeath/patchtools/testcode/InterfaceTestInterface"));
+
+        Patcher patcher = new Patcher(classSet);
+
+        patcher.apply(
+                getClass().getResourceAsStream("/interface.jpatch")
+        );
+
+        ClassSetLoader loader = new ClassSetLoader(classSet);
+        Class<?> res = loader.loadClass("uk.co.thinkofdeath.patchtools.testcode.InterfaceTestClass");
+        Class<?> inter = loader.loadClass("uk.co.thinkofdeath.patchtools.testcode.InterfaceTestInterface");
+
+        Object o = res.newInstance();
+        assertTrue("InterfaceTestClass does not implement InterfaceTestInterface", inter.isInstance(o));
+
+        assertEquals("Bob", inter.getMethod("getName").invoke(o));
+        assertEquals("Hello world", inter.getMethod("getMessage").invoke(o));
     }
 
     public static byte[] getClass(String name) {

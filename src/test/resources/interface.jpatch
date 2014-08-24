@@ -1,0 +1,16 @@
+
+.class ~Test
+    +interface uk/co/thinkofdeath/patchtools/testcode/InterfaceTestInterface
+
+    .method getName ()Ljava/lang/String;
+        .any
+        .ldc "Bob"
+        .areturn
+        .any
+    .end-method
+
+    +method getMessage ()Ljava/lang/String;
+        +ldc "Hello world"
+        +areturn
+    +end-method
+.end-class

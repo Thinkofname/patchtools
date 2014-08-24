@@ -21,6 +21,7 @@ public class PatchClass {
     private Ident ident;
     private Mode mode;
     private List<Command> superCommands = new ArrayList<>();
+    private List<Command> interfaceCommands = new ArrayList<>();
 
     private List<PatchMethod> methods = new ArrayList<>();
 
@@ -43,6 +44,10 @@ public class PatchClass {
                 case "extends":
                     if (command.args.length != 1) throw new IllegalArgumentException("extends requires 1 parameter");
                     superCommands.add(command);
+                    break;
+                case "interface":
+                    if (command.args.length != 1) throw new IllegalArgumentException("interface requires 1 parameter");
+                    interfaceCommands.add(command);
                     break;
                 case "method":
                     methods.add(new PatchMethod(this, command, reader));
@@ -92,6 +97,41 @@ public class PatchClass {
                 if (clName.equals("*") || clName.equals(classWrapper.getNode().superName)) {
                     classWrapper.getNode().superName = "java/lang/Object";
                 }
+            }
+        }
+
+        interLoop:
+        for (Command interCommand : interfaceCommands) {
+            if (interCommand.mode != Mode.ADD) {
+                Ident name = new Ident(interCommand.args[0]);
+                String clName = name.getName();
+                if (clName.equals("*") && classWrapper.getNode().interfaces.size() > 0) {
+                    continue;
+                }
+                for (String inter : classWrapper.getNode().interfaces) {
+                    if (name.isWeak()) {
+                        ClassWrapper cl = scope.getClass(clName);
+                        if (cl == null) {
+                            throw new RuntimeException();
+                        }
+                        clName = cl.getNode().name;
+                    }
+                    if (clName.equals(inter)) {
+                        continue interLoop;
+                    }
+                }
+                throw new RuntimeException();
+            } else {
+                Ident name = new Ident(interCommand.args[0]);
+                String clName = name.getName();
+                if (name.isWeak()) {
+                    ClassWrapper cl = scope.getClass(clName);
+                    if (cl == null) {
+                        throw new RuntimeException();
+                    }
+                    clName = cl.getNode().name;
+                }
+                classWrapper.getNode().interfaces.add(clName);
             }
         }
 
@@ -222,6 +262,31 @@ public class PatchClass {
                 if (!clName.equals("*") && !clName.equals(classWrapper.getNode().superName)) {
                     throw new PatchVerifyException();
                 }
+            }
+        }
+
+        interLoop:
+        for (Command interCommand : interfaceCommands) {
+            if (interCommand.mode != Mode.ADD) {
+                Ident name = new Ident(interCommand.args[0]);
+                String clName = name.getName();
+                if (clName.equals("*") && classWrapper.getNode().interfaces.size() > 0) {
+                    continue;
+                }
+                for (String inter : classWrapper.getNode().interfaces) {
+                    if (name.isWeak()) {
+                        ClassWrapper cl = scope.getClass(clName);
+                        if (cl == null) {
+                            cl = classSet.getClassWrapper(inter);
+                            scope.putClass(cl, clName);
+                        }
+                        clName = cl.getNode().name;
+                    }
+                    if (clName.equals(inter)) {
+                        continue interLoop;
+                    }
+                }
+                throw new PatchVerifyException();
             }
         }
 
