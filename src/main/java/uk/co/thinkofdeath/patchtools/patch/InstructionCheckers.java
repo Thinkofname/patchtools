@@ -80,10 +80,10 @@ public class InstructionCheckers {
             if (!methodName.equals("*")) {
                 if (method.isWeak()) {
                     ClassWrapper owner = classSet.getClassWrapper(node.owner);
-                    MethodWrapper ptMethod = scope.getMethod(owner, methodName);
+                    MethodWrapper ptMethod = scope.getMethod(owner, methodName, patchInstruction.params[2]);
                     if (ptMethod == null) { // Assume true
                         scope.putMethod(classSet.getClassWrapper(node.owner)
-                                .getMethod(node.name, node.desc), methodName);
+                                .getMethod(node.name, node.desc), methodName, patchInstruction.params[2]);
                         methodName = node.name;
                     } else {
                         methodName = ptMethod.getName();

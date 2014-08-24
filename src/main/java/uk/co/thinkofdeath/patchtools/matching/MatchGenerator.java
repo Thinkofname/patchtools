@@ -68,7 +68,7 @@ public class MatchGenerator {
                         if (newScope.hasMethod(methods[index])) {
                             throw new IllegalStateException();
                         }
-                        newScope.putMethod(methods[index], pm.getIdent().getName());
+                        newScope.putMethod(methods[index], pm.getIdent().getName(), pm.getDesc().getDescriptor());
                     }
                 });
             } catch (IllegalStateException e) {

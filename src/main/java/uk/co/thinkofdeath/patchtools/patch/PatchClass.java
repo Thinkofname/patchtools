@@ -79,12 +79,12 @@ public class PatchClass {
                         mappedDesc.toString(),
                         null, null);
                 MethodWrapper methodWrapper = new MethodWrapper(classWrapper, node);
-                scope.putMethod(methodWrapper, m.getIdent().getName());
+                scope.putMethod(methodWrapper, m.getIdent().getName(), m.getDesc().getDescriptor());
                 classWrapper.getMethods().add(methodWrapper);
                 classWrapper.getNode().methods.add(node);
             }
 
-            MethodWrapper methodWrapper = scope.getMethod(classWrapper, m.getIdent().getName());
+            MethodWrapper methodWrapper = scope.getMethod(classWrapper, m.getIdent().getName(), m.getDesc().getDescriptor());
 
             m.apply(classSet, scope, classWrapper.getMethodNode(methodWrapper));
         });
@@ -119,7 +119,9 @@ public class PatchClass {
         methods.forEach(m -> {
             if (m.getMode() == Mode.ADD) return;
 
-            MethodWrapper methodWrapper = scope.getMethod(classWrapper, m.getIdent().getName());
+            MethodWrapper methodWrapper = scope.getMethod(classWrapper,
+                    m.getIdent().getName(),
+                    m.getDesc().getDescriptor());
             if (!m.getIdent().isWeak()
                     && !methodWrapper.getName().equals(m.getIdent().getName())) {
                 throw new PatchVerifyException();

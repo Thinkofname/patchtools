@@ -42,7 +42,7 @@ public class InstructionCreators {
             String name = nameId.getName();
             if (nameId.isWeak()) {
                 ClassWrapper cls = classSet.getClassWrapper(owner);
-                name = scope.getMethod(cls, name).getName();
+                name = scope.getMethod(cls, name, patchInstruction.params[2]).getName();
             }
 
             StringBuilder mappedDesc = new StringBuilder("(");

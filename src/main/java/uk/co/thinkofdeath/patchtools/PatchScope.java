@@ -42,14 +42,14 @@ public class PatchScope {
         return methodMappings.containsKey(methodWrapper);
     }
 
-    public void putMethod(MethodWrapper methodWrapper, String name) {
-        methodMappings.put(methodWrapper, name);
+    public void putMethod(MethodWrapper methodWrapper, String name, String desc) {
+        methodMappings.put(methodWrapper, name + desc);
     }
 
-    public MethodWrapper getMethod(ClassWrapper owner, String name) {
+    public MethodWrapper getMethod(ClassWrapper owner, String name, String desc) {
         return methodMappings.keySet().stream()
                 .filter(m -> m.has(owner))
-                .filter(m -> methodMappings.get(m).equals(name))
+                .filter(m -> methodMappings.get(m).equals(name + desc))
                 .findFirst().orElse(null);
     }
 }
