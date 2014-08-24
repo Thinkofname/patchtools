@@ -18,6 +18,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+// TODO: Instruction matching improvements
+//      Don't fail on mis-match, keep trying
+// TODO: Better errors
+// TODO: Finish instructions
+// TODO: Disassembler
 public class PatchClass {
 
     private Ident ident;
