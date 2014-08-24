@@ -90,7 +90,7 @@ public class PatchClass {
         });
     }
 
-    private void updatedTypeString(ClassSet classSet, PatchScope scope, StringBuilder builder, Type type) {
+    static void updatedTypeString(ClassSet classSet, PatchScope scope, StringBuilder builder, Type type) {
         if (type.getSort() == Type.OBJECT) {
             builder.append("L");
             Ident id = new Ident(type.getInternalName());
@@ -145,7 +145,7 @@ public class PatchClass {
         });
     }
 
-    private void checkTypes(ClassSet classSet, PatchScope scope, Type pt, Type t) {
+    static void checkTypes(ClassSet classSet, PatchScope scope, Type pt, Type t) {
         if (pt.getSort() != t.getSort()) {
             throw new PatchVerifyException();
         }
@@ -163,7 +163,7 @@ public class PatchClass {
                 cls = ptcls.getNode().name;
             }
             if (!cls.equals(t.getInternalName())) {
-                throw new PatchVerifyException(cls + " : " + t.getInternalName());
+                throw new PatchVerifyException("'" + cls + "' : '" + t.getInternalName() + "'");
             }
         } else if (pt.getSort() == Type.ARRAY) {
             checkTypes(classSet, scope, pt.getElementType(), t.getElementType());

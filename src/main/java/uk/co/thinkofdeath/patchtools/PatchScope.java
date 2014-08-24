@@ -50,6 +50,6 @@ public class PatchScope {
         return methodMappings.keySet().stream()
                 .filter(m -> m.has(owner))
                 .filter(m -> methodMappings.get(m).equals(name))
-                .findFirst().get();
+                .findFirst().orElse(null);
     }
 }

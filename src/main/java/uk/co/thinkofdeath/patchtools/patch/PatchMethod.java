@@ -127,7 +127,9 @@ public class PatchMethod {
 
                     if (patchInstruction.mode == Mode.REMOVE) {
                         insns.remove(insns.get(position));
+                        position--;
                     }
+                    position++;
                     continue check;
                 } catch (PatchVerifyException e) {
                     if (!wildcard) {

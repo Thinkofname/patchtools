@@ -8,7 +8,7 @@ public class PatchInstruction {
 
     public PatchInstruction(Command command) {
         mode = command.mode;
-        instruction = Instruction.valueOf(command.name.toUpperCase());
+        instruction = Instruction.valueOf(command.name.toUpperCase().replace('-', '_'));
         params = command.args;
     }
 }

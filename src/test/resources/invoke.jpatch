@@ -1,0 +1,29 @@
+
+.class ~Invoke
+
+    // This is worked out from its usage
+    // in ~test
+    //.method ~func1 ()Ljava/lang/String; static
+    //    .any
+    //    .ldc "Hello"
+    //    .areturn
+    //    .any
+    //.end-method
+
+    .method ~func2 ()Ljava/lang/String; static
+        .any
+        .ldc "Bye"
+        .areturn
+        .any
+    .end-method
+
+    .method ~test ()Ljava/lang/String; static
+        .any
+        -invoke-static ~Invoke ~func1 ()Ljava/lang/String;
+        +invoke-static ~Invoke ~func2 ()Ljava/lang/String;
+        .any
+        .ldc " jim"
+        .any
+    .end-method
+
+.end-class

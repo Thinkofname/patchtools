@@ -63,6 +63,13 @@ public class ClassWrapper {
                 .findFirst().orElse(null);
     }
 
+    public MethodWrapper getMethod(String name, String desc) {
+        return methods.stream()
+                .filter(m -> m.getName().equals(name)
+                        && m.getDesc().equals(desc))
+                .findFirst().orElse(null);
+    }
+
     public List<FieldWrapper> getFields() {
         return fields;
     }

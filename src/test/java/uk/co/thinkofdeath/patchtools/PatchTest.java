@@ -33,7 +33,6 @@ public class PatchTest {
 
     @Test
     public void basicPatch() throws Exception {
-        long start = System.nanoTime();
         ClassSet classSet = new ClassSet(new ClassPathWrapper());
         classSet.add(
                 getClass("uk/co/thinkofdeath/patchtools/testcode/BasicClass")
@@ -47,7 +46,6 @@ public class PatchTest {
         patcher.apply(
                 getClass().getResourceAsStream("/basic.jpatch")
         );
-        System.out.println("Time: " + (System.nanoTime() - start) + "ns");
 
         ClassSetLoader loader = new ClassSetLoader(classSet);
         Class<?> res = loader.loadClass("uk.co.thinkofdeath.patchtools.testcode.BasicClass");
@@ -58,9 +56,26 @@ public class PatchTest {
         assertEquals("Hello world", res.getMethod("addedMethod").invoke(
                 res.newInstance()
         ));
-        assertEquals("Cake", res.getMethod("create").invoke(
-                null
-        ).toString());
+        assertEquals("Cake", res.getMethod("create").invoke(null).toString());
+    }
+
+    @Test
+    public void invoke() throws Exception {
+        ClassSet classSet = new ClassSet(new ClassPathWrapper());
+        classSet.add(
+                getClass("uk/co/thinkofdeath/patchtools/testcode/InvokeTest")
+        );
+
+        Patcher patcher = new Patcher(classSet);
+
+        patcher.apply(
+                getClass().getResourceAsStream("/invoke.jpatch")
+        );
+
+        ClassSetLoader loader = new ClassSetLoader(classSet);
+        Class<?> res = loader.loadClass("uk.co.thinkofdeath.patchtools.testcode.InvokeTest");
+
+        assertEquals("Bye jim", res.getMethod("test").invoke(null));
     }
 
     public static byte[] getClass(String name) {
