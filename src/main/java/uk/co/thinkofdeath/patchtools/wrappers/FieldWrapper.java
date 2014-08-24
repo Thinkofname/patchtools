@@ -8,10 +8,12 @@ public class FieldWrapper {
     private final String name;
     private final String desc;
     private final Object value;
+    private ClassWrapper owner;
     public boolean hidden;
 
     public FieldWrapper(ClassWrapper classWrapper, FieldNode node) {
         this.classSet = classWrapper.getClassSet();
+        owner = classWrapper;
         name = node.name;
         desc = node.desc;
         value = node.value;
@@ -32,5 +34,9 @@ public class FieldWrapper {
     @Override
     public String toString() {
         return "FieldWrapper{" + name + "}";
+    }
+
+    public ClassWrapper getOwner() {
+        return owner;
     }
 }

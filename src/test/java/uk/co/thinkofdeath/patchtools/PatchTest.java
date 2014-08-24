@@ -118,6 +118,21 @@ public class PatchTest {
         assertEquals("Hello world", inter.getMethod("getMessage").invoke(o));
     }
 
+    @Test
+    public void fieldTest() throws Exception {
+        ClassSet classSet = new ClassSet(new ClassPathWrapper());
+        classSet.add(getClass("uk/co/thinkofdeath/patchtools/testcode/BasicField"));
+
+        Patcher patcher = new Patcher(classSet);
+
+        patcher.apply(
+                getClass().getResourceAsStream("/field.jpatch")
+        );
+
+        ClassSetLoader loader = new ClassSetLoader(classSet);
+        Class<?> res = loader.loadClass("uk.co.thinkofdeath.patchtools.testcode.BasicField");
+    }
+
     public static byte[] getClass(String name) {
         try (InputStream inputStream = PatchTest.class.getResourceAsStream("/" + name + ".class")) {
             return ByteStreams.toByteArray(inputStream);

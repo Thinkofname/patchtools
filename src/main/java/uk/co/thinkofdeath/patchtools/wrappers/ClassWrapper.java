@@ -1,6 +1,7 @@
 package uk.co.thinkofdeath.patchtools.wrappers;
 
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.util.ArrayList;
@@ -72,6 +73,22 @@ public class ClassWrapper {
 
     public List<FieldWrapper> getFields() {
         return fields;
+    }
+
+    public FieldWrapper[] getFields(boolean stripHidden) {
+        if (stripHidden) {
+            return getFields().stream()
+                    .filter(f -> !f.isHidden())
+                    .toArray(FieldWrapper[]::new);
+        }
+        return getFields().toArray(new FieldWrapper[getFields().size()]);
+    }
+
+    public FieldNode getFieldNode(FieldWrapper fieldWrapper) {
+        return node.fields.stream()
+                .filter(f -> f.name.equals(fieldWrapper.getName())
+                        && f.desc.equals(fieldWrapper.getDesc()))
+                .findFirst().orElse(null);
     }
 
     @Override

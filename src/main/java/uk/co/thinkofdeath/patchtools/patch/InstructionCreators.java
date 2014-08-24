@@ -14,13 +14,17 @@ import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
 
 public class InstructionCreators {
 
-    static AbstractInsnNode createLdc(ClassSet classSet, PatchScope scope, PatchInstruction instruction) {
-        String cst = Joiner.on(' ').join(instruction.params);
+    public static Object parseConstant(String cst) {
         if (cst.startsWith("\"") && cst.endsWith("\"")) {
-            return new LdcInsnNode(cst.substring(1, cst.length() - 1));
+            return cst.substring(1, cst.length() - 1);
         } else {
             throw new UnsupportedOperationException();
         }
+    }
+
+    static AbstractInsnNode createLdc(ClassSet classSet, PatchScope scope, PatchInstruction instruction) {
+        String cst = Joiner.on(' ').join(instruction.params);
+        return new LdcInsnNode(parseConstant(cst));
     }
 
     static AbstractInsnNode createAReturn(ClassSet classSet, PatchScope scope, PatchInstruction instruction) {

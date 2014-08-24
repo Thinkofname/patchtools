@@ -1,12 +1,10 @@
 package uk.co.thinkofdeath.patchtools.matching;
 
 import uk.co.thinkofdeath.patchtools.PatchScope;
-import uk.co.thinkofdeath.patchtools.patch.Mode;
-import uk.co.thinkofdeath.patchtools.patch.PatchClass;
-import uk.co.thinkofdeath.patchtools.patch.PatchClasses;
-import uk.co.thinkofdeath.patchtools.patch.PatchMethod;
+import uk.co.thinkofdeath.patchtools.patch.*;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
+import uk.co.thinkofdeath.patchtools.wrappers.FieldWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.MethodWrapper;
 
 import java.util.ArrayList;
@@ -39,6 +37,10 @@ public class MatchGenerator {
                     c.getMethods().stream()
                             .filter(m -> m.getMode() != Mode.ADD)
                             .forEach(tickList::add);
+
+                    c.getFields().stream()
+                            .filter(f -> f.getMode() != Mode.ADD)
+                            .forEach(tickList::add);
                 });
     }
 
@@ -69,6 +71,17 @@ public class MatchGenerator {
                             throw new IllegalStateException();
                         }
                         newScope.putMethod(methods[index], pm.getIdent().getName(), pm.getDesc().getDescriptor());
+                    } else if (v instanceof PatchField) {
+                        PatchField pf = (PatchField) v;
+                        ClassWrapper cls = newScope.getClass(pf.getOwner().getIdent().getName());
+                        FieldWrapper[] fields = cls.getFields(true);
+                        if (fields.length <= index) {
+                            throw new IllegalStateException();
+                        }
+                        if (newScope.hasField(fields[index])) {
+                            throw new IllegalStateException();
+                        }
+                        newScope.putField(fields[index], pf.getIdent().getName(), pf.getDesc().getDescriptor());
                     }
                 });
             } catch (IllegalStateException e) {
@@ -107,6 +120,17 @@ public class MatchGenerator {
                 PatchClass owner = nearestClass(i);
                 ClassWrapper cls = classSet.getClassWrapper(classSet.classes(true)[getState(owner)]);
                 if (index >= cls.getMethods(true).length) {
+                    index = 0;
+                    state.put(val, index);
+                    if (i == 0) {
+                        break;
+                    }
+                    continue;
+                }
+            } else if (val instanceof PatchField) {
+                PatchClass owner = nearestClass(i);
+                ClassWrapper cls = classSet.getClassWrapper(classSet.classes(true)[getState(owner)]);
+                if (index >= cls.getFields(true).length) {
                     index = 0;
                     state.put(val, index);
                     if (i == 0) {

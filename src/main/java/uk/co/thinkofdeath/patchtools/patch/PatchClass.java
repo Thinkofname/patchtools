@@ -2,11 +2,13 @@ package uk.co.thinkofdeath.patchtools.patch;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.PatchVerifyException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
+import uk.co.thinkofdeath.patchtools.wrappers.FieldWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.MethodWrapper;
 
 import java.io.BufferedReader;
@@ -14,6 +16,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class PatchClass {
 
@@ -23,6 +26,7 @@ public class PatchClass {
     private List<Command> interfaceCommands = new ArrayList<>();
 
     private List<PatchMethod> methods = new ArrayList<>();
+    private List<PatchField> fields = new ArrayList<>();
 
     public PatchClass(Command clCommand, BufferedReader reader) throws IOException {
         if (clCommand.args.length != 1) throw new IllegalArgumentException();
@@ -51,6 +55,9 @@ public class PatchClass {
                 case "method":
                     methods.add(new PatchMethod(this, command, reader));
                     break;
+                case "field":
+                    fields.add(new PatchField(this, command));
+                    break;
                 case "end-class":
                     return;
                 default:
@@ -69,6 +76,10 @@ public class PatchClass {
 
     public List<PatchMethod> getMethods() {
         return methods;
+    }
+
+    public List<PatchField> getFields() {
+        return fields;
     }
 
     public void apply(PatchScope scope, ClassSet classSet) {
@@ -289,6 +300,37 @@ public class PatchClass {
                 throw new PatchVerifyException();
             }
         }
+
+        fields.forEach(f -> {
+            if (f.getMode() == Mode.ADD) return;
+
+            FieldWrapper fieldWrapper = scope.getField(classWrapper,
+                    f.getIdent().getName(),
+                    f.getDesc().getDescriptor());
+
+            if (!f.getIdent().isWeak()
+                    && !fieldWrapper.getName().equals(f.getIdent().getName())) {
+                throw new PatchVerifyException();
+            }
+
+            Type patchDesc = f.getDesc();
+            Type desc = Type.getType(fieldWrapper.getDesc());
+
+            checkTypes(classSet, scope, patchDesc, desc);
+
+            FieldNode fieldNode = classWrapper.getFieldNode(fieldWrapper);
+
+            if (((fieldNode.access & Opcodes.ACC_STATIC) == 0) == f.isStatic()) {
+                throw new PatchVerifyException("Expected " + (f.isStatic() ? "static" : "non-static"));
+            }
+            if (((fieldNode.access & Opcodes.ACC_PRIVATE) == 0) == f.isPrivate()) {
+                throw new PatchVerifyException("Expected " + (f.isPrivate() ? "private" : "non-private"));
+            }
+
+            if (!Objects.equals(fieldNode.value, f.getValue())) {
+                throw new PatchVerifyException();
+            }
+        });
 
         methods.forEach(m -> {
             if (m.getMode() == Mode.ADD) return;
