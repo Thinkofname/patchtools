@@ -163,7 +163,7 @@ public class PatchClass {
             mw = Arrays.stream(classWrapper.getMethods(true))
                     .filter(m -> m.getName().equals(finalPName) && m.getDesc().equals(mappedDesc.toString()))
                     .findFirst().orElse(null);
-        } catch (IllegalStateException ugnored) {
+        } catch (IllegalStateException ignored) {
 
         }
         if (mw == null) {
