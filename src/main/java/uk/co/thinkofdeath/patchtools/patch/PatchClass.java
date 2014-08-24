@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-// TODO: Interfaces
 public class PatchClass {
 
     private Ident ident;
