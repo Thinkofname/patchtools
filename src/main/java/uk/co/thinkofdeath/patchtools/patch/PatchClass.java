@@ -145,7 +145,8 @@ public class PatchClass {
                 mappedDesc.append(")");
                 updatedTypeString(classSet, scope, mappedDesc, desc.getReturnType());
 
-                int access = Opcodes.ACC_PUBLIC | (m.isStatic() ? Opcodes.ACC_STATIC : 0);
+                int access = (m.isPrivate() ? Opcodes.ACC_PRIVATE : Opcodes.ACC_PUBLIC)
+                        | (m.isStatic() ? Opcodes.ACC_STATIC : 0);
                 MethodWrapper methodWrapper = null;
 
                 if (((access & Opcodes.ACC_PUBLIC) != 0

@@ -21,6 +21,7 @@ public class PatchMethod {
     private String desc;
     private Mode mode;
     private boolean isStatic;
+    private boolean isPrivate;
 
     private List<PatchInstruction> instructions = new ArrayList<>();
 
@@ -31,8 +32,12 @@ public class PatchMethod {
         mode = mCommand.mode;
         desc = mCommand.args[1];
         if (mCommand.args.length >= 3) {
-            if (mCommand.args[2].equals("static")) {
-                isStatic = true;
+            for (int i = 2; i < mCommand.args.length; i++) {
+                if (mCommand.args[i].equals("static")) {
+                    isStatic = true;
+                } else if (mCommand.args[i].equals("private")) {
+                    isPrivate = true;
+                }
             }
         }
 
@@ -80,11 +85,20 @@ public class PatchMethod {
         return isStatic;
     }
 
+    public boolean isPrivate() {
+        return isPrivate;
+    }
+
     public void apply(ClassSet classSet, PatchScope scope, MethodNode methodNode) {
         int position = 0;
-        methodNode.access &= ~Opcodes.ACC_STATIC;
+        methodNode.access &= ~(Opcodes.ACC_STATIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PUBLIC);
         if (isStatic) {
             methodNode.access |= Opcodes.ACC_STATIC;
+        }
+        if (isPrivate) {
+            methodNode.access |= Opcodes.ACC_PRIVATE;
+        } else {
+            methodNode.access |= Opcodes.ACC_PUBLIC;
         }
         InsnList insns = methodNode.instructions;
         boolean wildcard = false;
@@ -149,6 +163,9 @@ public class PatchMethod {
 
         if (((methodNode.access & Opcodes.ACC_STATIC) == 0) == isStatic) {
             throw new PatchVerifyException("Expected " + (isStatic ? "static" : "non-static"));
+        }
+        if (((methodNode.access & Opcodes.ACC_PRIVATE) == 0) == isPrivate) {
+            throw new PatchVerifyException("Expected " + (isStatic ? "private" : "non-private"));
         }
 
         boolean wildcard = false;
