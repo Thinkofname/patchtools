@@ -1,6 +1,8 @@
 package uk.co.thinkofdeath.patchtools;
 
 import com.google.common.collect.Maps;
+import org.objectweb.asm.tree.MethodNode;
+import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.FieldWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.MethodWrapper;
@@ -12,12 +14,14 @@ public class PatchScope {
     private Map<String, ClassWrapper> classMappings = Maps.newHashMap();
     private Map<MethodWrapper, String> methodMappings = Maps.newHashMap();
     private Map<FieldWrapper, String> fieldMappings = Maps.newHashMap();
+    private Map<MethodNode, Map<PatchInstruction, Integer>> methodInstructionMap = Maps.newHashMap();
 
     public PatchScope duplicate() {
         PatchScope patchScope = new PatchScope();
         patchScope.classMappings = Maps.newHashMap(classMappings);
         patchScope.methodMappings = Maps.newHashMap(methodMappings);
         patchScope.fieldMappings = Maps.newHashMap(fieldMappings);
+        patchScope.methodInstructionMap = Maps.newHashMap(methodInstructionMap);
         return patchScope;
     }
 
@@ -27,6 +31,7 @@ public class PatchScope {
                 "classMappings=" + classMappings +
                 ", methodMappings=" + methodMappings +
                 ", fieldMappings=" + fieldMappings +
+                ", methodInstructionMap" + methodInstructionMap +
                 '}';
     }
 
@@ -70,5 +75,13 @@ public class PatchScope {
                 .filter(f -> f.getOwner() == owner)
                 .filter(f -> fieldMappings.get(f).equals(name + "::" + desc))
                 .findFirst().orElse(null);
+    }
+
+    public Map<PatchInstruction, Integer> getInstructMap(MethodNode node) {
+        return methodInstructionMap.get(node);
+    }
+
+    public void putInstructMap(MethodNode node, Map<PatchInstruction, Integer> instMap) {
+        methodInstructionMap.put(node, instMap);
     }
 }

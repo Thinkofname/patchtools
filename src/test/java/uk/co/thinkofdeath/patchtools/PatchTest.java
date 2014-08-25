@@ -145,6 +145,23 @@ public class PatchTest {
         }
     }
 
+    @Test
+    public void complex() throws Exception {
+        ClassSet classSet = new ClassSet(new ClassPathWrapper());
+        classSet.add(getClass("uk/co/thinkofdeath/patchtools/testcode/ComplexInstruction"));
+
+        Patcher patcher = new Patcher(classSet);
+
+        patcher.apply(
+                getClass().getResourceAsStream("/complex.jpatch")
+        );
+
+        ClassSetLoader loader = new ClassSetLoader(classSet);
+        Class<?> res = loader.loadClass("uk.co.thinkofdeath.patchtools.testcode.ComplexInstruction");
+
+        assertEquals("HelloABCTesting", res.getMethod("message").invoke(null));
+    }
+
     public static byte[] getClass(String name) {
         try (InputStream inputStream = PatchTest.class.getResourceAsStream("/" + name + ".class")) {
             return ByteStreams.toByteArray(inputStream);

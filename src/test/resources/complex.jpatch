@@ -1,0 +1,13 @@
+
+.class ~Complex
+
+    .method ~msg ()Ljava/lang/String; static
+        .any
+        -ldc "Hello"
+        +ldc "ABC"
+        .invoke-virtual java/lang/StringBuilder append (Ljava/lang/String;)Ljava/lang/StringBuilder;
+        .ldc "Testing"
+        .invoke-virtual java/lang/StringBuilder append (Ljava/lang/String;)Ljava/lang/StringBuilder;
+        .any
+    .end-method
+.end-class

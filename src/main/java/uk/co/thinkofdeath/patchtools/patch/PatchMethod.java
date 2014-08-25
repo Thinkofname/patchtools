@@ -1,9 +1,11 @@
 package uk.co.thinkofdeath.patchtools.patch;
 
+import com.google.common.collect.Maps;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.LineNumberNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.PatchVerifyException;
@@ -13,6 +15,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class PatchMethod {
 
@@ -90,7 +93,7 @@ public class PatchMethod {
     }
 
     public void apply(ClassSet classSet, PatchScope scope, MethodNode methodNode) {
-        int position = 0;
+        ;
         methodNode.access &= ~(Opcodes.ACC_STATIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PUBLIC);
         if (isStatic) {
             methodNode.access |= Opcodes.ACC_STATIC;
@@ -101,11 +104,12 @@ public class PatchMethod {
             methodNode.access |= Opcodes.ACC_PUBLIC;
         }
         InsnList insns = methodNode.instructions;
-        boolean wildcard = false;
 
-        check:
-        for (int i = 0; i < instructions.size(); i++) {
-            PatchInstruction patchInstruction = instructions.get(i);
+        Map<PatchInstruction, Integer> insnMap = scope.getInstructMap(methodNode);
+        int position = 0;
+        int offset = 0;
+
+        for (PatchInstruction patchInstruction : instructions) {
             if (patchInstruction.mode == Mode.ADD) {
                 AbstractInsnNode newIn = patchInstruction.instruction.getCreator()
                         .create(classSet, scope, patchInstruction);
@@ -115,45 +119,20 @@ public class PatchMethod {
                     insns.insert(newIn);
                 }
                 position++;
+                offset++;
                 continue;
             }
 
             if (patchInstruction.instruction == Instruction.ANY) {
-                wildcard = true;
-                if (i == instructions.size() - 1) {
-                    position = methodNode.instructions.size();
-                }
                 continue;
             }
-            while (true) {
 
-                if (position >= insns.size()) {
-                    if (!wildcard) {
-                        throw new RuntimeException();
-                    }
-                    break;
-                }
-                AbstractInsnNode insn = insns.get(position);
-                try {
-                    patchInstruction.instruction.getChecker()
-                            .check(classSet, scope, patchInstruction, insn);
-                    wildcard = false;
-
-                    if (patchInstruction.mode == Mode.REMOVE) {
-                        insns.remove(insns.get(position));
-                        position--;
-                    }
-                    position++;
-                    continue check;
-                } catch (PatchVerifyException e) {
-                    if (!wildcard) {
-                        throw new RuntimeException(e);
-                    }
-                }
-                position++;
+            int pos = insnMap.get(patchInstruction);
+            if (patchInstruction.mode == Mode.REMOVE) {
+                insns.remove(insns.get(pos));
+                offset--;
             }
-
-            throw new RuntimeException();
+            position = pos + offset + 1;
         }
     }
 
@@ -169,6 +148,11 @@ public class PatchMethod {
         }
 
         boolean wildcard = false;
+        int wildcardPosition = -1;
+        int wildcardPatchPosition = -1;
+
+        Map<PatchInstruction, Integer> insnMap = Maps.newHashMap();
+
         check:
         for (int i = 0; i < instructions.size(); i++) {
             PatchInstruction patchInstruction = instructions.get(i);
@@ -176,6 +160,8 @@ public class PatchMethod {
 
             if (patchInstruction.instruction == Instruction.ANY) {
                 wildcard = true;
+                wildcardPosition = -1;
+                wildcardPatchPosition = -1;
                 if (i == instructions.size() - 1) {
                     position = methodNode.instructions.size();
                 }
@@ -191,15 +177,29 @@ public class PatchMethod {
                 }
                 AbstractInsnNode insn = insns.get(position);
 
-                try {
-                    patchInstruction.instruction.getChecker()
-                            .check(classSet, scope, patchInstruction, insn);
-                    wildcard = false;
-                    position++;
-                    continue check;
-                } catch (PatchVerifyException e) {
-                    if (!wildcard) {
-                        throw e;
+                if (!(insn instanceof LineNumberNode)) {
+                    try {
+                        patchInstruction.instruction.getChecker()
+                                .check(classSet, scope, patchInstruction, insn);
+                        if (wildcard) {
+                            wildcardPosition = position;
+                            wildcardPatchPosition = i;
+                        }
+                        insnMap.put(patchInstruction, position);
+                        wildcard = false;
+                        position++;
+                        continue check;
+                    } catch (PatchVerifyException e) {
+                        if (!wildcard) {
+                            if (wildcardPosition != -1) {
+                                wildcard = true;
+                                position = ++wildcardPosition;
+                                i = --wildcardPatchPosition;
+                                continue check;
+                            } else {
+                                throw e;
+                            }
+                        }
                     }
                 }
                 position++;
@@ -210,6 +210,8 @@ public class PatchMethod {
         if (position != insns.size()) {
             throw new PatchVerifyException(position + " : " + insns.size());
         }
+
+        scope.putInstructMap(methodNode, insnMap);
     }
 
 }
