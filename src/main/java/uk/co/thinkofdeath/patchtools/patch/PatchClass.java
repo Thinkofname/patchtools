@@ -20,7 +20,6 @@ import java.util.Objects;
 
 // TODO: Better errors
 // TODO: Finish instructions
-// TODO: Disassembler
 public class PatchClass {
 
     private String type;
