@@ -20,7 +20,7 @@ public class DisassembleTest {
 
         Disassembler disassembler = new Disassembler(classSet);
 
-        String patch = disassembler.disasemble("uk/co/thinkofdeath/patchtools/testcode/BasicClass");
+        String patch = disassembler.disassemble("uk/co/thinkofdeath/patchtools/testcode/BasicClass");
         System.out.println("Done:");
         System.out.println(patch);
     }

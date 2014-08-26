@@ -18,7 +18,7 @@ public class Disassembler {
         this.classSet = classSet;
     }
 
-    public String disasemble(String cls) {
+    public String disassemble(String cls) {
         ClassWrapper classWrapper = classSet.getClassWrapper(cls);
 
         StringBuilder patch = new StringBuilder("\n");
