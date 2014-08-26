@@ -268,7 +268,7 @@ public class PatchClass {
         return mw;
     }
 
-    static void updatedTypeString(ClassSet classSet, PatchScope scope, StringBuilder builder, Type type) {
+    public static void updatedTypeString(ClassSet classSet, PatchScope scope, StringBuilder builder, Type type) {
         if (type.getSort() == Type.OBJECT) {
             builder.append("L");
             Ident id = new Ident(type.getInternalName());
@@ -417,7 +417,7 @@ public class PatchClass {
         });
     }
 
-    static void checkTypes(ClassSet classSet, PatchScope scope, Type pt, Type t) {
+    public static void checkTypes(ClassSet classSet, PatchScope scope, Type pt, Type t) {
         if (pt.getSort() != t.getSort()) {
             throw new PatchVerifyException();
         }

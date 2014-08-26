@@ -2,6 +2,7 @@ package uk.co.thinkofdeath.patchtools.patch;
 
 import com.google.common.base.Joiner;
 import org.objectweb.asm.Type;
+import uk.co.thinkofdeath.patchtools.patch.instructions.Utils;
 
 import java.io.IOException;
 
@@ -39,7 +40,7 @@ public class PatchField {
             String[] parts = new String[mCommand.args.length - i];
             if (parts.length != 0) {
                 System.arraycopy(mCommand.args, i, parts, 0, parts.length);
-                value = InstructionCreators.parseConstant(Joiner.on(' ').join(parts));
+                value = Utils.parseConstant(Joiner.on(' ').join(parts));
             }
         }
     }

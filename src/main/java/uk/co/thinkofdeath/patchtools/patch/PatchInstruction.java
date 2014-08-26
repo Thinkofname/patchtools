@@ -4,9 +4,9 @@ import java.util.Arrays;
 
 public class PatchInstruction {
 
-    Mode mode;
-    Instruction instruction;
-    String[] params;
+    public Mode mode;
+    public Instruction instruction;
+    public String[] params;
 
     public PatchInstruction(Command command) {
         mode = command.mode;
