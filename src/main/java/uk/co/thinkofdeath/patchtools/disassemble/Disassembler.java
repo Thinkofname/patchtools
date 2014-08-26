@@ -72,6 +72,7 @@ public class Disassembler {
                                 .append('.');
                         if (!Instruction.print(patch, m, i)) {
                             // TODO: throw new UnsupportedOperationException(i.toString());
+                            patch.append("unsupported ").append(i);
                         }
                         patch.append('\n');
                     });
