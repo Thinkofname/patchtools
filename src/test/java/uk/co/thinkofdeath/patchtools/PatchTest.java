@@ -2,6 +2,7 @@ package uk.co.thinkofdeath.patchtools;
 
 import com.google.common.io.ByteStreams;
 import org.junit.Test;
+import uk.co.thinkofdeath.patchtools.testcode.InterfaceTestInterface;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassPathWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
@@ -99,7 +100,6 @@ public class PatchTest {
     public void interTest() throws Exception {
         ClassSet classSet = new ClassSet(new ClassPathWrapper());
         classSet.add(getClass("uk/co/thinkofdeath/patchtools/testcode/InterfaceTestClass"));
-        classSet.add(getClass("uk/co/thinkofdeath/patchtools/testcode/InterfaceTestInterface"));
 
         Patcher patcher = new Patcher(classSet);
 
@@ -109,13 +109,14 @@ public class PatchTest {
 
         ClassSetLoader loader = new ClassSetLoader(classSet);
         Class<?> res = loader.loadClass("uk.co.thinkofdeath.patchtools.testcode.InterfaceTestClass");
-        Class<?> inter = loader.loadClass("uk.co.thinkofdeath.patchtools.testcode.InterfaceTestInterface");
 
         Object o = res.newInstance();
-        assertTrue("InterfaceTestClass does not implement InterfaceTestInterface", inter.isInstance(o));
+        assertTrue("InterfaceTestClass does not implement InterfaceTestInterface", o instanceof InterfaceTestInterface);
 
-        assertEquals("Bob", inter.getMethod("getName").invoke(o));
-        assertEquals("Hello world", inter.getMethod("getMessage").invoke(o));
+        InterfaceTestInterface testInterface = (InterfaceTestInterface) o;
+
+        assertEquals("Bob", testInterface.getName());
+        assertEquals("Hello world", testInterface.getMessage());
     }
 
     @Test
