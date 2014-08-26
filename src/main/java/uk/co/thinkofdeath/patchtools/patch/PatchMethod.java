@@ -93,7 +93,6 @@ public class PatchMethod {
     }
 
     public void apply(ClassSet classSet, PatchScope scope, MethodNode methodNode) {
-        ;
         methodNode.access &= ~(Opcodes.ACC_STATIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PUBLIC);
         if (isStatic) {
             methodNode.access |= Opcodes.ACC_STATIC;
