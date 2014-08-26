@@ -5,13 +5,11 @@
 .class ~Basic
 
     .method ~sayHello ()Ljava/lang/String;
-        .any
         // - == remove
         -ldc "Hello bob"
         // + == add
         +ldc "Hello jim"
         .return
-        .any
     .end-method
 
     +method addedMethod ()Ljava/lang/String;
@@ -25,6 +23,5 @@
         +ldc "Cake"
         .any
         .return
-        .any
     .end-method
 .end-class

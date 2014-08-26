@@ -208,7 +208,12 @@ public class PatchMethod {
             throw new PatchVerifyException();
         }
 
-        if (position != insns.size()) {
+        for (; position < insns.size(); position++) {
+            AbstractInsnNode insn = insns.get(position);
+            if (insn instanceof LineNumberNode
+                    || insn instanceof LabelNode) {
+                continue;
+            }
             throw new PatchVerifyException(position + " : " + insns.size());
         }
 
