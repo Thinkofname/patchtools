@@ -6,6 +6,7 @@ import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.PatchVerifyException;
+import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
@@ -40,5 +41,15 @@ public class LdcInstruction implements InstructionHandler {
     public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method) {
         String cst = Joiner.on(' ').join(instruction.params);
         return new LdcInsnNode(Utils.parseConstant(cst));
+    }
+
+    @Override
+    public boolean print(Instruction instruction, StringBuilder patch, MethodNode method, AbstractInsnNode insn) {
+        if (!(insn instanceof LdcInsnNode)) {
+            return false;
+        }
+        patch.append("ldc ");
+        Utils.printConstant(patch, ((LdcInsnNode) insn).cst);
+        return true;
     }
 }

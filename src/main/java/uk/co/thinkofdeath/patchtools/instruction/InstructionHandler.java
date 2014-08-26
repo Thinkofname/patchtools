@@ -11,4 +11,6 @@ public interface InstructionHandler {
     void check(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method, AbstractInsnNode insn);
 
     AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method);
+
+    boolean print(Instruction instruction, StringBuilder patch, MethodNode method, AbstractInsnNode insn);
 }

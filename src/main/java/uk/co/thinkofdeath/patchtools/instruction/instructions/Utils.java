@@ -8,4 +8,12 @@ public class Utils {
             throw new UnsupportedOperationException();
         }
     }
+
+    public static void printConstant(StringBuilder patch, Object value) {
+        if (value instanceof String) {
+            patch.append('"').append(value).append('"');
+        } else {
+            throw new UnsupportedOperationException("Unsupported " + value.getClass());
+        }
+    }
 }

@@ -1,6 +1,8 @@
 package uk.co.thinkofdeath.patchtools.instruction;
 
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.instruction.instructions.InvokeInstruction;
 import uk.co.thinkofdeath.patchtools.instruction.instructions.LdcInstruction;
 import uk.co.thinkofdeath.patchtools.instruction.instructions.ReturnInstruction;
@@ -22,5 +24,15 @@ public enum Instruction {
 
     public InstructionHandler getHandler() {
         return handler;
+    }
+
+    public static boolean print(StringBuilder patch, MethodNode method, AbstractInsnNode insn) {
+        for (Instruction i : values()) {
+            if (i.getHandler() != null
+                    && i.getHandler().print(i, patch, method, insn)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

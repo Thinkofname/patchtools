@@ -1,11 +1,13 @@
 package uk.co.thinkofdeath.patchtools.instruction.instructions;
 
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.PatchVerifyException;
+import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
 import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.patch.PatchClass;
@@ -113,5 +115,37 @@ public class InvokeInstruction implements InstructionHandler {
                 mappedDesc.toString(),
                 false
         );
+    }
+
+    @Override
+    public boolean print(Instruction instruction, StringBuilder patch, MethodNode method, AbstractInsnNode insn) {
+        if (!(insn instanceof MethodInsnNode)) {
+            return false;
+        }
+        MethodInsnNode methodInsnNode = (MethodInsnNode) insn;
+        patch.append("invoke-");
+        switch (methodInsnNode.getOpcode()) {
+            case Opcodes.INVOKESTATIC:
+                patch.append("static");
+                break;
+            case Opcodes.INVOKEVIRTUAL:
+                patch.append("virtual");
+                break;
+            case Opcodes.INVOKESPECIAL:
+                patch.append("special");
+                break;
+            case Opcodes.INVOKEINTERFACE:
+                patch.append("interface");
+                break;
+            default:
+                throw new IllegalArgumentException("Invoke opcode: " + methodInsnNode.getOpcode());
+        }
+        patch.append(' ')
+                .append(methodInsnNode.owner)
+                .append(' ')
+                .append(methodInsnNode.name)
+                .append(' ')
+                .append(methodInsnNode.desc);
+        return true;
     }
 }
