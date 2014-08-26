@@ -2,10 +2,8 @@
 .class ~A
 
     .method ~myMethod ()Ljava/lang/String;
-        .any
         .ldc "testing"
         .return
-        .any
     .end-method
 
 .end-class

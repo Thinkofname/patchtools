@@ -11,10 +11,8 @@
     //.end-method
 
     .method ~func2 ()Ljava/lang/String; static
-        .any
         .ldc "Bye"
         .return
-        .any
     .end-method
 
     .method ~test ()Ljava/lang/String; static

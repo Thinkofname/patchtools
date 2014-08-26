@@ -3,10 +3,8 @@
     +interface uk/co/thinkofdeath/patchtools/testcode/InterfaceTestInterface
 
     .method getName ()Ljava/lang/String;
-        .any
         .ldc "Bob"
         .return
-        .any
     .end-method
 
     +method getMessage ()Ljava/lang/String;
