@@ -112,7 +112,7 @@ public class PatchMethod {
         for (PatchInstruction patchInstruction : instructions) {
             if (patchInstruction.mode == Mode.ADD) {
                 AbstractInsnNode newIn = patchInstruction.instruction.getHandler()
-                        .create(classSet, scope, patchInstruction);
+                        .create(classSet, scope, patchInstruction, methodNode);
                 if (position - 1 >= 0) {
                     insns.insert(insns.get(position - 1), newIn);
                 } else {
@@ -180,7 +180,7 @@ public class PatchMethod {
                 if (!(insn instanceof LineNumberNode)) {
                     try {
                         patchInstruction.instruction.getHandler()
-                                .check(classSet, scope, patchInstruction, insn);
+                                .check(classSet, scope, patchInstruction, methodNode, insn);
                         if (wildcard) {
                             wildcardPosition = position;
                             wildcardPatchPosition = i;

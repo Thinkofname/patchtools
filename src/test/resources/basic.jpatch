@@ -10,13 +10,13 @@
         -ldc "Hello bob"
         // + == add
         +ldc "Hello jim"
-        .areturn
+        .return
         .any
     .end-method
 
     +method addedMethod ()Ljava/lang/String;
         +ldc "Hello world"
-        +areturn
+        +return
     +end-method
 
     .method ~staticCreate ()L~Basic; static
@@ -24,7 +24,7 @@
         -ldc "Testing"
         +ldc "Cake"
         .any
-        .areturn
+        .return
         .any
     .end-method
 .end-class

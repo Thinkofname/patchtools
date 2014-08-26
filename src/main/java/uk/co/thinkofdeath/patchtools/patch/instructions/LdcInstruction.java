@@ -3,6 +3,7 @@ package uk.co.thinkofdeath.patchtools.patch.instructions;
 import com.google.common.base.Joiner;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.LdcInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.PatchVerifyException;
 import uk.co.thinkofdeath.patchtools.patch.InstructionHandler;
@@ -11,7 +12,7 @@ import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 public class LdcInstruction implements InstructionHandler {
     @Override
-    public void check(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction, AbstractInsnNode insn) {
+    public void check(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction, MethodNode method, AbstractInsnNode insn) {
         if (!(insn instanceof LdcInsnNode)) {
             throw new PatchVerifyException();
         }
@@ -36,7 +37,7 @@ public class LdcInstruction implements InstructionHandler {
     }
 
     @Override
-    public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction) {
+    public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method) {
         String cst = Joiner.on(' ').join(instruction.params);
         return new LdcInsnNode(Utils.parseConstant(cst));
     }

@@ -6,14 +6,14 @@
     //.method ~func1 ()Ljava/lang/String; static
     //    .any
     //    .ldc "Hello"
-    //    .areturn
+    //    .return
     //    .any
     //.end-method
 
     .method ~func2 ()Ljava/lang/String; static
         .any
         .ldc "Bye"
-        .areturn
+        .return
         .any
     .end-method
 

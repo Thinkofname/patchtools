@@ -3,17 +3,12 @@ package uk.co.thinkofdeath.patchtools.patch;
 import org.objectweb.asm.Opcodes;
 import uk.co.thinkofdeath.patchtools.patch.instructions.InvokeInstruction;
 import uk.co.thinkofdeath.patchtools.patch.instructions.LdcInstruction;
-import uk.co.thinkofdeath.patchtools.patch.instructions.SingleInstruction;
+import uk.co.thinkofdeath.patchtools.patch.instructions.ReturnInstruction;
 
 public enum Instruction {
     ANY(null),
     LDC(new LdcInstruction()),
-    ARETURN(new SingleInstruction(Opcodes.ARETURN)),
-    DRETURN(new SingleInstruction(Opcodes.DRETURN)),
-    FRETURN(new SingleInstruction(Opcodes.FRETURN)),
-    IRETURN(new SingleInstruction(Opcodes.IRETURN)),
-    LRETURN(new SingleInstruction(Opcodes.LRETURN)),
-    RETURN(new SingleInstruction(Opcodes.RETURN)),
+    RETURN(new ReturnInstruction()),
     INVOKE_STATIC(new InvokeInstruction(Opcodes.INVOKESTATIC)),
     INVOKE_SPECIAL(new InvokeInstruction(Opcodes.INVOKESPECIAL)),
     INVOKE_VIRTUAL(new InvokeInstruction(Opcodes.INVOKEVIRTUAL)),

@@ -5,12 +5,12 @@
     .method getName ()Ljava/lang/String;
         .any
         .ldc "Bob"
-        .areturn
+        .return
         .any
     .end-method
 
     +method getMessage ()Ljava/lang/String;
         +ldc "Hello world"
-        +areturn
+        +return
     +end-method
 .end-class

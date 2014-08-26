@@ -3,6 +3,7 @@ package uk.co.thinkofdeath.patchtools.patch.instructions;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.PatchVerifyException;
 import uk.co.thinkofdeath.patchtools.patch.Ident;
@@ -22,7 +23,7 @@ public class InvokeInstruction implements InstructionHandler {
     }
 
     @Override
-    public void check(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction, AbstractInsnNode insn) {
+    public void check(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction, MethodNode method, AbstractInsnNode insn) {
         if (!(insn instanceof MethodInsnNode) || insn.getOpcode() != opcode) {
             throw new PatchVerifyException();
         }
@@ -49,10 +50,10 @@ public class InvokeInstruction implements InstructionHandler {
             }
         }
 
-        Ident method = new Ident(patchInstruction.params[1]);
-        String methodName = method.getName();
+        Ident methodIdent = new Ident(patchInstruction.params[1]);
+        String methodName = methodIdent.getName();
         if (!methodName.equals("*")) {
-            if (method.isWeak()) {
+            if (methodIdent.isWeak()) {
                 ClassWrapper owner = classSet.getClassWrapper(node.owner);
                 MethodWrapper ptMethod = scope.getMethod(owner, methodName, patchInstruction.params[2]);
                 if (ptMethod == null) { // Assume true
@@ -81,7 +82,7 @@ public class InvokeInstruction implements InstructionHandler {
     }
 
     @Override
-    public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction) {
+    public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction, MethodNode method) {
         if (patchInstruction.params.length != 3) {
             throw new PatchVerifyException("Incorrect number of arguments for invoke");
         }

@@ -4,7 +4,7 @@
     .method ~myMethod ()Ljava/lang/String;
         .any
         .ldc "testing"
-        .areturn
+        .return
         .any
     .end-method
 
@@ -15,6 +15,6 @@
 
     +method ~myMethod ()Ljava/lang/String;
         +ldc "abc"
-        +areturn
+        +return
     +end-method
 .end-class
