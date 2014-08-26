@@ -3,10 +3,7 @@ package uk.co.thinkofdeath.patchtools.patch;
 import com.google.common.collect.Maps;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.LineNumberNode;
-import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.*;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.PatchVerifyException;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
@@ -177,7 +174,11 @@ public class PatchMethod {
                 }
                 AbstractInsnNode insn = insns.get(position);
 
-                if (!(insn instanceof LineNumberNode)) {
+                boolean allowLabel = insn instanceof LabelNode
+                        && patchInstruction.instruction == Instruction.LABEL;
+
+                if (!(insn instanceof LineNumberNode)
+                        && (!(insn instanceof LabelNode) || allowLabel)) {
                     try {
                         patchInstruction.instruction.getHandler()
                                 .check(classSet, scope, patchInstruction, methodNode, insn);

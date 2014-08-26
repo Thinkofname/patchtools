@@ -1,6 +1,7 @@
 package uk.co.thinkofdeath.patchtools;
 
 import com.google.common.collect.Maps;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
@@ -15,13 +16,13 @@ public class PatchScope {
     private Map<MethodWrapper, String> methodMappings = Maps.newHashMap();
     private Map<FieldWrapper, String> fieldMappings = Maps.newHashMap();
     private Map<MethodNode, Map<PatchInstruction, Integer>> methodInstructionMap = Maps.newHashMap();
+    private Map<MethodNode, Map<String, Label>> methodLabelMap = Maps.newHashMap();
 
     public PatchScope duplicate() {
         PatchScope patchScope = new PatchScope();
         patchScope.classMappings = Maps.newHashMap(classMappings);
         patchScope.methodMappings = Maps.newHashMap(methodMappings);
         patchScope.fieldMappings = Maps.newHashMap(fieldMappings);
-        patchScope.methodInstructionMap = Maps.newHashMap(methodInstructionMap);
         return patchScope;
     }
 
@@ -32,6 +33,7 @@ public class PatchScope {
                 ", methodMappings=" + methodMappings +
                 ", fieldMappings=" + fieldMappings +
                 ", methodInstructionMap" + methodInstructionMap +
+                ", methodLabelMap" + methodLabelMap +
                 '}';
     }
 
@@ -83,5 +85,19 @@ public class PatchScope {
 
     public void putInstructMap(MethodNode node, Map<PatchInstruction, Integer> instMap) {
         methodInstructionMap.put(node, instMap);
+    }
+
+    public Label getLabel(MethodNode node, String name) {
+        if (methodLabelMap.containsKey(node)) {
+            return methodLabelMap.get(node).get(name);
+        }
+        return null;
+    }
+
+    public void putLabel(MethodNode node, Label label, String name) {
+        if (!methodLabelMap.containsKey(node)) {
+            methodLabelMap.put(node, Maps.newHashMap());
+        }
+        methodLabelMap.get(node).put(name, label);
     }
 }
