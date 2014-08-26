@@ -1,4 +1,4 @@
-package uk.co.thinkofdeath.patchtools.patch.instructions;
+package uk.co.thinkofdeath.patchtools.instruction.instructions;
 
 import com.google.common.base.Joiner;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -6,7 +6,7 @@ import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.PatchVerifyException;
-import uk.co.thinkofdeath.patchtools.patch.InstructionHandler;
+import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 

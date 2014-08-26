@@ -1,5 +1,7 @@
 package uk.co.thinkofdeath.patchtools.patch;
 
+import uk.co.thinkofdeath.patchtools.instruction.Instruction;
+
 import java.util.Arrays;
 
 public class PatchInstruction {

@@ -1,4 +1,4 @@
-package uk.co.thinkofdeath.patchtools.patch.instructions;
+package uk.co.thinkofdeath.patchtools.instruction.instructions;
 
 public class Utils {
     public static Object parseConstant(String cst) {

@@ -1,9 +1,9 @@
-package uk.co.thinkofdeath.patchtools.patch;
+package uk.co.thinkofdeath.patchtools.instruction;
 
 import org.objectweb.asm.Opcodes;
-import uk.co.thinkofdeath.patchtools.patch.instructions.InvokeInstruction;
-import uk.co.thinkofdeath.patchtools.patch.instructions.LdcInstruction;
-import uk.co.thinkofdeath.patchtools.patch.instructions.ReturnInstruction;
+import uk.co.thinkofdeath.patchtools.instruction.instructions.InvokeInstruction;
+import uk.co.thinkofdeath.patchtools.instruction.instructions.LdcInstruction;
+import uk.co.thinkofdeath.patchtools.instruction.instructions.ReturnInstruction;
 
 public enum Instruction {
     ANY(null),

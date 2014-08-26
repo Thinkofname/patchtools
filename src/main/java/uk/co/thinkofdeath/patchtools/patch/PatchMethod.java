@@ -9,6 +9,7 @@ import org.objectweb.asm.tree.LineNumberNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.PatchVerifyException;
+import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 import java.io.BufferedReader;

@@ -2,7 +2,7 @@ package uk.co.thinkofdeath.patchtools.patch;
 
 import com.google.common.base.Joiner;
 import org.objectweb.asm.Type;
-import uk.co.thinkofdeath.patchtools.patch.instructions.Utils;
+import uk.co.thinkofdeath.patchtools.instruction.instructions.Utils;
 
 import java.io.IOException;
 
