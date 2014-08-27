@@ -13,7 +13,8 @@ public class Utils {
         if (value instanceof String) {
             patch.append('"').append(value).append('"');
         } else {
-            throw new UnsupportedOperationException("Unsupported " + value.getClass());
+            //throw new UnsupportedOperationException("Unsupported " + value.getClass());
+            patch.append("unsupported: ").append(value);
         }
     }
 }

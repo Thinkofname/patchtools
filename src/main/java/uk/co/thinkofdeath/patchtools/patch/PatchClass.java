@@ -21,6 +21,7 @@ import java.util.Objects;
 
 // TODO: Better errors
 // TODO: Finish instructions
+// TODO: Split into 4 passes
 public class PatchClass {
 
     private String type;

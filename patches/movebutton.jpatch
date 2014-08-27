@@ -1,0 +1,26 @@
+
+.class ~GuiMainMenu
+
+    .method ~addButtons (II)V private
+        .any
+        .push-int 2
+        .div-int
+        -push-int 100
+        +push-int 200
+        .sub-int
+        .any
+        -push-string "menu.singleplayer"
+        +push-string "Hello world"
+        .push-int 0
+        .any
+    .end-method
+.end-class
+
+.class net/minecraft/client/ClientBrandRetriever
+
+    .method getClientModName ()Ljava/lang/String; static
+        -push-string "vanilla"
+        +push-string "patched-vanilla"
+        .return
+    .end-method
+.end-class

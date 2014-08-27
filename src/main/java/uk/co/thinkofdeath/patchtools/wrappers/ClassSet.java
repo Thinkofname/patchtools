@@ -11,10 +11,7 @@ import org.objectweb.asm.tree.MethodNode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 public class ClassSet implements Iterable<String> {
 
@@ -50,11 +47,9 @@ public class ClassSet implements Iterable<String> {
 
     private void replaceMethod(MethodWrapper methodWrapper, String clazz) {
         if (clazz == null) return;
-        ClassWrapper cl = classes.get(clazz);
+        ClassWrapper cl = getClassWrapper(clazz);
         if (cl == null) {
-            cl = classPath.find(this, clazz);
-            if (cl == null) throw new RuntimeException(clazz);
-            classes.put(cl.getNode().name, cl);
+            throw new RuntimeException(clazz);
         }
         final ClassWrapper finalCl = cl;
         MethodWrapper target = cl.getMethods().stream()
@@ -114,7 +109,52 @@ public class ClassSet implements Iterable<String> {
     }
 
     public byte[] getClass(String name) {
-        ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+        ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES) {
+            @Override
+            protected String getCommonSuperClass(String type1, String type2) {
+                if (type1.equals(type2)) {
+                    return type1;
+                }
+
+                HashSet<String> supers = new HashSet<>();
+                supers.add(type1);
+                supers.add(type2);
+
+                boolean run1 = true;
+                boolean run2 = true;
+                ClassWrapper t1 = getClassWrapper(type1);
+                ClassWrapper t2 = getClassWrapper(type2);
+
+                if ((t1.getNode().access & Opcodes.ACC_INTERFACE) != 0
+                        || (t2.getNode().access & Opcodes.ACC_INTERFACE) != 0) {
+                    return "java/lang/Object";
+                }
+
+                while (run1 || run2) {
+                    if (run1) {
+                        if (t1.getNode().superName == null) {
+                            run1 = false;
+                        } else {
+                            t1 = getClassWrapper(t1.getNode().superName);
+                            if (!supers.add(t1.getNode().name)) {
+                                return t1.getNode().name;
+                            }
+                        }
+                    }
+                    if (run2) {
+                        if (t2.getNode().superName == null) {
+                            run2 = false;
+                        } else {
+                            t2 = getClassWrapper(t2.getNode().superName);
+                            if (!supers.add(t2.getNode().name)) {
+                                return t2.getNode().name;
+                            }
+                        }
+                    }
+                }
+                return "java/lang/Object";
+            }
+        };
         ClassWrapper wrapper = classes.get(name);
         if (wrapper == null || wrapper.isHidden()) {
             return null;
@@ -124,7 +164,13 @@ public class ClassSet implements Iterable<String> {
     }
 
     public ClassWrapper getClassWrapper(String name) {
-        return classes.get(name);
+        ClassWrapper cl = classes.get(name);
+        if (cl == null) {
+            cl = classPath.find(this, name);
+            if (cl == null) return null;
+            classes.put(cl.getNode().name, cl);
+        }
+        return cl;
     }
 
     public String[] classes() {

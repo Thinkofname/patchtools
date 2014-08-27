@@ -48,11 +48,16 @@ public class ClassWrapper {
         return methods;
     }
 
+    // Shouldn't ever been updated so we cache
+    private MethodWrapper[] methodCache;
     public MethodWrapper[] getMethods(boolean stripHidden) {
         if (stripHidden) {
-            return getMethods().stream()
-                    .filter(m -> !m.isHidden())
-                    .toArray(MethodWrapper[]::new);
+            if (methodCache == null) {
+                methodCache = getMethods().stream()
+                        .filter(m -> !m.isHidden())
+                        .toArray(MethodWrapper[]::new);
+            }
+            return methodCache;
         }
         return getMethods().toArray(new MethodWrapper[getMethods().size()]);
     }
@@ -75,11 +80,16 @@ public class ClassWrapper {
         return fields;
     }
 
+    // Shouldn't ever been updated so we cache
+    private FieldWrapper[] fieldCache;
     public FieldWrapper[] getFields(boolean stripHidden) {
         if (stripHidden) {
-            return getFields().stream()
-                    .filter(f -> !f.isHidden())
-                    .toArray(FieldWrapper[]::new);
+            if (fieldCache == null) {
+                fieldCache = getFields().stream()
+                        .filter(f -> !f.isHidden())
+                        .toArray(FieldWrapper[]::new);
+            }
+            return fieldCache;
         }
         return getFields().toArray(new FieldWrapper[getFields().size()]);
     }

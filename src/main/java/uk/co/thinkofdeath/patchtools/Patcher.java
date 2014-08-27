@@ -52,6 +52,7 @@ public class Patcher {
                 return false;
             }
         }, parallel);
+        generator.close();
         patchClasses.getClasses().forEach(c -> c.apply(foundScope, classSet));
     }
 

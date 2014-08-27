@@ -29,13 +29,15 @@ public class PushIntStruction implements InstructionHandler {
                 if (!any && (int) ldcInsnNode.cst != val) {
                     throw new PatchVerifyException();
                 }
+                return;
             }
         } else if (insn instanceof InsnNode) {
             if (insn.getOpcode() >= Opcodes.ICONST_M1 && insn.getOpcode() <= Opcodes.ICONST_5) {
                 int other = insn.getOpcode() - Opcodes.ICONST_M1 - 1;
                 if (!any && other != val) {
-                    throw new PatchVerifyException();
+                    throw new PatchVerifyException(other + " vs " + val);
                 }
+                return;
             }
         } else if (insn instanceof IntInsnNode) {
             if (insn.getOpcode() == Opcodes.BIPUSH || insn.getOpcode() == Opcodes.SIPUSH) {
@@ -43,9 +45,10 @@ public class PushIntStruction implements InstructionHandler {
                 if (!any && other != val) {
                     throw new PatchVerifyException();
                 }
+                return;
             }
         }
-        throw new PatchVerifyException();
+        throw new PatchVerifyException(insn.getClass().getSimpleName() + " " + insn.getOpcode());
     }
 
     @Override

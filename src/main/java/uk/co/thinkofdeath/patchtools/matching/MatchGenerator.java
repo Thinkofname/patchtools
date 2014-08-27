@@ -11,16 +11,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.function.Predicate;
 
 public class MatchGenerator {
 
+
+    private ExecutorService pool = Executors.newFixedThreadPool(8);
     private ExecutorCompletionService<PatchScope> executorCompletionService
-            = new ExecutorCompletionService<>(Executors.newFixedThreadPool(4));
+            = new ExecutorCompletionService<>(pool);
 
     private final ClassSet classSet;
     private final PatchClasses patchClasses;
@@ -62,18 +61,22 @@ public class MatchGenerator {
         ArrayList<Future<PatchScope>> tasks = new ArrayList<>();
         try {
             while (true) {
-                Future<PatchScope> retScope = executorCompletionService.poll();
-                if (retScope != null) {
-                    tasks.remove(retScope);
-                    if (retScope.get() != null) {
-                        return retScope.get();
+                while (true) {
+                    Future<PatchScope> retScope = executorCompletionService.poll();
+                    if (retScope != null) {
+                        tasks.remove(retScope);
+                        if (retScope.get() != null) {
+                            return retScope.get();
+                        }
+                    } else {
+                        break;
                     }
                 }
 
                 PatchScope newScope = scope.duplicate();
                 try {
                     cycleScope(newScope);
-                } catch (IllegalStateException e) {
+                } catch (InvalidMatch e) {
                     if (tick()) {
                         continue;
                     }
@@ -92,6 +95,8 @@ public class MatchGenerator {
                 }
                 break;
             }
+            System.out.println();
+            System.out.println("Tasks set, waiting for " + tasks.size() + " tasks");
             while (!tasks.isEmpty()) {
                 Future<PatchScope> retScope = executorCompletionService.take();
                 if (retScope != null) {
@@ -119,7 +124,7 @@ public class MatchGenerator {
             PatchScope newScope = scope.duplicate();
             try {
                 cycleScope(newScope);
-            } catch (IllegalStateException e) {
+            } catch (InvalidMatch e) {
                 if (tick()) {
                     continue;
                 }
@@ -145,10 +150,10 @@ public class MatchGenerator {
                 PatchClass pc = (PatchClass) v;
                 String[] classes = classSet.classes(true);
                 if (classes.length <= index) {
-                    throw new IllegalStateException();
+                    throw new InvalidMatch();
                 }
                 if (newScope.hasClass(classSet.getClassWrapper(classes[index]))) {
-                    throw new IllegalStateException();
+                    throw new InvalidMatch();
                 }
                 newScope.putClass(classSet.getClassWrapper(classes[index]), pc.getIdent().getName());
             } else if (v instanceof PatchMethod) {
@@ -156,10 +161,10 @@ public class MatchGenerator {
                 ClassWrapper cls = newScope.getClass(pm.getOwner().getIdent().getName());
                 MethodWrapper[] methods = cls.getMethods(true);
                 if (methods.length <= index) {
-                    throw new IllegalStateException();
+                    throw new InvalidMatch();
                 }
                 if (newScope.hasMethod(methods[index])) {
-                    throw new IllegalStateException();
+                    throw new InvalidMatch();
                 }
                 newScope.putMethod(methods[index], pm.getIdent().getName(), pm.getDesc().getDescriptor());
             } else if (v instanceof PatchField) {
@@ -167,10 +172,10 @@ public class MatchGenerator {
                 ClassWrapper cls = newScope.getClass(pf.getOwner().getIdent().getName());
                 FieldWrapper[] fields = cls.getFields(true);
                 if (fields.length <= index) {
-                    throw new IllegalStateException();
+                    throw new InvalidMatch();
                 }
                 if (newScope.hasField(fields[index])) {
-                    throw new IllegalStateException();
+                    throw new InvalidMatch();
                 }
                 newScope.putField(fields[index], pf.getIdent().getName(), pf.getDesc().getDescriptor());
             }
@@ -183,6 +188,9 @@ public class MatchGenerator {
             int index = getState(val);
             index++;
             if (val instanceof PatchClass) {
+                if (i == 0) {
+                    System.out.println(i + " : " + index + "/" + classSet.classes(true).length);
+                }
                 if (index >= classSet.classes(true).length) {
                     index = 0;
                     state.put(val, index);
@@ -235,5 +243,9 @@ public class MatchGenerator {
             state.put(o, 0);
         }
         return state.get(o);
+    }
+
+    public void close() {
+        pool.shutdownNow();
     }
 }
