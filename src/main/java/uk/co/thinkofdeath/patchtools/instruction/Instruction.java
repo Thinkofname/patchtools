@@ -10,6 +10,7 @@ public enum Instruction {
     LABEL(new LabelInstruction()), // Virtual instruction
     NOP(new SingleInstruction(Opcodes.NOP)),
     PUSH_NULL(new SingleInstruction(Opcodes.ACONST_NULL)),
+    PUSH_INT(new PushIntStruction()),
     // iconst_m1 (push-int)
     // iconst_0 (push-int)
     // iconst_1 (push-int)
@@ -101,67 +102,67 @@ public enum Instruction {
     // TODO: dup (dup)
     // TODO: dup_x1 (dup_x)
     // dup_x2 (dup_x)
-    // dup (dup)
+    // dup2 (dup)
     // TODO: dup2_x1 (dup2_x)
     // dup2_x2 (dup2_x)
-    // TODO: swap (swap)
-    // TODO: iadd (add-int)
-    // TODO: ladd (add-long)
-    // TODO: fadd (add-float)
-    // TODO: dadd (add-double)
-    // TODO: isub (sub-int)
-    // TODO: lsub (sub-long)
-    // TODO: fsub (sub-float)
-    // TODO: dsub (sub-double)
-    // TODO: imul (mul-int)
-    // TODO: lmul (mul-long)
-    // TODO: fmul (mul-float)
-    // TODO: dmul (mul-double)
-    // TODO: idiv (div-int)
-    // TODO: ldiv (div-long)
-    // TODO: fdiv (div-float)
-    // TODO: ddiv (div-double)
-    // TODO: irem (rem-int)
-    // TODO: lrem (rem-long)
-    // TODO: frem (rem-float)
-    // TODO: drem (rem-double)
-    // TODO: ineg (neg-int)
-    // TODO: lneg (neg-long)
-    // TODO: fneg (neg-float)
-    // TODO: dneg (neg-double)
-    // TODO: ishl (shift-left-int)
-    // TODO: lshl (shift-left-long)
-    // TODO: ishr (shift-right-int)
-    // TODO: lshr (shift-right-long)
-    // TODO: iushr (ushift-right-int)
-    // TODO: lushr (ushift-right-long)
-    // TODO: iand (and-int)
-    // TODO: land (and-long)
-    // TODO: ior (or-int)
-    // TODO: lor (or-long)
-    // TODO: ixor (xor-int)
-    // TODO: lxor (xor-long)
+    SWAP(new SingleInstruction(Opcodes.SWAP)),
+    ADD_INT(new SingleInstruction(Opcodes.IADD)),
+    ADD_LONG(new SingleInstruction(Opcodes.LADD)),
+    ADD_FLOAT(new SingleInstruction(Opcodes.FADD)),
+    ADD_DOUBLE(new SingleInstruction(Opcodes.DADD)),
+    SUB_INT(new SingleInstruction(Opcodes.ISUB)),
+    SUB_LONG(new SingleInstruction(Opcodes.LSUB)),
+    SUB_FLOAT(new SingleInstruction(Opcodes.FSUB)),
+    SUB_DOUBLE(new SingleInstruction(Opcodes.DSUB)),
+    MUL_INT(new SingleInstruction(Opcodes.IMUL)),
+    MUL_LONG(new SingleInstruction(Opcodes.LMUL)),
+    MUL_FLOAT(new SingleInstruction(Opcodes.FMUL)),
+    MUL_DOUBLE(new SingleInstruction(Opcodes.DMUL)),
+    DIV_INT(new SingleInstruction(Opcodes.IDIV)),
+    DIV_LONG(new SingleInstruction(Opcodes.LDIV)),
+    DIV_FLOAT(new SingleInstruction(Opcodes.FDIV)),
+    DIV_DOUBLE(new SingleInstruction(Opcodes.DDIV)),
+    REM_INT(new SingleInstruction(Opcodes.IREM)),
+    REM_LONG(new SingleInstruction(Opcodes.LREM)),
+    REM_FLOAT(new SingleInstruction(Opcodes.FREM)),
+    REM_DOULBE(new SingleInstruction(Opcodes.DREM)),
+    NEG_INT(new SingleInstruction(Opcodes.INEG)),
+    NEG_LONG(new SingleInstruction(Opcodes.LNEG)),
+    NEG_FLOAT(new SingleInstruction(Opcodes.FNEG)),
+    NEG_DOUBLE(new SingleInstruction(Opcodes.DNEG)),
+    SHIFT_LEFT_INT(new SingleInstruction(Opcodes.ISHL)),
+    SHIFT_LEFT_LONG(new SingleInstruction(Opcodes.LSHL)),
+    SHIFT_RIGHT_INT(new SingleInstruction(Opcodes.ISHR)),
+    SHIFT_RIGHT_LONG(new SingleInstruction(Opcodes.LSHR)),
+    USHIFT_RIGHT_INT(new SingleInstruction(Opcodes.IUSHR)),
+    USHIFT_RIGHT_LONG(new SingleInstruction(Opcodes.LUSHR)),
+    AND_INT(new SingleInstruction(Opcodes.IAND)),
+    AND_LONG(new SingleInstruction(Opcodes.LAND)),
+    OR_INT(new SingleInstruction(Opcodes.IOR)),
+    OR_LONG(new SingleInstruction(Opcodes.LOR)),
+    XOR_INT(new SingleInstruction(Opcodes.IXOR)),
+    XOR_LONG(new SingleInstruction(Opcodes.LXOR)),
     // TODO: iinc (inc)
-    // TODO: i2l (convert-int-long)
-    // TODO: i2f (convert-int-float)
-    // TODO: i2d (convert-int-double)
-    // TODO: l2i (convert-long-int)
-    // TODO: l2f (convert-long-float)
-    // TODO: l2d (convert-long-double)
-    // TODO: f2i (convert-float-int)
-    // TODO: f2l (convert-float-long)
-    // TODO: f2d (convert-float-double)
-    // TODO: d2i (convert-double-int)
-    // TODO: d2l (convert-double-long)
-    // TODO: d2f (convert-double-float)
-    // TODO: i2b (convert-int-byte)
-    // TODO: i2c (convert-int-char)
-    // TODO: i2s (convert-int-short)
-    // TODO: lcomp (compare-long)
-    // TODO: fcmpl (compare-float)
-    // fcmpg (compare-float)
-    // TODO: dcmpl (compare-long)
-    // dcmpg (compare-long)
+    CONVERT_INT_LONG(new SingleInstruction(Opcodes.I2L)),
+    CONVERT_INT_FLOAT(new SingleInstruction(Opcodes.I2F)),
+    CONVERT_INT_DOUBLE(new SingleInstruction(Opcodes.I2D)),
+    CONVERT_LONG_INT(new SingleInstruction(Opcodes.L2I)),
+    CONVERT_LONG_FLOAT(new SingleInstruction(Opcodes.L2F)),
+    CONVERT_LONG_DOUBLE(new SingleInstruction(Opcodes.L2D)),
+    CONVERT_FLOAT_INT(new SingleInstruction(Opcodes.F2I)),
+    CONVERT_FLOAT_LONG(new SingleInstruction(Opcodes.F2L)),
+    CONVERT_FLOAT_DOUBLE(new SingleInstruction(Opcodes.F2D)),
+    CONVERT_DOUBLE_INT(new SingleInstruction(Opcodes.D2I)),
+    CONVERT_DOUBLE_LONG(new SingleInstruction(Opcodes.D2L)),
+    CONVERT_DOUBLE_FLOAT(new SingleInstruction(Opcodes.D2F)),
+    CONVERT_INT_BYTE(new SingleInstruction(Opcodes.I2B)),
+    CONVERT_INT_CHAR(new SingleInstruction(Opcodes.I2C)),
+    CONVERT_INT_SHORT(new SingleInstruction(Opcodes.I2S)),
+    COMPARE_LONG(new SingleInstruction(Opcodes.LCMP)),
+    // TODO: fcmpl (compare-float)?
+    // TODO: fcmpg (compare-float)?
+    // TODO: dcmpl (compare-long)?
+    // TODO: dcmpg (compare-long)?
     // TODO: lfeq (if-zero)
     // TODO: lfne (if-not-zero)
     // TODO: iflt (if-less-zero)
@@ -189,7 +190,7 @@ public enum Instruction {
     // TODO: getstatic (get-static)
     // TODO: putstatic (put-static)
     // TODO: getfield (get-field)
-    // TODO: putfield (put-field)s
+    // TODO: putfield (put-field)
     INVOKE_VIRTUAL(new InvokeInstruction(Opcodes.INVOKEVIRTUAL)),
     INVOKE_SPECIAL(new InvokeInstruction(Opcodes.INVOKESPECIAL)),
     INVOKE_STATIC(new InvokeInstruction(Opcodes.INVOKESTATIC)),

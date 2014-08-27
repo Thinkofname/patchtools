@@ -15,12 +15,12 @@ public class DisassembleTest {
     public void test1() {
         ClassSet classSet = new ClassSet(new ClassPathWrapper());
         classSet.add(
-                getClass("uk/co/thinkofdeath/patchtools/testcode/BasicClass")
+                getClass("uk/co/thinkofdeath/patchtools/testcode/DisassembleClass")
         );
 
         Disassembler disassembler = new Disassembler(classSet);
 
-        String patch = disassembler.disassemble("uk/co/thinkofdeath/patchtools/testcode/BasicClass");
+        String patch = disassembler.disassemble("uk/co/thinkofdeath/patchtools/testcode/DisassembleClass");
         System.out.println("Done:");
         System.out.println(patch);
     }
