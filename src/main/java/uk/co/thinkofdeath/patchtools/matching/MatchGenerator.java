@@ -11,9 +11,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Predicate;
 
 public class MatchGenerator {
+
+    private ExecutorCompletionService<PatchScope> executorCompletionService
+            = new ExecutorCompletionService<>(Executors.newFixedThreadPool(4));
 
     private final ClassSet classSet;
     private final PatchClasses patchClasses;
@@ -45,60 +52,94 @@ public class MatchGenerator {
     }
 
     public PatchScope apply(Predicate<PatchScope> test) {
-        while (true) {
-            PatchScope newScope = scope.duplicate();
-            try {
-                tickList.forEach(v -> {
-                    int index = getState(v);
-                    if (v instanceof PatchClass) {
-                        PatchClass pc = (PatchClass) v;
-                        String[] classes = classSet.classes(true);
-                        if (classes.length <= index) {
-                            throw new IllegalStateException();
-                        }
-                        if (newScope.hasClass(classSet.getClassWrapper(classes[index]))) {
-                            throw new IllegalStateException();
-                        }
-                        newScope.putClass(classSet.getClassWrapper(classes[index]), pc.getIdent().getName());
-                    } else if (v instanceof PatchMethod) {
-                        PatchMethod pm = (PatchMethod) v;
-                        ClassWrapper cls = newScope.getClass(pm.getOwner().getIdent().getName());
-                        MethodWrapper[] methods = cls.getMethods(true);
-                        if (methods.length <= index) {
-                            throw new IllegalStateException();
-                        }
-                        if (newScope.hasMethod(methods[index])) {
-                            throw new IllegalStateException();
-                        }
-                        newScope.putMethod(methods[index], pm.getIdent().getName(), pm.getDesc().getDescriptor());
-                    } else if (v instanceof PatchField) {
-                        PatchField pf = (PatchField) v;
-                        ClassWrapper cls = newScope.getClass(pf.getOwner().getIdent().getName());
-                        FieldWrapper[] fields = cls.getFields(true);
-                        if (fields.length <= index) {
-                            throw new IllegalStateException();
-                        }
-                        if (newScope.hasField(fields[index])) {
-                            throw new IllegalStateException();
-                        }
-                        newScope.putField(fields[index], pf.getIdent().getName(), pf.getDesc().getDescriptor());
+        long start = System.nanoTime();
+        ArrayList<Future<PatchScope>> tasks = new ArrayList<>();
+        try {
+            while (true) {
+                Future<PatchScope> retScope = executorCompletionService.poll();
+                if (retScope != null) {
+                    tasks.remove(retScope);
+                    if (retScope.get() != null) {
+                        return retScope.get();
                     }
-                });
-            } catch (IllegalStateException e) {
+                }
+
+                PatchScope newScope = scope.duplicate();
+                try {
+                    tickList.forEach(v -> {
+                        int index = getState(v);
+                        if (v instanceof PatchClass) {
+                            PatchClass pc = (PatchClass) v;
+                            String[] classes = classSet.classes(true);
+                            if (classes.length <= index) {
+                                throw new IllegalStateException();
+                            }
+                            if (newScope.hasClass(classSet.getClassWrapper(classes[index]))) {
+                                throw new IllegalStateException();
+                            }
+                            newScope.putClass(classSet.getClassWrapper(classes[index]), pc.getIdent().getName());
+                        } else if (v instanceof PatchMethod) {
+                            PatchMethod pm = (PatchMethod) v;
+                            ClassWrapper cls = newScope.getClass(pm.getOwner().getIdent().getName());
+                            MethodWrapper[] methods = cls.getMethods(true);
+                            if (methods.length <= index) {
+                                throw new IllegalStateException();
+                            }
+                            if (newScope.hasMethod(methods[index])) {
+                                throw new IllegalStateException();
+                            }
+                            newScope.putMethod(methods[index], pm.getIdent().getName(), pm.getDesc().getDescriptor());
+                        } else if (v instanceof PatchField) {
+                            PatchField pf = (PatchField) v;
+                            ClassWrapper cls = newScope.getClass(pf.getOwner().getIdent().getName());
+                            FieldWrapper[] fields = cls.getFields(true);
+                            if (fields.length <= index) {
+                                throw new IllegalStateException();
+                            }
+                            if (newScope.hasField(fields[index])) {
+                                throw new IllegalStateException();
+                            }
+                            newScope.putField(fields[index], pf.getIdent().getName(), pf.getDesc().getDescriptor());
+                        }
+                    });
+                } catch (IllegalStateException e) {
+                    if (tick()) {
+                        continue;
+                    }
+                    break;
+                }
+
+                tasks.add(executorCompletionService.submit(() -> {
+                    if (test.test(newScope)) {
+                        return newScope;
+                    }
+                    return null;
+                }));
+
                 if (tick()) {
                     continue;
                 }
-                return null;
+                break;
             }
-
-            if (test.test(newScope)) {
-                return newScope;
-            }
-
-            if (tick()) {
-                continue;
+            while (!tasks.isEmpty()) {
+                Future<PatchScope> retScope = executorCompletionService.take();
+                if (retScope != null) {
+                    tasks.remove(retScope);
+                    if (retScope.get() != null) {
+                        return retScope.get();
+                    }
+                }
             }
             return null;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } finally {
+            for (Future<PatchScope> f : tasks) {
+                f.cancel(true);
+            }
         }
     }
 

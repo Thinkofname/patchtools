@@ -37,7 +37,7 @@ public class Patcher {
         }
         MatchGenerator generator = new MatchGenerator(classSet, patchClasses, patchScope);
         PatchScope foundScope = generator.apply(scope -> {
-            System.out.println("Trying: " + scope);
+            //System.out.println("Trying: " + scope);
             try {
                 patchClasses.getClasses().forEach(c -> c.check(scope, classSet));
                 return true;
