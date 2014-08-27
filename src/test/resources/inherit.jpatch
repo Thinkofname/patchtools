@@ -2,7 +2,7 @@
 .class ~A
 
     .method ~myMethod ()Ljava/lang/String;
-        .ldc "testing"
+        .push-string "testing"
         .return
     .end-method
 
@@ -12,7 +12,7 @@
     .extends ~A
 
     +method ~myMethod ()Ljava/lang/String;
-        +ldc "abc"
+        +push-string "abc"
         +return
     +end-method
 .end-class

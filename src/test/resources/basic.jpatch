@@ -6,21 +6,21 @@
 
     .method ~sayHello ()Ljava/lang/String;
         // - == remove
-        -ldc "Hello bob"
+        -push-string "Hello bob"
         // + == add
-        +ldc "Hello jim"
+        +push-string "Hello jim"
         .return
     .end-method
 
     +method addedMethod ()Ljava/lang/String;
-        +ldc "Hello world"
+        +push-string "Hello world"
         +return
     +end-method
 
     .method ~staticCreate ()L~Basic; static
         .any
-        -ldc "Testing"
-        +ldc "Cake"
+        -push-string "Testing"
+        +push-string "Cake"
         .any
         .return
     .end-method

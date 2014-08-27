@@ -3,12 +3,12 @@
     +interface uk/co/thinkofdeath/patchtools/testcode/InterfaceTestInterface
 
     .method getName ()Ljava/lang/String;
-        .ldc "Bob"
+        .push-string "Bob"
         .return
     .end-method
 
     +method getMessage ()Ljava/lang/String;
-        +ldc "Hello world"
+        +push-string "Hello world"
         +return
     +end-method
 .end-class

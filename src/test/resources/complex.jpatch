@@ -3,10 +3,10 @@
 
     .method ~msg ()Ljava/lang/String; static
         .any
-        -ldc "Hello"
-        +ldc "ABC"
+        -push-string "Hello"
+        +push-string "ABC"
         .invoke-virtual java/lang/StringBuilder append (Ljava/lang/String;)Ljava/lang/StringBuilder;
-        .ldc "Testing"
+        .push-string "Testing"
         .invoke-virtual java/lang/StringBuilder append (Ljava/lang/String;)Ljava/lang/StringBuilder;
         .any
     .end-method

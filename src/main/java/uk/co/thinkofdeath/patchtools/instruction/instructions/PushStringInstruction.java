@@ -11,7 +11,7 @@ import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
-public class LdcInstruction implements InstructionHandler {
+public class PushStringInstruction implements InstructionHandler {
     @Override
     public void check(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction, MethodNode method, AbstractInsnNode insn) {
         if (!(insn instanceof LdcInsnNode)) {
@@ -45,10 +45,10 @@ public class LdcInstruction implements InstructionHandler {
 
     @Override
     public boolean print(Instruction instruction, StringBuilder patch, MethodNode method, AbstractInsnNode insn) {
-        if (!(insn instanceof LdcInsnNode)) {
+        if (!(insn instanceof LdcInsnNode) || !(((LdcInsnNode) insn).cst instanceof String)) {
             return false;
         }
-        patch.append("ldc ");
+        patch.append("push-string ");
         Utils.printConstant(patch, ((LdcInsnNode) insn).cst);
         return true;
     }

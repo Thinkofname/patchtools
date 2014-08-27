@@ -5,13 +5,13 @@
     // in ~test
     //.method ~func1 ()Ljava/lang/String; static
     //    .any
-    //    .ldc "Hello"
+    //    .push-string "Hello"
     //    .return
     //    .any
     //.end-method
 
     .method ~func2 ()Ljava/lang/String; static
-        .ldc "Bye"
+        .push-string "Bye"
         .return
     .end-method
 
@@ -20,7 +20,7 @@
         -invoke-static ~Invoke ~func1 ()Ljava/lang/String;
         +invoke-static ~Invoke ~func2 ()Ljava/lang/String;
         .any
-        .ldc " jim"
+        .push-string " jim"
         .any
     .end-method
 
