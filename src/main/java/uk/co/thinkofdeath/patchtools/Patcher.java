@@ -32,20 +32,26 @@ public class Patcher {
         PatchClasses patchClasses;
         try (BufferedReader ignored = reader) {
             patchClasses = new PatchClasses(reader);
+            apply(patchClasses, patchScope);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    public void apply(PatchClasses patchClasses, PatchScope patchScope) {
+        apply(patchClasses, patchScope, true);
+    }
+
+    public void apply(PatchClasses patchClasses, PatchScope patchScope, boolean parallel) {
         MatchGenerator generator = new MatchGenerator(classSet, patchClasses, patchScope);
         PatchScope foundScope = generator.apply(scope -> {
-            //System.out.println("Trying: " + scope);
             try {
                 patchClasses.getClasses().forEach(c -> c.check(scope, classSet));
                 return true;
             } catch (PatchVerifyException e) {
                 return false;
             }
-        });
-        System.out.println("Found: " + foundScope);
+        }, parallel);
         patchClasses.getClasses().forEach(c -> c.apply(foundScope, classSet));
     }
 
