@@ -2,6 +2,7 @@ package uk.co.thinkofdeath.patchtools.patch;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
@@ -87,7 +88,23 @@ public class PatchClass {
     }
 
     public void apply(PatchScope scope, ClassSet classSet) {
-        if (mode == Mode.ADD) throw new UnsupportedOperationException("NYI");
+        if (mode == Mode.ADD) {
+            ClassNode classNode = new ClassNode(Opcodes.ASM5);
+            classNode.version = Opcodes.V1_7;
+            classNode.access = Opcodes.ACC_PUBLIC;
+            classNode.name = ident.getName();
+            classNode.superName = "java/lang/Object";
+            switch (type) {
+                case "enum":
+                    classNode.access |= Opcodes.ACC_ENUM;
+                    break;
+                case "interface":
+                    classNode.access |= Opcodes.ACC_ENUM;
+                    break;
+            }
+            classSet.add(classNode);
+            scope.putClass(classSet.getClassWrapper(classNode.name), classNode.name);
+        }
         ClassWrapper classWrapper = scope.getClass(ident.getName());
 
         for (Command superCommand : superCommands) {

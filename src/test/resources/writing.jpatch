@@ -1,0 +1,14 @@
+
++class think/TestClass
+
+    +method doMagic ()I static
+        +push-int 5
+        +push-int 6
+        +mul-int
+        +push-int 10
+        +div-int
+        +push-int 2
+        +add-int
+        +return
+    +end-method
++end-class

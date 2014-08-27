@@ -32,8 +32,8 @@ public class PatchScope {
                 "classMappings=" + classMappings +
                 ", methodMappings=" + methodMappings +
                 ", fieldMappings=" + fieldMappings +
-                ", methodInstructionMap" + methodInstructionMap +
-                ", methodLabelMap" + methodLabelMap +
+                ", methodInstructionMap=" + methodInstructionMap +
+                ", methodLabelMap=" + methodLabelMap +
                 '}';
     }
 

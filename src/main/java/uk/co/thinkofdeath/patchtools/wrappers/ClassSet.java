@@ -102,7 +102,11 @@ public class ClassSet implements Iterable<String> {
         ClassReader classReader = new ClassReader(clazz);
         ClassNode node = new ClassNode(Opcodes.ASM5);
         classReader.accept(node, 0);
-        classes.put(classReader.getClassName(), new ClassWrapper(this, node));
+        add(node);
+    }
+
+    public void add(ClassNode node) {
+        classes.put(node.name, new ClassWrapper(this, node));
     }
 
     public void remove(String name) {
