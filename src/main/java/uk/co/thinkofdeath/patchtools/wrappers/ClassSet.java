@@ -5,8 +5,11 @@ import com.google.common.io.Closeables;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.commons.Remapper;
+import org.objectweb.asm.commons.RemappingClassAdapter;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
+import uk.co.thinkofdeath.patchtools.PatchScope;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -109,57 +112,23 @@ public class ClassSet implements Iterable<String> {
     }
 
     public byte[] getClass(String name) {
-        ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES) {
-            @Override
-            protected String getCommonSuperClass(String type1, String type2) {
-                if (type1.equals(type2)) {
-                    return type1;
-                }
-
-                HashSet<String> supers = new HashSet<>();
-                supers.add(type1);
-                supers.add(type2);
-
-                boolean run1 = true;
-                boolean run2 = true;
-                ClassWrapper t1 = getClassWrapper(type1);
-                ClassWrapper t2 = getClassWrapper(type2);
-
-                if ((t1.getNode().access & Opcodes.ACC_INTERFACE) != 0
-                        || (t2.getNode().access & Opcodes.ACC_INTERFACE) != 0) {
-                    return "java/lang/Object";
-                }
-
-                while (run1 || run2) {
-                    if (run1) {
-                        if (t1.getNode().superName == null) {
-                            run1 = false;
-                        } else {
-                            t1 = getClassWrapper(t1.getNode().superName);
-                            if (!supers.add(t1.getNode().name)) {
-                                return t1.getNode().name;
-                            }
-                        }
-                    }
-                    if (run2) {
-                        if (t2.getNode().superName == null) {
-                            run2 = false;
-                        } else {
-                            t2 = getClassWrapper(t2.getNode().superName);
-                            if (!supers.add(t2.getNode().name)) {
-                                return t2.getNode().name;
-                            }
-                        }
-                    }
-                }
-                return "java/lang/Object";
-            }
-        };
+        ClassSetWriter classWriter = new ClassSetWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
         ClassWrapper wrapper = classes.get(name);
         if (wrapper == null || wrapper.isHidden()) {
             return null;
         }
         wrapper.getNode().accept(classWriter);
+        return classWriter.toByteArray();
+    }
+
+    public byte[] getClass(String name, PatchScope scope) {
+        ClassReader classReader = new ClassReader(getClass(name));
+        ClassSetWriter classWriter = new ClassSetWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+        ClassWrapper wrapper = classes.get(name);
+        if (wrapper == null || wrapper.isHidden()) {
+            return null;
+        }
+        classReader.accept(new RemappingClassAdapter(classWriter, new ClassRemapper(scope)), ClassReader.EXPAND_FRAMES);
         return classWriter.toByteArray();
     }
 
@@ -195,5 +164,101 @@ public class ClassSet implements Iterable<String> {
     @Override
     public Iterator<String> iterator() {
         return classes.keySet().iterator();
+    }
+
+    private class ClassSetWriter extends ClassWriter {
+
+        public ClassSetWriter(int flags) {
+            super(flags);
+        }
+
+        @Override
+        protected String getCommonSuperClass(String type1, String type2) {
+            if (type1.equals(type2)) {
+                return type1;
+            }
+
+            HashSet<String> supers = new HashSet<>();
+            supers.add(type1);
+            supers.add(type2);
+
+            boolean run1 = true;
+            boolean run2 = true;
+            ClassWrapper t1 = getClassWrapper(type1);
+            ClassWrapper t2 = getClassWrapper(type2);
+
+            if (t1 == null || t2 == null) {
+                return "java/lang/Object";
+            }
+
+            if ((t1.getNode().access & Opcodes.ACC_INTERFACE) != 0
+                    || (t2.getNode().access & Opcodes.ACC_INTERFACE) != 0) {
+                return "java/lang/Object";
+            }
+
+            while (run1 || run2) {
+                if (run1) {
+                    if (t1.getNode().superName == null) {
+                        run1 = false;
+                    } else {
+                        t1 = getClassWrapper(t1.getNode().superName);
+                        if (!supers.add(t1.getNode().name)) {
+                            return t1.getNode().name;
+                        }
+                    }
+                }
+                if (run2) {
+                    if (t2.getNode().superName == null) {
+                        run2 = false;
+                    } else {
+                        t2 = getClassWrapper(t2.getNode().superName);
+                        if (!supers.add(t2.getNode().name)) {
+                            return t2.getNode().name;
+                        }
+                    }
+                }
+            }
+            return "java/lang/Object";
+        }
+    }
+
+    private class ClassRemapper extends Remapper {
+        private final PatchScope scope;
+
+        public ClassRemapper(PatchScope scope) {
+            this.scope = scope;
+        }
+
+        @Override
+        public String map(String typeName) {
+            ClassWrapper cls = getClassWrapper(typeName);
+            if (cls != null) {
+                String name = scope.getClass(cls);
+                return name == null ? typeName : name;
+            }
+            return typeName;
+        }
+
+        @Override
+        public String mapMethodName(String owner, String name, String desc) {
+            ClassWrapper cls = getClassWrapper(owner);
+            if (cls != null) {
+                MethodWrapper methodWrapper = cls.getMethod(name, desc);
+                String nName = scope.getMethod(methodWrapper);
+                return nName == null ? name : nName.split("\\(")[0];
+            }
+            return name;
+        }
+
+        @Override
+        public String mapFieldName(String owner, String name, String desc) {
+            ClassWrapper cls = getClassWrapper(owner);
+            if (cls != null) {
+                FieldWrapper fieldWrapper = cls.getField(name, desc);
+                String nName = scope.getField(fieldWrapper);
+                return nName == null ? name : nName.split("::")[0];
+            }
+            return name;
+        }
     }
 }

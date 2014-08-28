@@ -94,6 +94,13 @@ public class ClassWrapper {
         return getFields().toArray(new FieldWrapper[getFields().size()]);
     }
 
+    public FieldWrapper getField(String name, String desc) {
+        return fields.stream()
+                .filter(f -> f.getName().equals(name)
+                        && f.getDesc().equals(desc))
+                .findFirst().orElse(null);
+    }
+
     public FieldNode getFieldNode(FieldWrapper fieldWrapper) {
         return node.fields.stream()
                 .filter(f -> f.name.equals(fieldWrapper.getName())

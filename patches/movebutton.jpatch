@@ -1,4 +1,4 @@
-.class ~GuiMainMenu
+.class ~minecraft/GuiMainMenu
 
     .method ~addButtons (II)V private
         .any

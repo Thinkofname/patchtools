@@ -1,6 +1,7 @@
 package uk.co.thinkofdeath.patchtools.main;
 
 import com.google.common.io.ByteStreams;
+import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.Patcher;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassPathWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
@@ -15,13 +16,14 @@ import java.util.zip.ZipOutputStream;
 public class Patch {
 
     public static void main(String[] args) throws Exception {
-        if (args.length != 3) {
-            System.out.println("Usage: java <j-args> <jar> <out-jar> <patch");
+        if (args.length < 3) {
+            System.out.println("Usage: java <j-args> <jar> <out-jar> <patch> [map]");
             return;
         }
         File inJar = new File(args[0]);
         File outJar = new File(args[1]);
         File inPatch = new File(args[2]);
+        boolean map = args.length >= 4 && args[3].equals("true");
 
         if (!outJar.getParentFile().exists() && !outJar.getParentFile().mkdirs()) {
             throw new RuntimeException("Failed to setup output dir");
@@ -61,15 +63,23 @@ public class Patch {
 
         long start = System.nanoTime();
         Patcher patcher = new Patcher(classSet);
-        patcher.apply(new FileInputStream(inPatch));
+        PatchScope scope = patcher.apply(new FileInputStream(inPatch));
         System.out.println("Time: " + (System.nanoTime() - start));
 
         try (ZipOutputStream zop = new ZipOutputStream(new FileOutputStream(outJar))) {
             for (String cls : classSet.classes(true)) {
                 System.out.println("Saving " + cls);
-                ZipEntry zipEntry = new ZipEntry(cls + ".class");
-                zop.putNextEntry(zipEntry);
-                zop.write(classSet.getClass(cls));
+                if (!map) {
+                    ZipEntry zipEntry = new ZipEntry(cls + ".class");
+                    zop.putNextEntry(zipEntry);
+                    zop.write(classSet.getClass(cls));
+                } else {
+                    String mcls = scope.getClass(classSet.getClassWrapper(cls));
+                    if (mcls == null) mcls = cls;
+                    ZipEntry zipEntry = new ZipEntry(mcls + ".class");
+                    zop.putNextEntry(zipEntry);
+                    zop.write(classSet.getClass(cls, scope));
+                }
             }
             for (Map.Entry<String, byte[]> e : resources.entrySet()) {
                 ZipEntry zipEntry = new ZipEntry(e.getKey());

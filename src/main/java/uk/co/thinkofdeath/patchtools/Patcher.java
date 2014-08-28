@@ -16,33 +16,33 @@ public class Patcher {
         classSet.simplify();
     }
 
-    public void apply(InputStream inputStream) {
-        apply(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+    public PatchScope apply(InputStream inputStream) {
+        return apply(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
     }
 
-    public void apply(Reader reader) {
-        apply(new BufferedReader(reader));
+    public PatchScope apply(Reader reader) {
+        return apply(new BufferedReader(reader));
     }
 
-    public void apply(BufferedReader reader) {
-        apply(reader, new PatchScope());
+    public PatchScope apply(BufferedReader reader) {
+        return apply(reader, new PatchScope());
     }
 
-    public void apply(BufferedReader reader, PatchScope patchScope) {
+    public PatchScope apply(BufferedReader reader, PatchScope patchScope) {
         PatchClasses patchClasses;
         try (BufferedReader ignored = reader) {
             patchClasses = new PatchClasses(reader);
-            apply(patchClasses, patchScope);
+            return apply(patchClasses, patchScope);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
-    public void apply(PatchClasses patchClasses, PatchScope patchScope) {
-        apply(patchClasses, patchScope, true);
+    public PatchScope apply(PatchClasses patchClasses, PatchScope patchScope) {
+        return apply(patchClasses, patchScope, true);
     }
 
-    public void apply(PatchClasses patchClasses, PatchScope patchScope, boolean parallel) {
+    public PatchScope apply(PatchClasses patchClasses, PatchScope patchScope, boolean parallel) {
         MatchGenerator generator = new MatchGenerator(classSet, patchClasses, patchScope);
         PatchScope foundScope = generator.apply(scope -> {
             try {
@@ -57,6 +57,7 @@ public class Patcher {
         }, parallel);
         generator.close();
         patchClasses.getClasses().forEach(c -> c.apply(foundScope, classSet));
+        return foundScope;
     }
 
     public ClassSet getClasses() {

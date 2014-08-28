@@ -64,6 +64,13 @@ public class PatchScope {
         return cls;
     }
 
+    public String getClass(ClassWrapper cls) {
+        return classMappings.entrySet().stream()
+                .filter(e -> e.getValue() == cls)
+                .map(Map.Entry::getKey)
+                .findFirst().orElse(null);
+    }
+
     public boolean hasMethod(MethodWrapper methodWrapper) {
         return methodMappings.containsKey(methodWrapper)
                 || (parent != null && parent.hasMethod(methodWrapper));
@@ -71,6 +78,10 @@ public class PatchScope {
 
     public boolean putMethod(MethodWrapper methodWrapper, String name, String desc) {
         return methodMappings.put(methodWrapper, name + desc) != null;
+    }
+
+    public String getMethod(MethodWrapper methodWrapper) {
+        return methodMappings.get(methodWrapper);
     }
 
     public MethodWrapper getMethod(ClassWrapper owner, String name, String desc) {
@@ -103,6 +114,10 @@ public class PatchScope {
 
     public boolean putField(FieldWrapper fieldWrapper, String name, String descriptor) {
         return fieldMappings.put(fieldWrapper, name + "::" + descriptor) != null;
+    }
+
+    public String getField(FieldWrapper fieldWrapper) {
+        return fieldMappings.get(fieldWrapper);
     }
 
     public FieldWrapper getField(ClassWrapper owner, String name, String desc) {
