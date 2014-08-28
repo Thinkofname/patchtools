@@ -5,7 +5,6 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
-import uk.co.thinkofdeath.patchtools.PatchVerifyException;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
@@ -13,28 +12,29 @@ import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 public class PushStringInstruction implements InstructionHandler {
     @Override
-    public void check(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction, MethodNode method, AbstractInsnNode insn) {
+    public boolean check(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction, MethodNode method, AbstractInsnNode insn) {
         if (!(insn instanceof LdcInsnNode)) {
-            throw new PatchVerifyException();
+            return false;
         }
         LdcInsnNode ldcInsnNode = (LdcInsnNode) insn;
         String cst = Joiner.on(' ').join(patchInstruction.params);
 
         if (cst.equals("*")) {
-            return;
+            return true;
         }
 
         if (ldcInsnNode.cst instanceof String) {
             if (!cst.startsWith("\"") || !cst.endsWith("\"")) {
-                throw new PatchVerifyException();
+                return false;
             }
             cst = cst.substring(1, cst.length() - 1);
             if (!ldcInsnNode.cst.equals(cst)) {
-                throw new PatchVerifyException(ldcInsnNode.cst + " != " + cst);
+                return false;
             }
         } else {
-            throw new UnsupportedOperationException();
+            return false;
         }
+        return true;
     }
 
     @Override

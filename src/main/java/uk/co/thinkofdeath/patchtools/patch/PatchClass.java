@@ -391,7 +391,9 @@ public class PatchClass {
             Type patchDesc = f.getDesc();
             Type desc = Type.getType(fieldWrapper.getDesc());
 
-            checkTypes(classSet, scope, patchDesc, desc);
+            if (!checkTypes(classSet, scope, patchDesc, desc)) {
+                throw new PatchVerifyException();
+            }
 
             FieldNode fieldNode = classWrapper.getFieldNode(fieldWrapper);
 
@@ -432,10 +434,14 @@ public class PatchClass {
                 Type pt = patchDesc.getArgumentTypes()[i];
                 Type t = desc.getArgumentTypes()[i];
 
-                checkTypes(classSet, scope, pt, t);
+                if (!checkTypes(classSet, scope, pt, t)) {
+                    throw new PatchVerifyException();
+                }
             }
 
-            checkTypes(classSet, scope, patchDesc.getReturnType(), desc.getReturnType());
+            if (!checkTypes(classSet, scope, patchDesc.getReturnType(), desc.getReturnType())) {
+                throw new PatchVerifyException();
+            }
 
             m.checkInstructions(classSet, scope, classWrapper.getMethodNode(methodWrapper));
         });
@@ -454,9 +460,9 @@ public class PatchClass {
         });
     }
 
-    public static void checkTypes(ClassSet classSet, PatchScope scope, Type pt, Type t) {
+    public static boolean checkTypes(ClassSet classSet, PatchScope scope, Type pt, Type t) {
         if (pt.getSort() != t.getSort()) {
-            throw new PatchVerifyException();
+            return false;
         }
 
         if (pt.getSort() == Type.OBJECT) {
@@ -467,19 +473,20 @@ public class PatchClass {
                 if (ptcls == null) { // Assume true
                     cls = t.getInternalName();
                     scope.putClass(classSet.getClassWrapper(cls), cls);
-                    return;
+                    return true;
                 }
                 cls = ptcls.getNode().name;
             }
             if (!cls.equals(t.getInternalName())) {
-                throw new PatchVerifyException("'" + cls + "' : '" + t.getInternalName() + "'");
+                return false;
             }
         } else if (pt.getSort() == Type.ARRAY) {
-            checkTypes(classSet, scope, pt.getElementType(), t.getElementType());
+            return checkTypes(classSet, scope, pt.getElementType(), t.getElementType());
         } else {
             if (!pt.equals(t)) {
-                throw new PatchVerifyException();
+                return false;
             }
         }
+        return true;
     }
 }

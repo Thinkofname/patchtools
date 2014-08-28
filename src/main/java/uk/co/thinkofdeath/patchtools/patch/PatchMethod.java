@@ -179,9 +179,8 @@ public class PatchMethod {
 
                 if (!(insn instanceof LineNumberNode)
                         && (!(insn instanceof LabelNode) || allowLabel)) {
-                    try {
-                        patchInstruction.instruction.getHandler()
-                                .check(classSet, scope, patchInstruction, methodNode, insn);
+                    if (patchInstruction.instruction.getHandler()
+                            .check(classSet, scope, patchInstruction, methodNode, insn)) {
                         if (wildcard) {
                             wildcardPosition = position;
                             wildcardPatchPosition = i;
@@ -190,7 +189,7 @@ public class PatchMethod {
                         wildcard = false;
                         position++;
                         continue check;
-                    } catch (PatchVerifyException e) {
+                    } else {
                         if (!wildcard) {
                             if (wildcardPosition != -1) {
                                 wildcard = true;
@@ -198,7 +197,7 @@ public class PatchMethod {
                                 i = --wildcardPatchPosition;
                                 continue check;
                             } else {
-                                throw e;
+                                throw new PatchVerifyException();
                             }
                         }
                     }

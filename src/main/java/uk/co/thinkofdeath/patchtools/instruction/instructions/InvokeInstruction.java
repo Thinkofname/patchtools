@@ -6,7 +6,6 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
-import uk.co.thinkofdeath.patchtools.PatchVerifyException;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
 import uk.co.thinkofdeath.patchtools.patch.Ident;
@@ -25,14 +24,14 @@ public class InvokeInstruction implements InstructionHandler {
     }
 
     @Override
-    public void check(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction, MethodNode method, AbstractInsnNode insn) {
+    public boolean check(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction, MethodNode method, AbstractInsnNode insn) {
         if (!(insn instanceof MethodInsnNode) || insn.getOpcode() != opcode) {
-            throw new PatchVerifyException();
+            return false;
         }
         MethodInsnNode node = (MethodInsnNode) insn;
 
         if (patchInstruction.params.length != 3) {
-            throw new PatchVerifyException("Incorrect number of arguments for invoke");
+            return false;
         }
 
         Ident cls = new Ident(patchInstruction.params[0]);
@@ -48,7 +47,7 @@ public class InvokeInstruction implements InstructionHandler {
                 }
             }
             if (!clsName.equals(node.owner)) {
-                throw new PatchVerifyException();
+                return false;
             }
         }
 
@@ -67,7 +66,7 @@ public class InvokeInstruction implements InstructionHandler {
                 }
             }
             if (!methodName.equals(node.name)) {
-                throw new PatchVerifyException();
+                return false;
             }
         }
 
@@ -78,15 +77,17 @@ public class InvokeInstruction implements InstructionHandler {
             Type pt = patchDesc.getArgumentTypes()[i];
             Type t = desc.getArgumentTypes()[i];
 
-            PatchClass.checkTypes(classSet, scope, pt, t);
+            if (!PatchClass.checkTypes(classSet, scope, pt, t)) {
+                return false;
+            }
         }
-        PatchClass.checkTypes(classSet, scope, patchDesc.getReturnType(), desc.getReturnType());
+        return PatchClass.checkTypes(classSet, scope, patchDesc.getReturnType(), desc.getReturnType());
     }
 
     @Override
     public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction, MethodNode method) {
         if (patchInstruction.params.length != 3) {
-            throw new PatchVerifyException("Incorrect number of arguments for invoke");
+            throw new RuntimeException("Incorrect number of arguments for invoke");
         }
 
         Ident ownerId = new Ident(patchInstruction.params[0]);

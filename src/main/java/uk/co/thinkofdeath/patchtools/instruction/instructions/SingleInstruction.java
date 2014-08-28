@@ -4,7 +4,6 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
-import uk.co.thinkofdeath.patchtools.PatchVerifyException;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
@@ -19,13 +18,8 @@ public class SingleInstruction implements InstructionHandler {
     }
 
     @Override
-    public void check(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method, AbstractInsnNode insn) {
-        if (!(insn instanceof InsnNode)) {
-            throw new PatchVerifyException();
-        }
-        if (insn.getOpcode() != opcode) {
-            throw new PatchVerifyException();
-        }
+    public boolean check(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method, AbstractInsnNode insn) {
+        return insn instanceof InsnNode && insn.getOpcode() == opcode;
     }
 
     @Override
