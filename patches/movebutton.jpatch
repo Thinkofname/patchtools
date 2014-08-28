@@ -17,17 +17,6 @@
     .end-method
 .end-class
 
-.class ~minecraft/GuiMenu
-
-    .extends ~minecraft/GuiScreen
-
-.end-class
-
-.class ~minecraft/GuiScreen
-
-.end-class
-
-
 .class net/minecraft/client/ClientBrandRetriever
 
     .method getClientModName ()Ljava/lang/String; static

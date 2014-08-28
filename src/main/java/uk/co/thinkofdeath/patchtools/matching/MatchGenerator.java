@@ -173,7 +173,15 @@ public class MatchGenerator {
         long id = 0;
         long max = computeMax();
         System.out.println("Max: " + max);
+        long thisTick = 0;
+        long last = System.nanoTime();
+        long speed = 1;
         while (true) {
+            if (System.nanoTime() >= last + TimeUnit.SECONDS.toNanos(1)) {
+                speed = thisTick == 0 ? 1 : thisTick;
+                thisTick = 0;
+                last = System.nanoTime();
+            }
             PatchScope newScope = new PatchScope(scope);
 
             if (cycleScope(id, newScope)) {
@@ -182,6 +190,24 @@ public class MatchGenerator {
                 }
             }
 
+            if (id % 1000 == 0) {
+                String est;
+                long estTime = (max - id) / speed;
+                if (TimeUnit.SECONDS.toDays(estTime) != 0) {
+                    est = TimeUnit.SECONDS.toDays(estTime) + " days";
+                } else if (TimeUnit.SECONDS.toHours(estTime) != 0) {
+                    est = TimeUnit.SECONDS.toHours(estTime) + " hours";
+                } else if (TimeUnit.SECONDS.toMinutes(estTime) != 0) {
+                    est = TimeUnit.SECONDS.toMinutes(estTime) + " minutes";
+                } else {
+                    est = TimeUnit.SECONDS.toSeconds(estTime) + " seconds";
+                }
+                System.out.printf("Current:  Completed: %d/%d   Est: %s\r",
+                        id, max,
+                        est);
+            }
+
+            thisTick++;
             id++;
             if (id >= max) {
                 break;

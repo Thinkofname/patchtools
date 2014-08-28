@@ -21,7 +21,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 import uk.co.thinkofdeath.patchtools.PatchScope;
-import uk.co.thinkofdeath.patchtools.PatchVerifyException;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
@@ -149,15 +148,15 @@ public class PatchMethod {
         }
     }
 
-    public void checkInstructions(ClassSet classSet, PatchScope scope, MethodNode methodNode) {
+    public boolean checkInstructions(ClassSet classSet, PatchScope scope, MethodNode methodNode) {
         int position = 0;
         InsnList insns = methodNode.instructions;
 
         if (((methodNode.access & Opcodes.ACC_STATIC) == 0) == isStatic) {
-            throw new PatchVerifyException("Expected " + (isStatic ? "static" : "non-static"));
+            return false;
         }
         if (((methodNode.access & Opcodes.ACC_PRIVATE) == 0) == isPrivate) {
-            throw new PatchVerifyException("Expected " + (isStatic ? "private" : "non-private"));
+            return false;
         }
 
         boolean wildcard = false;
@@ -184,7 +183,7 @@ public class PatchMethod {
 
                 if (position >= insns.size()) {
                     if (!wildcard) {
-                        throw new PatchVerifyException();
+                        return false;
                     }
                     break;
                 }
@@ -213,14 +212,14 @@ public class PatchMethod {
                                 i = --wildcardPatchPosition;
                                 continue check;
                             } else {
-                                throw new PatchVerifyException();
+                                return false;
                             }
                         }
                     }
                 }
                 position++;
             }
-            throw new PatchVerifyException();
+            return false;
         }
 
         for (; position < insns.size(); position++) {
@@ -229,10 +228,11 @@ public class PatchMethod {
                     || insn instanceof LabelNode) {
                 continue;
             }
-            throw new PatchVerifyException(position + " : " + insns.size());
+            return false;
         }
 
         scope.putInstructMap(methodNode, insnMap);
+        return true;
     }
 
 }

@@ -60,17 +60,10 @@ public class Patcher {
 
     public PatchScope apply(PatchClasses patchClasses, PatchScope patchScope, boolean parallel) {
         MatchGenerator generator = new MatchGenerator(classSet, patchClasses, patchScope);
-        PatchScope foundScope = generator.apply(scope -> {
-            try {
-                patchClasses.getClasses().forEach(c -> c.checkAttributes(scope, classSet));
-                patchClasses.getClasses().forEach(c -> c.checkFields(scope, classSet));
-                patchClasses.getClasses().forEach(c -> c.checkMethods(scope, classSet));
-                patchClasses.getClasses().forEach(c -> c.checkMethodsInstructions(scope, classSet));
-                return true;
-            } catch (PatchVerifyException e) {
-                return false;
-            }
-        }, parallel);
+        PatchScope foundScope = generator.apply(scope -> patchClasses.getClasses().stream().allMatch(c -> c.checkAttributes(scope, classSet))
+                && patchClasses.getClasses().stream().allMatch(c -> c.checkFields(scope, classSet))
+                && patchClasses.getClasses().stream().allMatch(c -> c.checkMethods(scope, classSet))
+                && patchClasses.getClasses().stream().allMatch(c -> c.checkMethodsInstructions(scope, classSet)), parallel);
         generator.close();
         patchClasses.getClasses().forEach(c -> c.apply(foundScope, classSet));
         return foundScope;
