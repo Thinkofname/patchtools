@@ -27,29 +27,12 @@ import uk.co.thinkofdeath.patchtools.wrappers.MethodWrapper;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public class MatchGenerator {
 
-
-    private ExecutorService pool = new ThreadPoolExecutor(5, 5,
-            0L, TimeUnit.MILLISECONDS,
-            new ArrayBlockingQueue<Runnable>(128) {
-                @Override
-                public boolean offer(Runnable o) {
-                    try {
-                        put(o);
-                        return true;
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        return false;
-                    }
-                }
-            });
+    private static final int NUM_WORKERS = 8;
 
     private final ClassSet classSet;
     private final PatchClasses patchClasses;
@@ -91,31 +74,27 @@ public class MatchGenerator {
 
     private PatchScope applyParallel(Predicate<PatchScope> test) {
         result = null;
-        long id = 0;
         long max = computeMax();
         System.out.println("Max: " + max);
-        long thisTick = 0;
-        long last = System.nanoTime();
-        long speed = 1;
-        while (true) {
-            if (System.nanoTime() >= last + TimeUnit.SECONDS.toNanos(1)) {
-                speed = thisTick == 0 ? 1 : thisTick;
-                thisTick = 0;
-                last = System.nanoTime();
-            }
+        ThreadGroup group = new ThreadGroup("Patch testers");
+        for (int wId = 0; wId < NUM_WORKERS; wId++) {
+            long start = (max / NUM_WORKERS) * wId;
+            long end = wId == NUM_WORKERS - 1 ? max : (max / NUM_WORKERS) * (wId + 1);
+            new Thread(group, () -> {
+                for (long id = start; id < end; id++, completedTests++) {
+                    /*if (System.nanoTime() >= last + TimeUnit.SECONDS.toNanos(1)) {
+                        speed = thisTick == 0 ? 1 : thisTick;
+                        thisTick = 0;
+                        last = System.nanoTime();
+                    }*/
 
-            if (result != null) {
-                System.out.println();
-                return result;
-            }
+                    if (result != null) {
+                        return;
+                    }
 
-            PatchScope newScope = new PatchScope(scope);
+                    PatchScope newScope = new PatchScope(scope);
 
-            final long capturedId = id;
-            pool.execute(() -> {
-                try {
-                    if (result != null) return;
-                    if (!cycleScope(capturedId, newScope)) return;
+                    if (!cycleScope(id, newScope)) continue;
                     if (test.test(newScope)) {
                         synchronized (resultLock) {
                             if (result == null) {
@@ -124,35 +103,15 @@ public class MatchGenerator {
                             }
                         }
                     }
-                } finally {
-                    completedTests++;
-                }
-            });
 
-            if (id % 1000 == 0) {
-                String est;
-                long estTime = (max - id) / speed;
-                if (TimeUnit.SECONDS.toDays(estTime) != 0) {
-                    est = TimeUnit.SECONDS.toDays(estTime) + " days";
-                } else if (TimeUnit.SECONDS.toHours(estTime) != 0) {
-                    est = TimeUnit.SECONDS.toHours(estTime) + " hours";
-                } else if (TimeUnit.SECONDS.toMinutes(estTime) != 0) {
-                    est = TimeUnit.SECONDS.toMinutes(estTime) + " minutes";
-                } else {
-                    est = TimeUnit.SECONDS.toSeconds(estTime) + " seconds";
+                    if (id % 100000 == 0) {
+                        System.out.printf("Current: Completed: %d/%d\r", completedTests, max);
+                    }
                 }
-                System.out.printf("Current: Setup:%d  Completed: %d/%d   Est: %s\r",
-                        id, completedTests, max,
-                        est);
-            }
-
-            id++;
-            thisTick++;
-            if (id >= max) {
-                break;
-            }
+            }).start();
         }
-        System.out.println();
+
+
         System.out.println("Waiting");
         synchronized (resultLock) {
             if (result != null) {
@@ -190,7 +149,7 @@ public class MatchGenerator {
                 }
             }
 
-            if (id % 1000 == 0) {
+            if (id % 100000 == 0) {
                 String est;
                 long estTime = (max - id) / speed;
                 if (TimeUnit.SECONDS.toDays(estTime) != 0) {
@@ -270,6 +229,6 @@ public class MatchGenerator {
     }
 
     public void close() {
-        pool.shutdownNow();
+        //pool.shutdownNow();
     }
 }
