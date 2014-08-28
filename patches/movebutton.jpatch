@@ -1,4 +1,3 @@
-
 .class ~GuiMainMenu
 
     .method ~addButtons (II)V private
@@ -15,6 +14,7 @@
         .any
     .end-method
 .end-class
+
 
 .class net/minecraft/client/ClientBrandRetriever
 

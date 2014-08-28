@@ -304,7 +304,7 @@ public class PatchClass {
         }
     }
 
-    public void check(PatchScope scope, ClassSet classSet) {
+    public void checkAttributes(PatchScope scope, ClassSet classSet) {
         if (mode == Mode.ADD) return;
         ClassWrapper classWrapper = scope.getClass(ident.getName());
         if (!ident.isWeak() && !classWrapper.getNode().name.equals(ident.getName())) {
@@ -371,7 +371,11 @@ public class PatchClass {
                 throw new PatchVerifyException();
             }
         }
+    }
 
+    public void checkFields(PatchScope scope, ClassSet classSet) {
+        ClassWrapper classWrapper = scope.getClass(ident.getName());
+        if (mode == Mode.ADD) return;
         fields.forEach(f -> {
             if (f.getMode() == Mode.ADD) return;
 
@@ -402,7 +406,10 @@ public class PatchClass {
                 throw new PatchVerifyException();
             }
         });
+    }
 
+    public void checkMethods(PatchScope scope, ClassSet classSet) {
+        ClassWrapper classWrapper = scope.getClass(ident.getName());
         methods.forEach(m -> {
             if (m.getMode() == Mode.ADD) return;
 
@@ -429,6 +436,19 @@ public class PatchClass {
             }
 
             checkTypes(classSet, scope, patchDesc.getReturnType(), desc.getReturnType());
+
+            m.checkInstructions(classSet, scope, classWrapper.getMethodNode(methodWrapper));
+        });
+    }
+
+    public void checkMethodsInstructions(PatchScope scope, ClassSet classSet) {
+        ClassWrapper classWrapper = scope.getClass(ident.getName());
+        methods.forEach(m -> {
+            if (m.getMode() == Mode.ADD) return;
+
+            MethodWrapper methodWrapper = scope.getMethod(classWrapper,
+                    m.getIdent().getName(),
+                    m.getDesc().getDescriptor());
 
             m.checkInstructions(classSet, scope, classWrapper.getMethodNode(methodWrapper));
         });

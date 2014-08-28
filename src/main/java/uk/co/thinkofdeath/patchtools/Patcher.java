@@ -46,7 +46,10 @@ public class Patcher {
         MatchGenerator generator = new MatchGenerator(classSet, patchClasses, patchScope);
         PatchScope foundScope = generator.apply(scope -> {
             try {
-                patchClasses.getClasses().forEach(c -> c.check(scope, classSet));
+                patchClasses.getClasses().forEach(c -> c.checkAttributes(scope, classSet));
+                patchClasses.getClasses().forEach(c -> c.checkFields(scope, classSet));
+                patchClasses.getClasses().forEach(c -> c.checkMethods(scope, classSet));
+                patchClasses.getClasses().forEach(c -> c.checkMethodsInstructions(scope, classSet));
                 return true;
             } catch (PatchVerifyException e) {
                 return false;

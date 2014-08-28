@@ -1,5 +1,6 @@
 package uk.co.thinkofdeath.patchtools.matching;
 
+import com.google.common.collect.Maps;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.patch.*;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
@@ -11,15 +12,29 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public class MatchGenerator {
 
 
-    private ExecutorService pool = Executors.newFixedThreadPool(8);
-    private ExecutorCompletionService<PatchScope> executorCompletionService
-            = new ExecutorCompletionService<>(pool);
+    private ExecutorService pool = new ThreadPoolExecutor(8, 8,
+            0L, TimeUnit.MILLISECONDS,
+            new ArrayBlockingQueue<Runnable>(128) {
+                @Override
+                public boolean offer(Runnable o) {
+                    try {
+                        put(o);
+                        return true;
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return false;
+                    }
+                }
+            });
 
     private final ClassSet classSet;
     private final PatchClasses patchClasses;
@@ -57,65 +72,56 @@ public class MatchGenerator {
         return applySingle(test);
     }
 
+    private PatchScope result;
+    private final Object resultLock = new Object();
+
     private PatchScope applyParallel(Predicate<PatchScope> test) {
-        ArrayList<Future<PatchScope>> tasks = new ArrayList<>();
-        try {
-            while (true) {
-                while (true) {
-                    Future<PatchScope> retScope = executorCompletionService.poll();
-                    if (retScope != null) {
-                        tasks.remove(retScope);
-                        if (retScope.get() != null) {
-                            return retScope.get();
-                        }
-                    } else {
-                        break;
-                    }
-                }
+        result = null;
+        while (true) {
+            if (result != null) {
+                System.out.println();
+                return result;
+            }
 
-                PatchScope newScope = scope.duplicate();
+            PatchScope newScope = scope.duplicate();
+            HashMap<Object, Integer> capturedState = Maps.newHashMap(state);
+
+            pool.execute(() -> {
+                if (result != null) return;
                 try {
-                    cycleScope(newScope);
+                    cycleScope(capturedState, newScope);
                 } catch (InvalidMatch e) {
-                    if (tick()) {
-                        continue;
-                    }
-                    break;
+                    return;
                 }
+                if (test.test(newScope)) {
+                    synchronized (resultLock) {
+                        if (result == null) {
+                            result = newScope;
+                            resultLock.notifyAll();
+                        }
+                    }
+                }
+            });
 
-                tasks.add(executorCompletionService.submit(() -> {
-                    if (test.test(newScope)) {
-                        return newScope;
-                    }
-                    return null;
-                }));
-
-                if (tick()) {
-                    continue;
-                }
-                break;
+            if (tick()) {
+                continue;
             }
-            System.out.println();
-            System.out.println("Tasks set, waiting for " + tasks.size() + " tasks");
-            while (!tasks.isEmpty()) {
-                Future<PatchScope> retScope = executorCompletionService.take();
-                if (retScope != null) {
-                    tasks.remove(retScope);
-                    if (retScope.get() != null) {
-                        return retScope.get();
-                    }
-                }
+            break;
+        }
+        System.out.println();
+        System.out.println("Waiting");
+        synchronized (resultLock) {
+            if (result != null) {
+                return result;
             }
-            return null;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return null;
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        } finally {
-            for (Future<PatchScope> f : tasks) {
-                f.cancel(true);
+            try {
+                resultLock.wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return null;
             }
+            System.out.println("Result: " + result);
+            return result;
         }
     }
 
@@ -123,7 +129,7 @@ public class MatchGenerator {
         while (true) {
             PatchScope newScope = scope.duplicate();
             try {
-                cycleScope(newScope);
+                cycleScope(state, newScope);
             } catch (InvalidMatch e) {
                 if (tick()) {
                     continue;
@@ -143,9 +149,9 @@ public class MatchGenerator {
         return null;
     }
 
-    private void cycleScope(PatchScope newScope) {
+    private void cycleScope(Map<Object, Integer> state, PatchScope newScope) {
         tickList.forEach(v -> {
-            int index = getState(v);
+            int index = getState(state, v);
             if (v instanceof PatchClass) {
                 PatchClass pc = (PatchClass) v;
                 String[] classes = classSet.classes(true);
@@ -185,11 +191,11 @@ public class MatchGenerator {
     private boolean tick() {
         for (int i = tickList.size() - 1; i >= 0; i--) {
             Object val = tickList.get(i);
-            int index = getState(val);
+            int index = getState(state, val);
             index++;
             if (val instanceof PatchClass) {
                 if (i == 0) {
-                    System.out.println(i + " : " + index + "/" + classSet.classes(true).length);
+                    System.out.print(i + " : " + index + "/" + classSet.classes(true).length + "\r");
                 }
                 if (index >= classSet.classes(true).length) {
                     index = 0;
@@ -201,7 +207,7 @@ public class MatchGenerator {
                 }
             } else if (val instanceof PatchMethod) {
                 PatchClass owner = nearestClass(i);
-                ClassWrapper cls = classSet.getClassWrapper(classSet.classes(true)[getState(owner)]);
+                ClassWrapper cls = classSet.getClassWrapper(classSet.classes(true)[getState(state, owner)]);
                 if (index >= cls.getMethods(true).length) {
                     index = 0;
                     state.put(val, index);
@@ -212,7 +218,7 @@ public class MatchGenerator {
                 }
             } else if (val instanceof PatchField) {
                 PatchClass owner = nearestClass(i);
-                ClassWrapper cls = classSet.getClassWrapper(classSet.classes(true)[getState(owner)]);
+                ClassWrapper cls = classSet.getClassWrapper(classSet.classes(true)[getState(state, owner)]);
                 if (index >= cls.getFields(true).length) {
                     index = 0;
                     state.put(val, index);
@@ -238,7 +244,7 @@ public class MatchGenerator {
         return null;
     }
 
-    private int getState(Object o) {
+    private int getState(Map<Object, Integer> state, Object o) {
         if (!state.containsKey(o)) {
             state.put(o, 0);
         }
