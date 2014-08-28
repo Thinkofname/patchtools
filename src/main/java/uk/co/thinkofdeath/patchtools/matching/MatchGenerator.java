@@ -83,7 +83,7 @@ public class MatchGenerator {
                 return result;
             }
 
-            PatchScope newScope = scope.duplicate();
+            PatchScope newScope = new PatchScope(scope);
             HashMap<Object, Integer> capturedState = Maps.newHashMap(state);
 
             pool.execute(() -> {
@@ -127,7 +127,7 @@ public class MatchGenerator {
 
     private PatchScope applySingle(Predicate<PatchScope> test) {
         while (true) {
-            PatchScope newScope = scope.duplicate();
+            PatchScope newScope = new PatchScope(scope);
             try {
                 cycleScope(state, newScope);
             } catch (InvalidMatch e) {

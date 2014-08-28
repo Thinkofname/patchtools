@@ -9,6 +9,7 @@ import uk.co.thinkofdeath.patchtools.wrappers.FieldWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.MethodWrapper;
 
 import java.util.Map;
+import java.util.stream.Stream;
 
 public class PatchScope {
 
@@ -17,6 +18,15 @@ public class PatchScope {
     private Map<FieldWrapper, String> fieldMappings = Maps.newHashMap();
     private Map<MethodNode, Map<PatchInstruction, Integer>> methodInstructionMap = Maps.newHashMap();
     private Map<MethodNode, Map<String, Label>> methodLabelMap = Maps.newHashMap();
+    private final PatchScope parent;
+
+    public PatchScope() {
+        parent = null;
+    }
+
+    public PatchScope(PatchScope parent) {
+        this.parent = parent;
+    }
 
     public PatchScope duplicate() {
         PatchScope patchScope = new PatchScope();
@@ -38,7 +48,8 @@ public class PatchScope {
     }
 
     public boolean hasClass(ClassWrapper classWrapper) {
-        return classMappings.containsValue(classWrapper);
+        return classMappings.containsValue(classWrapper)
+                || (parent != null && parent.hasClass(classWrapper));
     }
 
     public void putClass(ClassWrapper classWrapper, String name) {
@@ -46,11 +57,16 @@ public class PatchScope {
     }
 
     public ClassWrapper getClass(String name) {
-        return classMappings.get(name);
+        ClassWrapper cls = classMappings.get(name);
+        if (cls == null && parent != null) {
+            cls = parent.getClass(name);
+        }
+        return cls;
     }
 
     public boolean hasMethod(MethodWrapper methodWrapper) {
-        return methodMappings.containsKey(methodWrapper);
+        return methodMappings.containsKey(methodWrapper)
+                || (parent != null && parent.hasMethod(methodWrapper));
     }
 
     public void putMethod(MethodWrapper methodWrapper, String name, String desc) {
@@ -58,14 +74,31 @@ public class PatchScope {
     }
 
     public MethodWrapper getMethod(ClassWrapper owner, String name, String desc) {
-        return methodMappings.keySet().stream()
+        String joined = name + desc;
+        return getMethodStream()
                 .filter(m -> m.has(owner))
-                .filter(m -> methodMappings.get(m).equals(name + desc))
+                .filter(m -> getMethodDesc(m).equals(joined))
                 .findFirst().orElse(null);
     }
 
+    private Stream<MethodWrapper> getMethodStream() {
+        if (parent == null) {
+            return methodMappings.keySet().stream();
+        }
+        return Stream.concat(methodMappings.keySet().stream(), parent.getMethodStream());
+    }
+
+    private String getMethodDesc(MethodWrapper methodWrapper) {
+        String key = methodMappings.get(methodWrapper);
+        if (key == null) {
+            return parent.getMethodDesc(methodWrapper);
+        }
+        return key;
+    }
+
     public boolean hasField(FieldWrapper field) {
-        return fieldMappings.containsKey(field);
+        return fieldMappings.containsKey(field)
+                || (parent != null && parent.hasField(field));
     }
 
     public void putField(FieldWrapper fieldWrapper, String name, String descriptor) {
@@ -73,10 +106,26 @@ public class PatchScope {
     }
 
     public FieldWrapper getField(ClassWrapper owner, String name, String desc) {
-        return fieldMappings.keySet().stream()
+        String joined = name + "::" + desc;
+        return getFieldStream()
                 .filter(f -> f.getOwner() == owner)
-                .filter(f -> fieldMappings.get(f).equals(name + "::" + desc))
+                .filter(f -> getFieldDesc(f).equals(joined))
                 .findFirst().orElse(null);
+    }
+
+    private Stream<FieldWrapper> getFieldStream() {
+        if (parent == null) {
+            return fieldMappings.keySet().stream();
+        }
+        return Stream.concat(fieldMappings.keySet().stream(), parent.getFieldStream());
+    }
+
+    private String getFieldDesc(FieldWrapper fieldWrapper) {
+        String key = fieldMappings.get(fieldWrapper);
+        if (key == null) {
+            return parent.getFieldDesc(fieldWrapper);
+        }
+        return key;
     }
 
     public Map<PatchInstruction, Integer> getInstructMap(MethodNode node) {
