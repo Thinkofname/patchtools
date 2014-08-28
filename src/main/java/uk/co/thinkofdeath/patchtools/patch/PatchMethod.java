@@ -85,6 +85,10 @@ public class PatchMethod {
         return Type.getMethodType(desc);
     }
 
+    public String getDescRaw() {
+        return desc;
+    }
+
     public PatchClass getOwner() {
         return owner;
     }

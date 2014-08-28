@@ -189,7 +189,7 @@ public class PatchClass {
             if (f.getMode() == Mode.REMOVE) {
                 FieldWrapper fieldWrapper = scope.getField(classWrapper,
                         f.getIdent().getName(),
-                        f.getDesc().getDescriptor());
+                        f.getDescRaw());
                 classWrapper.getNode().fields.remove(
                         classWrapper.getFieldNode(fieldWrapper)
                 );
@@ -208,7 +208,7 @@ public class PatchClass {
                         mappedDesc.toString(),
                         null, f.getValue());
                 FieldWrapper fieldWrapper = new FieldWrapper(classWrapper, node);
-                scope.putField(fieldWrapper, f.getIdent().getName(), f.getDesc().getDescriptor());
+                scope.putField(fieldWrapper, f.getIdent().getName(), f.getDescRaw());
                 classWrapper.getFields().add(fieldWrapper);
                 classWrapper.getNode().fields.add(node);
             }
@@ -246,12 +246,12 @@ public class PatchClass {
                 } else {
                     methodWrapper.add(classWrapper);
                 }
-                scope.putMethod(methodWrapper, m.getIdent().getName(), m.getDesc().getDescriptor());
+                scope.putMethod(methodWrapper, m.getIdent().getName(), m.getDescRaw());
                 classWrapper.getMethods().add(methodWrapper);
                 classWrapper.getNode().methods.add(node);
             }
 
-            MethodWrapper methodWrapper = scope.getMethod(classWrapper, m.getIdent().getName(), m.getDesc().getDescriptor());
+            MethodWrapper methodWrapper = scope.getMethod(classWrapper, m.getIdent().getName(), m.getDescRaw());
 
             m.apply(classSet, scope, classWrapper.getMethodNode(methodWrapper));
         });
@@ -397,7 +397,7 @@ public class PatchClass {
 
             FieldWrapper fieldWrapper = scope.getField(classWrapper,
                     f.getIdent().getName(),
-                    f.getDesc().getDescriptor());
+                    f.getDescRaw());
 
             if (!f.getIdent().isWeak()
                     && !fieldWrapper.getName().equals(f.getIdent().getName())) {
@@ -435,7 +435,7 @@ public class PatchClass {
 
             MethodWrapper methodWrapper = scope.getMethod(classWrapper,
                     m.getIdent().getName(),
-                    m.getDesc().getDescriptor());
+                    m.getDescRaw());
             if (!m.getIdent().isWeak()
                     && !methodWrapper.getName().equals(m.getIdent().getName())) {
                 return false;
@@ -471,7 +471,7 @@ public class PatchClass {
 
             MethodWrapper methodWrapper = scope.getMethod(classWrapper,
                     m.getIdent().getName(),
-                    m.getDesc().getDescriptor());
+                    m.getDescRaw());
 
             if (!m.checkInstructions(classSet, scope, classWrapper.getMethodNode(methodWrapper))) {
                 return false;

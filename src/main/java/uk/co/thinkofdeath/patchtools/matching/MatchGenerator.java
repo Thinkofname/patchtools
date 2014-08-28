@@ -251,7 +251,7 @@ public class MatchGenerator {
                 if (methods.length == 0) return false;
                 int index = (int) (id % methods.length);
                 id /= methods.length;
-                if (newScope.putMethod(methods[index], pm.getIdent().getName(), pm.getDesc().getDescriptor())) {
+                if (newScope.putMethod(methods[index], pm.getIdent().getName(), pm.getDescRaw())) {
                     return false;
                 }
             } else if (v instanceof PatchField) {
@@ -261,7 +261,7 @@ public class MatchGenerator {
                 if (fields.length == 0) return false;
                 int index = (int) (id % fields.length);
                 id /= fields.length;
-                if (newScope.putField(fields[index], pf.getIdent().getName(), pf.getDesc().getDescriptor())) {
+                if (newScope.putField(fields[index], pf.getIdent().getName(), pf.getDescRaw())) {
                     return false;
                 }
             }
