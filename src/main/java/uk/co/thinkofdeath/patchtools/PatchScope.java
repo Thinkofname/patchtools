@@ -52,8 +52,8 @@ public class PatchScope {
                 || (parent != null && parent.hasClass(classWrapper));
     }
 
-    public void putClass(ClassWrapper classWrapper, String name) {
-        classMappings.put(name, classWrapper);
+    public boolean putClass(ClassWrapper classWrapper, String name) {
+        return classMappings.put(name, classWrapper) != null;
     }
 
     public ClassWrapper getClass(String name) {
@@ -69,8 +69,8 @@ public class PatchScope {
                 || (parent != null && parent.hasMethod(methodWrapper));
     }
 
-    public void putMethod(MethodWrapper methodWrapper, String name, String desc) {
-        methodMappings.put(methodWrapper, name + desc);
+    public boolean putMethod(MethodWrapper methodWrapper, String name, String desc) {
+        return methodMappings.put(methodWrapper, name + desc) != null;
     }
 
     public MethodWrapper getMethod(ClassWrapper owner, String name, String desc) {
@@ -101,8 +101,8 @@ public class PatchScope {
                 || (parent != null && parent.hasField(field));
     }
 
-    public void putField(FieldWrapper fieldWrapper, String name, String descriptor) {
-        fieldMappings.put(fieldWrapper, name + "::" + descriptor);
+    public boolean putField(FieldWrapper fieldWrapper, String name, String descriptor) {
+        return fieldMappings.put(fieldWrapper, name + "::" + descriptor) != null;
     }
 
     public FieldWrapper getField(ClassWrapper owner, String name, String desc) {

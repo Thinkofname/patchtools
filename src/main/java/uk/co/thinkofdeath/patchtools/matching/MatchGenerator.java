@@ -1,6 +1,6 @@
 package uk.co.thinkofdeath.patchtools.matching;
 
-import com.google.common.collect.Maps;
+import com.google.common.math.LongMath;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.patch.*;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
@@ -9,9 +9,8 @@ import uk.co.thinkofdeath.patchtools.wrappers.FieldWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.MethodWrapper;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -21,7 +20,7 @@ import java.util.function.Predicate;
 public class MatchGenerator {
 
 
-    private ExecutorService pool = new ThreadPoolExecutor(8, 8,
+    private ExecutorService pool = new ThreadPoolExecutor(5, 5,
             0L, TimeUnit.MILLISECONDS,
             new ArrayBlockingQueue<Runnable>(128) {
                 @Override
@@ -39,8 +38,6 @@ public class MatchGenerator {
     private final ClassSet classSet;
     private final PatchClasses patchClasses;
     private final PatchScope scope;
-
-    private final Map<Object, Integer> state = new HashMap<>();
 
     private final List<Object> tickList = new ArrayList<>();
 
@@ -74,9 +71,13 @@ public class MatchGenerator {
 
     private PatchScope result;
     private final Object resultLock = new Object();
+    private long completedTests = 0;
 
     private PatchScope applyParallel(Predicate<PatchScope> test) {
         result = null;
+        long id = 0;
+        long max = computeMax();
+        System.out.println("Max: " + max);
         while (true) {
             if (result != null) {
                 System.out.println();
@@ -84,29 +85,37 @@ public class MatchGenerator {
             }
 
             PatchScope newScope = new PatchScope(scope);
-            HashMap<Object, Integer> capturedState = Maps.newHashMap(state);
 
+            final long capturedId = id;
             pool.execute(() -> {
-                if (result != null) return;
                 try {
-                    cycleScope(capturedState, newScope);
-                } catch (InvalidMatch e) {
-                    return;
-                }
-                if (test.test(newScope)) {
-                    synchronized (resultLock) {
-                        if (result == null) {
-                            result = newScope;
-                            resultLock.notifyAll();
+                    if (result != null) return;
+                    try {
+                        cycleScope(capturedId, newScope);
+                    } catch (InvalidMatch e) {
+                        return;
+                    }
+                    if (test.test(newScope)) {
+                        synchronized (resultLock) {
+                            if (result == null) {
+                                result = newScope;
+                                resultLock.notifyAll();
+                            }
                         }
                     }
+                } finally {
+                    completedTests++;
                 }
             });
 
-            if (tick()) {
-                continue;
+            if (id % 1000 == 0) {
+                System.out.printf("Current: Setup:%d  Completed: %d/%d\r", id, completedTests, max);
             }
-            break;
+
+            id++;
+            if (id >= max) {
+                break;
+            }
         }
         System.out.println();
         System.out.println("Waiting");
@@ -126,129 +135,83 @@ public class MatchGenerator {
     }
 
     private PatchScope applySingle(Predicate<PatchScope> test) {
+        long id = 0;
+        long max = computeMax();
+        System.out.println("Max: " + max);
         while (true) {
             PatchScope newScope = new PatchScope(scope);
             try {
-                cycleScope(state, newScope);
+                cycleScope(id, newScope);
             } catch (InvalidMatch e) {
-                if (tick()) {
-                    continue;
+                id++;
+                if (id >= max) {
+                    break;
                 }
-                break;
+                continue;
             }
 
             if (test.test(newScope)) {
                 return newScope;
             }
 
-            if (tick()) {
-                continue;
+            id++;
+            if (id >= max) {
+                break;
             }
-            break;
         }
         return null;
     }
 
-    private void cycleScope(Map<Object, Integer> state, PatchScope newScope) {
-        tickList.forEach(v -> {
-            int index = getState(state, v);
+    private long computeMax() {
+        long max = LongMath.pow(classSet.classes(true).length, (int) tickList.stream().filter(v -> v instanceof PatchClass).count());
+        long patchMethods = tickList.stream().filter(v -> v instanceof PatchMethod).count();
+        long methods = Arrays.stream(classSet.classes(true))
+                .map(classSet::getClassWrapper)
+                .flatMap(c -> c.getMethods().stream())
+                .count();
+        max += LongMath.pow(methods, (int) patchMethods);
+        long patchFields = tickList.stream().filter(v -> v instanceof PatchField).count();
+        long fields = Arrays.stream(classSet.classes(true))
+                .map(classSet::getClassWrapper)
+                .flatMap(c -> c.getFields().stream())
+                .count();
+        max += LongMath.pow(fields, (int) patchFields);
+        return max;
+    }
+
+    private void cycleScope(long id, PatchScope newScope) {
+        for (Object v : tickList) {
             if (v instanceof PatchClass) {
-                PatchClass pc = (PatchClass) v;
                 String[] classes = classSet.classes(true);
-                if (classes.length <= index) {
+                if (classes.length == 0) throw new InvalidMatch();
+                int index = (int) (id % classes.length);
+                id /= classes.length;
+                PatchClass pc = (PatchClass) v;
+                if (newScope.putClass(classSet.getClassWrapper(classes[index]), pc.getIdent().getName())) {
                     throw new InvalidMatch();
                 }
-                if (newScope.hasClass(classSet.getClassWrapper(classes[index]))) {
-                    throw new InvalidMatch();
-                }
-                newScope.putClass(classSet.getClassWrapper(classes[index]), pc.getIdent().getName());
             } else if (v instanceof PatchMethod) {
                 PatchMethod pm = (PatchMethod) v;
                 ClassWrapper cls = newScope.getClass(pm.getOwner().getIdent().getName());
                 MethodWrapper[] methods = cls.getMethods(true);
-                if (methods.length <= index) {
+                if (methods.length == 0) throw new InvalidMatch();
+                int index = (int) (id % methods.length);
+                id /= methods.length;
+                if (newScope.putMethod(methods[index], pm.getIdent().getName(), pm.getDesc().getDescriptor())) {
                     throw new InvalidMatch();
                 }
-                if (newScope.hasMethod(methods[index])) {
-                    throw new InvalidMatch();
-                }
-                newScope.putMethod(methods[index], pm.getIdent().getName(), pm.getDesc().getDescriptor());
             } else if (v instanceof PatchField) {
                 PatchField pf = (PatchField) v;
                 ClassWrapper cls = newScope.getClass(pf.getOwner().getIdent().getName());
                 FieldWrapper[] fields = cls.getFields(true);
-                if (fields.length <= index) {
+                if (fields.length == 0) throw new InvalidMatch();
+                int index = (int) (id % fields.length);
+                id /= fields.length;
+                if (newScope.putField(fields[index], pf.getIdent().getName(), pf.getDesc().getDescriptor())) {
                     throw new InvalidMatch();
                 }
-                if (newScope.hasField(fields[index])) {
-                    throw new InvalidMatch();
-                }
-                newScope.putField(fields[index], pf.getIdent().getName(), pf.getDesc().getDescriptor());
-            }
-        });
-    }
-
-    private boolean tick() {
-        for (int i = tickList.size() - 1; i >= 0; i--) {
-            Object val = tickList.get(i);
-            int index = getState(state, val);
-            index++;
-            if (val instanceof PatchClass) {
-                if (i == 0) {
-                    System.out.print(i + " : " + index + "/" + classSet.classes(true).length + "\r");
-                }
-                if (index >= classSet.classes(true).length) {
-                    index = 0;
-                    state.put(val, index);
-                    if (i == 0) {
-                        break;
-                    }
-                    continue;
-                }
-            } else if (val instanceof PatchMethod) {
-                PatchClass owner = nearestClass(i);
-                ClassWrapper cls = classSet.getClassWrapper(classSet.classes(true)[getState(state, owner)]);
-                if (index >= cls.getMethods(true).length) {
-                    index = 0;
-                    state.put(val, index);
-                    if (i == 0) {
-                        break;
-                    }
-                    continue;
-                }
-            } else if (val instanceof PatchField) {
-                PatchClass owner = nearestClass(i);
-                ClassWrapper cls = classSet.getClassWrapper(classSet.classes(true)[getState(state, owner)]);
-                if (index >= cls.getFields(true).length) {
-                    index = 0;
-                    state.put(val, index);
-                    if (i == 0) {
-                        break;
-                    }
-                    continue;
-                }
-            }
-            state.put(val, index);
-            return true;
-        }
-        return false;
-    }
-
-    private PatchClass nearestClass(int i) {
-        for (; i >= 0; i--) {
-            Object val = tickList.get(i);
-            if (val instanceof PatchClass) {
-                return (PatchClass) val;
             }
         }
-        return null;
-    }
-
-    private int getState(Map<Object, Integer> state, Object o) {
-        if (!state.containsKey(o)) {
-            state.put(o, 0);
-        }
-        return state.get(o);
     }
 
     public void close() {
