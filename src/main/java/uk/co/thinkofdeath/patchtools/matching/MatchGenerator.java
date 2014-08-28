@@ -78,7 +78,16 @@ public class MatchGenerator {
         long id = 0;
         long max = computeMax();
         System.out.println("Max: " + max);
+        long thisTick = 0;
+        long last = System.nanoTime();
+        long speed = 1;
         while (true) {
+            if (System.nanoTime() >= last + TimeUnit.SECONDS.toNanos(1)) {
+                speed = thisTick == 0 ? 1 : thisTick;
+                thisTick = 0;
+                last = System.nanoTime();
+            }
+
             if (result != null) {
                 System.out.println();
                 return result;
@@ -90,11 +99,7 @@ public class MatchGenerator {
             pool.execute(() -> {
                 try {
                     if (result != null) return;
-                    try {
-                        cycleScope(capturedId, newScope);
-                    } catch (InvalidMatch e) {
-                        return;
-                    }
+                    if (!cycleScope(capturedId, newScope)) return;
                     if (test.test(newScope)) {
                         synchronized (resultLock) {
                             if (result == null) {
@@ -109,10 +114,24 @@ public class MatchGenerator {
             });
 
             if (id % 1000 == 0) {
-                System.out.printf("Current: Setup:%d  Completed: %d/%d\r", id, completedTests, max);
+                String est;
+                long estTime = (max - id) / speed;
+                if (TimeUnit.SECONDS.toDays(estTime) != 0) {
+                    est = TimeUnit.SECONDS.toDays(estTime) + " days";
+                } else if (TimeUnit.SECONDS.toHours(estTime) != 0) {
+                    est = TimeUnit.SECONDS.toHours(estTime) + " hours";
+                } else if (TimeUnit.SECONDS.toMinutes(estTime) != 0) {
+                    est = TimeUnit.SECONDS.toMinutes(estTime) + " minutes";
+                } else {
+                    est = TimeUnit.SECONDS.toSeconds(estTime) + " seconds";
+                }
+                System.out.printf("Current: Setup:%d  Completed: %d/%d   Est: %s\r",
+                        id, completedTests, max,
+                        est);
             }
 
             id++;
+            thisTick++;
             if (id >= max) {
                 break;
             }
@@ -140,18 +159,11 @@ public class MatchGenerator {
         System.out.println("Max: " + max);
         while (true) {
             PatchScope newScope = new PatchScope(scope);
-            try {
-                cycleScope(id, newScope);
-            } catch (InvalidMatch e) {
-                id++;
-                if (id >= max) {
-                    break;
-                }
-                continue;
-            }
 
-            if (test.test(newScope)) {
-                return newScope;
+            if (cycleScope(id, newScope)) {
+                if (test.test(newScope)) {
+                    return newScope;
+                }
             }
 
             id++;
@@ -179,39 +191,40 @@ public class MatchGenerator {
         return max;
     }
 
-    private void cycleScope(long id, PatchScope newScope) {
+    private boolean cycleScope(long id, PatchScope newScope) {
         for (Object v : tickList) {
             if (v instanceof PatchClass) {
                 String[] classes = classSet.classes(true);
-                if (classes.length == 0) throw new InvalidMatch();
+                if (classes.length == 0) return false;
                 int index = (int) (id % classes.length);
                 id /= classes.length;
                 PatchClass pc = (PatchClass) v;
                 if (newScope.putClass(classSet.getClassWrapper(classes[index]), pc.getIdent().getName())) {
-                    throw new InvalidMatch();
+                    return false;
                 }
             } else if (v instanceof PatchMethod) {
                 PatchMethod pm = (PatchMethod) v;
                 ClassWrapper cls = newScope.getClass(pm.getOwner().getIdent().getName());
                 MethodWrapper[] methods = cls.getMethods(true);
-                if (methods.length == 0) throw new InvalidMatch();
+                if (methods.length == 0) return false;
                 int index = (int) (id % methods.length);
                 id /= methods.length;
                 if (newScope.putMethod(methods[index], pm.getIdent().getName(), pm.getDesc().getDescriptor())) {
-                    throw new InvalidMatch();
+                    return false;
                 }
             } else if (v instanceof PatchField) {
                 PatchField pf = (PatchField) v;
                 ClassWrapper cls = newScope.getClass(pf.getOwner().getIdent().getName());
                 FieldWrapper[] fields = cls.getFields(true);
-                if (fields.length == 0) throw new InvalidMatch();
+                if (fields.length == 0) return false;
                 int index = (int) (id % fields.length);
                 id /= fields.length;
                 if (newScope.putField(fields[index], pf.getIdent().getName(), pf.getDesc().getDescriptor())) {
-                    throw new InvalidMatch();
+                    return false;
                 }
             }
         }
+        return true;
     }
 
     public void close() {
