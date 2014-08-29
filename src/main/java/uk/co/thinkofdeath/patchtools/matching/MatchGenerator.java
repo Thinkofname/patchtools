@@ -82,12 +82,6 @@ public class MatchGenerator {
             long end = wId == NUM_WORKERS - 1 ? max : (max / NUM_WORKERS) * (wId + 1);
             new Thread(group, () -> {
                 for (long id = start; id < end; id++, completedTests++) {
-                    /*if (System.nanoTime() >= last + TimeUnit.SECONDS.toNanos(1)) {
-                        speed = thisTick == 0 ? 1 : thisTick;
-                        thisTick = 0;
-                        last = System.nanoTime();
-                    }*/
-
                     if (result != null) {
                         return;
                     }
@@ -105,7 +99,7 @@ public class MatchGenerator {
                     }
 
                     if (id % 100000 == 0) {
-                        System.out.printf("Current: Completed: %d/%d\r", completedTests, max);
+                        System.out.printf("Current completed: %d/%d\r", completedTests, max);
                     }
                 }
             }).start();
@@ -161,7 +155,7 @@ public class MatchGenerator {
                 } else {
                     est = TimeUnit.SECONDS.toSeconds(estTime) + " seconds";
                 }
-                System.out.printf("Current:  Completed: %d/%d   Est: %s\r",
+                System.out.printf("Current completed: %d/%d   Est: %s\r",
                         id, max,
                         est);
             }
@@ -226,9 +220,5 @@ public class MatchGenerator {
             }
         }
         return true;
-    }
-
-    public void close() {
-        //pool.shutdownNow();
     }
 }

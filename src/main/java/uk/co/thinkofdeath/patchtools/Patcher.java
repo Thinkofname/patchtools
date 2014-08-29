@@ -64,7 +64,6 @@ public class Patcher {
                 && patchClasses.getClasses().stream().allMatch(c -> c.checkFields(scope, classSet))
                 && patchClasses.getClasses().stream().allMatch(c -> c.checkMethods(scope, classSet))
                 && patchClasses.getClasses().stream().allMatch(c -> c.checkMethodsInstructions(scope, classSet)), parallel);
-        generator.close();
         patchClasses.getClasses().forEach(c -> c.apply(foundScope, classSet));
         return foundScope;
     }
