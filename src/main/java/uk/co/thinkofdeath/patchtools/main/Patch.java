@@ -98,6 +98,9 @@ public class Patch {
                 }
             }
             for (Map.Entry<String, byte[]> e : resources.entrySet()) {
+                if (e.getKey().startsWith("META-INF")) {
+                    continue;
+                }
                 ZipEntry zipEntry = new ZipEntry(e.getKey());
                 zop.putNextEntry(zipEntry);
                 zop.write(e.getValue());
