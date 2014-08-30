@@ -20,24 +20,17 @@ import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import org.jetbrains.annotations.Contract;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.*;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.patch.*;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
+import uk.co.thinkofdeath.patchtools.wrappers.FieldWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.MethodWrapper;
 
 import java.util.*;
 import java.util.function.BiPredicate;
-
-// Find links between patch classes
-// Split into groups if every class isn't linked
-// Test one group at a time
-// Find links between normal classes
 
 public class MatchGenerator {
 
@@ -92,7 +85,23 @@ public class MatchGenerator {
                                     addToVisited(visited, visitList, matchClass, group);
                                 });
 
-                        // TODO: Fields
+                        pc.getFields().stream()
+                                .filter(f -> f.getMode() != Mode.ADD)
+                                .forEach(f -> {
+                                    Type type = f.getDesc();
+
+                                    MatchField field = new MatchField(mc, f.getIdent().getName(), f.getDescRaw());
+                                    mc.addField(field);
+
+                                    Type rt = getRootType(type);
+                                    if (rt.getSort() == Type.OBJECT) {
+                                        MatchClass argCls = new MatchClass(
+                                                new Ident(rt.getInternalName()).getName()
+                                        );
+                                        addToVisited(visited, visitList, argCls, group);
+                                    }
+                                    field.setType(type);
+                                });
 
                         pc.getMethods().stream()
                                 .filter(m -> m.getMode() != Mode.ADD)
@@ -181,13 +190,42 @@ public class MatchGenerator {
                             }
                         }
 
-                        // TODO: fields
-
+                        cls.getFields().forEach(f -> node.fields.forEach(n -> f.addMatch(node, n)));
                         cls.getMethods().forEach(m -> node.methods.forEach(n -> m.addMatch(node, n)));
                     }
                 }
 
-                // TODO: fields
+                while (true) {
+                    MatchField field = group.getClasses().stream()
+                            .flatMap(c -> c.getFields().stream())
+                            .filter(MatchField::hasUnchecked)
+                            .findAny().orElse(null);
+                    if (field == null) {
+                        break;
+                    }
+                    doneSomething = true;
+
+                    MatchField.FieldPair[] unchecked = field.getUncheckedMethods();
+                    for (MatchField.FieldPair pair : unchecked) {
+                        FieldNode node = pair.getNode();
+                        field.addChecked(node);
+
+                        List<MatchPair> matchPairs = new ArrayList<>();
+
+                        Type type = Type.getType(node.desc);
+                        if (type.getSort() != field.getType().getSort()) {
+                            field.removeMatch(pair.getOwner(), node);
+                            continue;
+                        } else if (type.getSort() == Type.OBJECT) {
+                            MatchClass retCls = group.getClass(new MatchClass(new Ident(field.getType().getInternalName()).getName()));
+                            ClassWrapper wrapper = classSet.getClassWrapper(type.getInternalName());
+                            if (!wrapper.isHidden()) {
+                                matchPairs.add(new MatchPair.ClassMatch(retCls, wrapper.getNode()));
+                            }
+                        }
+                        matchPairs.forEach(MatchPair::apply);
+                    }
+                }
 
                 while (true) {
                     MatchMethod method = group.getClasses().stream()
@@ -275,6 +313,7 @@ public class MatchGenerator {
                                             ));
                                         }
                                     }
+                                    // TODO: fields
                                 }
 
                                 for (PatchInstruction instruction : pm.getInstructions()) {
@@ -320,10 +359,13 @@ public class MatchGenerator {
             for (MatchClass cls : group.getClasses()) {
                 List<ClassNode> matches = new ArrayList<>(cls.getMatches());
                 for (ClassNode clazz : matches) {
-                    if (!cls.getMethods().stream()
-                            .allMatch(m -> m.usesNode(clazz))) {
+                    if (cls.getMethods().stream()
+                            .anyMatch(m -> !m.usesNode(clazz))
+                            || cls.getFields().stream()
+                            .anyMatch(f -> !f.usesNode(clazz))) {
                         cls.removeMatch(clazz);
                         cls.getMethods().forEach(m -> m.removeMatch(clazz));
+                        cls.getFields().forEach(f -> f.removeMatch(clazz));
                     }
                 }
             }
@@ -335,7 +377,10 @@ public class MatchGenerator {
             g.getClasses().forEach(c -> {
                 System.out.printf("  %s with %d matches\n", c.getName(), c.getMatches().size());
                 c.getMethods().forEach(m -> {
-                    System.out.printf("    %s with %d matches\n", m.getName(), m.getMatches().size());
+                    System.out.printf("    ::%s with %d matches\n", m.getName(), m.getMatches().size());
+                });
+                c.getFields().forEach(f -> {
+                    System.out.printf("    .%s with %d matches\n", f.getName(), f.getMatches().size());
                 });
             });
         });
@@ -344,6 +389,7 @@ public class MatchGenerator {
             g.getClasses().forEach(c -> {
                 state.put(c, 0);
                 c.getMethods().forEach(m -> state.put(m, 0));
+                c.getFields().forEach(f -> state.put(f, 0));
             });
         });
     }
@@ -360,7 +406,7 @@ public class MatchGenerator {
             long tick = 0;
 
             do {
-                if (tick % 1000 == 0) {
+                if (tick % 10000 == 0) {
                     System.out.printf("%d ticks\r", tick);
                 }
                 tick++;
@@ -387,8 +433,7 @@ public class MatchGenerator {
         group.getClasses().forEach(c -> {
             tickList.add(c);
 
-            // TODO: fields
-
+            c.getFields().forEach(tickList::add);
             c.getMethods().forEach(tickList::add);
         });
         return tickList;
@@ -418,8 +463,18 @@ public class MatchGenerator {
                 }
                 state.put(o, index);
                 return true;
+            } else if (o instanceof MatchField) {
+                MatchClass matchClass = nearestClass(tickList, i);
+                ClassNode cls = matchClass.getMatches().get(state.get(matchClass));
+                MatchField mc = (MatchField) o;
+                if (index >= mc.getMatches(cls).size()) {
+                    index = 0;
+                    state.put(o, index);
+                    continue;
+                }
+                state.put(o, index);
+                return true;
             }
-            // TODO: fields
         }
         return false;
     }
@@ -441,7 +496,13 @@ public class MatchGenerator {
                 return null;
             }
 
-            // TODO: fields
+            for (MatchField f : c.getFields()) {
+                FieldNode node = f.getMatches(cls.getNode()).get(state.get(f));
+                FieldWrapper met = cls.getField(node.name, node.desc);
+                if (scope.putField(met, f.getName(), f.getDesc())) {
+                    return null;
+                }
+            }
 
             for (MatchMethod m : c.getMethods()) {
                 MethodNode node = m.getMatches(cls.getNode()).get(state.get(m));

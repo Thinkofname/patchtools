@@ -30,6 +30,7 @@ public class MatchClass {
     private MatchClass superClass;
     private List<MatchClass> interfaces = new ArrayList<>();
     private List<MatchMethod> methods = new ArrayList<>();
+    private List<MatchField> fields = new ArrayList<>();
 
     private List<ClassNode> matchedClasses = new ArrayList<>();
     private Set<ClassNode> checkedClasses = new HashSet<>();
@@ -56,6 +57,12 @@ public class MatchClass {
     public void addMethod(@NotNull MatchMethod method) {
         if (!methods.contains(method)) {
             methods.add(method);
+        }
+    }
+
+    public void addField(@NotNull MatchField field) {
+        if (!fields.contains(field)) {
+            fields.add(field);
         }
     }
 
@@ -97,6 +104,10 @@ public class MatchClass {
 
     public List<MatchMethod> getMethods() {
         return methods;
+    }
+
+    public List<MatchField> getFields() {
+        return fields;
     }
 
     public boolean hasChecked(int length) {
