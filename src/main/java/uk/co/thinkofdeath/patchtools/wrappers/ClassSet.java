@@ -68,7 +68,7 @@ public class ClassSet implements Iterable<String> {
         if (clazz == null) return;
         ClassWrapper cl = getClassWrapper(clazz);
         if (cl == null) {
-            throw new RuntimeException(clazz);
+            return;
         }
         final ClassWrapper finalCl = cl;
         MethodWrapper target = cl.getMethods().stream()
