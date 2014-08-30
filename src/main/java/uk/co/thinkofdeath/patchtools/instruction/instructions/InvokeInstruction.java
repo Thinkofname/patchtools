@@ -85,7 +85,7 @@ public class InvokeInstruction implements InstructionHandler {
                     MethodWrapper ptMethod = scope.getMethod(owner, methodName, patchInstruction.params[2]);
                     if (ptMethod == null) { // Assume true
                         scope.putMethod(classSet.getClassWrapper(node.owner)
-                                .getMethod(node.name, node.desc), methodName, patchInstruction.params[2]);
+                            .getMethod(node.name, node.desc), methodName, patchInstruction.params[2]);
                         methodName = node.name;
                     } else {
                         methodName = ptMethod.getName();
@@ -137,11 +137,11 @@ public class InvokeInstruction implements InstructionHandler {
         mappedDesc.append(")");
         PatchClass.updatedTypeString(classSet, scope, mappedDesc, desc.getReturnType());
         return new MethodInsnNode(
-                opcode,
-                owner,
-                name,
-                mappedDesc.toString(),
-                false
+            opcode,
+            owner,
+            name,
+            mappedDesc.toString(),
+            false
         );
     }
 
@@ -169,11 +169,11 @@ public class InvokeInstruction implements InstructionHandler {
                 throw new IllegalArgumentException("Invoke opcode: " + methodInsnNode.getOpcode());
         }
         patch.append(' ')
-                .append(methodInsnNode.owner)
-                .append(' ')
-                .append(methodInsnNode.name)
-                .append(' ')
-                .append(methodInsnNode.desc);
+            .append(methodInsnNode.owner)
+            .append(' ')
+            .append(methodInsnNode.name)
+            .append(' ')
+            .append(methodInsnNode.desc);
         return true;
     }
 
@@ -192,7 +192,7 @@ public class InvokeInstruction implements InstructionHandler {
             Type rt = MatchGenerator.getRootType(type);
             if (rt.getSort() == Type.OBJECT) {
                 MatchClass argCls = new MatchClass(
-                        new Ident(rt.getInternalName()).getName()
+                    new Ident(rt.getInternalName()).getName()
                 );
                 classes.add(argCls);
             }
@@ -201,7 +201,7 @@ public class InvokeInstruction implements InstructionHandler {
         Type rt = MatchGenerator.getRootType(type);
         if (rt.getSort() == Type.OBJECT) {
             MatchClass argCls = new MatchClass(
-                    new Ident(rt.getInternalName()).getName()
+                new Ident(rt.getInternalName()).getName()
             );
             classes.add(argCls);
         }

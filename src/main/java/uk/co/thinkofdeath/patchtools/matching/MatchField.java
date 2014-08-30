@@ -89,8 +89,8 @@ public class MatchField {
 
     public FieldPair[] getUncheckedMethods() {
         return matchedFields.stream()
-                .filter(c -> !checkedFields.contains(c))
-                .toArray(FieldPair[]::new);
+            .filter(c -> !checkedFields.contains(c))
+            .toArray(FieldPair[]::new);
     }
 
     public List<FieldNode> getMatches() {
@@ -99,13 +99,13 @@ public class MatchField {
 
     public List<FieldNode> getMatches(ClassNode owner) {
         return Arrays.asList(matchedFields.stream()
-                .filter(m -> m.getOwner() == owner)
-                .map(FieldPair::getNode).toArray(FieldNode[]::new));
+            .filter(m -> m.getOwner() == owner)
+            .map(FieldPair::getNode).toArray(FieldNode[]::new));
     }
 
     public boolean usesNode(ClassNode clazz) {
         return matchedFields.stream()
-                .anyMatch(m -> m.owner == clazz);
+            .anyMatch(m -> m.owner == clazz);
     }
 
     public static class FieldPair {
@@ -152,8 +152,8 @@ public class MatchField {
         MatchField that = (MatchField) o;
 
         return desc.equals(that.desc)
-                && name.equals(that.name)
-                && owner.equals(that.owner);
+            && name.equals(that.name)
+            && owner.equals(that.owner);
 
     }
 

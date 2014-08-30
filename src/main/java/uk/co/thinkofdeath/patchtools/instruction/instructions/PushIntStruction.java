@@ -81,19 +81,19 @@ public class PushIntStruction implements InstructionHandler {
             LdcInsnNode ldcInsnNode = (LdcInsnNode) insn;
             if (ldcInsnNode.cst instanceof Integer) {
                 patch.append("push-int ")
-                        .append(ldcInsnNode.cst);
+                    .append(ldcInsnNode.cst);
                 return true;
             }
         } else if (insn instanceof InsnNode) {
             if (insn.getOpcode() >= Opcodes.ICONST_M1 && insn.getOpcode() <= Opcodes.ICONST_5) {
                 patch.append("push-int ")
-                        .append(insn.getOpcode() - Opcodes.ICONST_M1 - 1);
+                    .append(insn.getOpcode() - Opcodes.ICONST_M1 - 1);
                 return true;
             }
         } else if (insn instanceof IntInsnNode) {
             if (insn.getOpcode() == Opcodes.BIPUSH || insn.getOpcode() == Opcodes.SIPUSH) {
                 patch.append("push-int ")
-                        .append(((IntInsnNode) insn).operand);
+                    .append(((IntInsnNode) insn).operand);
                 return true;
             }
         }

@@ -59,14 +59,14 @@ public class Patcher {
     public PatchScope apply(PatchClasses patchClasses, PatchScope patchScope) {
         MatchGenerator generator = new MatchGenerator(classSet, patchClasses, patchScope);
         PatchScope foundScope = generator.apply((group, scope) -> {
-                    PatchClass[] classes = group.getClasses().stream()
-                            .map(c -> patchClasses.getClass(c.getName()))
-                            .toArray(PatchClass[]::new);
-                    return Arrays.stream(classes).allMatch(c -> c.checkAttributes(scope, classSet))
-                            && Arrays.stream(classes).allMatch(c -> c.checkFields(scope, classSet))
-                            && Arrays.stream(classes).allMatch(c -> c.checkMethods(scope, classSet))
-                            && Arrays.stream(classes).allMatch(c -> c.checkMethodsInstructions(scope, classSet));
-                }
+                PatchClass[] classes = group.getClasses().stream()
+                    .map(c -> patchClasses.getClass(c.getName()))
+                    .toArray(PatchClass[]::new);
+                return Arrays.stream(classes).allMatch(c -> c.checkAttributes(scope, classSet))
+                    && Arrays.stream(classes).allMatch(c -> c.checkFields(scope, classSet))
+                    && Arrays.stream(classes).allMatch(c -> c.checkMethods(scope, classSet))
+                    && Arrays.stream(classes).allMatch(c -> c.checkMethodsInstructions(scope, classSet));
+            }
         );
         if (foundScope == null) {
             return null;

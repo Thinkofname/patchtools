@@ -50,8 +50,8 @@ public class MatchGroup {
 
     public MatchClass getClass(MatchClass owner) {
         return classes.values().stream()
-                .filter(owner::equals)
-                .findAny().orElse(owner);
+            .filter(owner::equals)
+            .findAny().orElse(owner);
     }
 
     public MatchClass getFirst() {

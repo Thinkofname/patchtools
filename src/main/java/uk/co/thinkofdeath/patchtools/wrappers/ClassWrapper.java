@@ -71,8 +71,8 @@ public class ClassWrapper {
         if (stripHidden) {
             if (methodCache == null) {
                 methodCache = getMethods().stream()
-                        .filter(m -> !m.isHidden())
-                        .toArray(MethodWrapper[]::new);
+                    .filter(m -> !m.isHidden())
+                    .toArray(MethodWrapper[]::new);
             }
             return methodCache;
         }
@@ -81,9 +81,9 @@ public class ClassWrapper {
 
     public MethodNode getMethodNode(MethodWrapper wrapper) {
         MethodNode mn = node.methods.stream()
-                .filter(m -> m.name.equals(wrapper.getName())
-                        && m.desc.equals(wrapper.getDesc()))
-                .findFirst().orElse(null);
+            .filter(m -> m.name.equals(wrapper.getName())
+                && m.desc.equals(wrapper.getDesc()))
+            .findFirst().orElse(null);
         if (mn == null && node.superName != null) {
             mn = classSet.getClassWrapper(node.superName).getMethodNode(wrapper);
         }
@@ -92,9 +92,9 @@ public class ClassWrapper {
 
     public MethodWrapper getMethod(String name, String desc) {
         MethodWrapper wrap = methods.stream()
-                .filter(m -> m.getName().equals(name)
-                        && m.getDesc().equals(desc))
-                .findFirst().orElse(null);
+            .filter(m -> m.getName().equals(name)
+                && m.getDesc().equals(desc))
+            .findFirst().orElse(null);
         if (wrap == null && node.superName != null) {
             wrap = classSet.getClassWrapper(node.superName).getMethod(name, desc);
         }
@@ -112,8 +112,8 @@ public class ClassWrapper {
         if (stripHidden) {
             if (fieldCache == null) {
                 fieldCache = getFields().stream()
-                        .filter(f -> !f.isHidden())
-                        .toArray(FieldWrapper[]::new);
+                    .filter(f -> !f.isHidden())
+                    .toArray(FieldWrapper[]::new);
             }
             return fieldCache;
         }
@@ -122,9 +122,9 @@ public class ClassWrapper {
 
     public FieldWrapper getField(String name, String desc) {
         FieldWrapper wrap = fields.stream()
-                .filter(f -> f.getName().equals(name)
-                        && f.getDesc().equals(desc))
-                .findFirst().orElse(null);
+            .filter(f -> f.getName().equals(name)
+                && f.getDesc().equals(desc))
+            .findFirst().orElse(null);
         if (wrap == null && node.superName != null) {
             wrap = classSet.getClassWrapper(node.superName).getField(name, desc);
         }
@@ -133,9 +133,9 @@ public class ClassWrapper {
 
     public FieldNode getFieldNode(FieldWrapper fieldWrapper) {
         FieldNode fn = node.fields.stream()
-                .filter(f -> f.name.equals(fieldWrapper.getName())
-                        && f.desc.equals(fieldWrapper.getDesc()))
-                .findFirst().orElse(null);
+            .filter(f -> f.name.equals(fieldWrapper.getName())
+                && f.desc.equals(fieldWrapper.getDesc()))
+            .findFirst().orElse(null);
         if (fn == null && node.superName != null) {
             fn = classSet.getClassWrapper(node.superName).getFieldNode(fieldWrapper);
         }

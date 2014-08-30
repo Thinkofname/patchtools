@@ -53,8 +53,8 @@ public class PatchClasses {
     @Contract("null -> null")
     public PatchClass getClass(String name) {
         return classes.stream()
-                .filter(c -> c.getIdent().getName().equals(name))
-                .findFirst()
-                .orElse(null);
+            .filter(c -> c.getIdent().getName().equals(name))
+            .findFirst()
+            .orElse(null);
     }
 }

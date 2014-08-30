@@ -48,20 +48,20 @@ public class ClassSet implements Iterable<String> {
         simplified = true;
         // Safety copy
         new ArrayList<>(classes.values()).stream()
-                .filter(v -> !v.isHidden())
-                .forEach(v -> v.getMethods().stream()
-                        .filter(m -> !m.isHidden())
-                        .forEach(m -> {
-                            MethodNode node = v.getMethodNode(m);
-                            if (((node.access & Opcodes.ACC_PUBLIC) != 0
-                                    || (node.access & Opcodes.ACC_PROTECTED) != 0)
-                                    && (node.access & Opcodes.ACC_STATIC) == 0) {
-                                for (String inter : v.getNode().interfaces) {
-                                    replaceMethod(m, inter);
-                                }
-                                replaceMethod(m, v.getNode().superName);
-                            }
-                        }));
+            .filter(v -> !v.isHidden())
+            .forEach(v -> v.getMethods().stream()
+                .filter(m -> !m.isHidden())
+                .forEach(m -> {
+                    MethodNode node = v.getMethodNode(m);
+                    if (((node.access & Opcodes.ACC_PUBLIC) != 0
+                        || (node.access & Opcodes.ACC_PROTECTED) != 0)
+                        && (node.access & Opcodes.ACC_STATIC) == 0) {
+                        for (String inter : v.getNode().interfaces) {
+                            replaceMethod(m, inter);
+                        }
+                        replaceMethod(m, v.getNode().superName);
+                    }
+                }));
     }
 
     private void replaceMethod(MethodWrapper methodWrapper, String clazz) {
@@ -72,15 +72,15 @@ public class ClassSet implements Iterable<String> {
         }
         final ClassWrapper finalCl = cl;
         MethodWrapper target = cl.getMethods().stream()
-                .filter(m -> m.getName().equals(methodWrapper.getName())
-                        && m.getDesc().equals(methodWrapper.getDesc()))
-                .filter(m -> {
-                    MethodNode node = finalCl.getMethodNode(m);
-                    return (((node.access & Opcodes.ACC_PUBLIC) != 0
-                            || (node.access & Opcodes.ACC_PROTECTED) != 0)
-                            && (node.access & Opcodes.ACC_STATIC) == 0);
-                })
-                .findFirst().orElse(null);
+            .filter(m -> m.getName().equals(methodWrapper.getName())
+                && m.getDesc().equals(methodWrapper.getDesc()))
+            .filter(m -> {
+                MethodNode node = finalCl.getMethodNode(m);
+                return (((node.access & Opcodes.ACC_PUBLIC) != 0
+                    || (node.access & Opcodes.ACC_PROTECTED) != 0)
+                    && (node.access & Opcodes.ACC_STATIC) == 0);
+            })
+            .findFirst().orElse(null);
         if (target != null) {
             if (target.isHidden()) {
                 methodWrapper.hidden = true;
@@ -170,9 +170,9 @@ public class ClassSet implements Iterable<String> {
         }
         if (hiddenStrippedCache == null) {
             hiddenStrippedCache = classes.entrySet().stream()
-                    .filter(v -> !v.getValue().isHidden())
-                    .map(Map.Entry::getKey)
-                    .toArray(String[]::new);
+                .filter(v -> !v.getValue().isHidden())
+                .map(Map.Entry::getKey)
+                .toArray(String[]::new);
         }
         return hiddenStrippedCache;
     }
@@ -208,7 +208,7 @@ public class ClassSet implements Iterable<String> {
             }
 
             if ((t1.getNode().access & Opcodes.ACC_INTERFACE) != 0
-                    || (t2.getNode().access & Opcodes.ACC_INTERFACE) != 0) {
+                || (t2.getNode().access & Opcodes.ACC_INTERFACE) != 0) {
                 return "java/lang/Object";
             }
 

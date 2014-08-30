@@ -72,6 +72,7 @@ public class PatchField {
     public String getDescRaw() {
         return desc;
     }
+
     public PatchClass getOwner() {
         return owner;
     }

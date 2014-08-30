@@ -243,7 +243,7 @@ public enum Instruction {
     public static boolean print(StringBuilder patch, MethodNode method, AbstractInsnNode insn) {
         for (Instruction i : values()) {
             if (i.getHandler() != null
-                    && i.getHandler().print(i, patch, method, insn)) {
+                && i.getHandler().print(i, patch, method, insn)) {
                 return true;
             }
         }

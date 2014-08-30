@@ -92,8 +92,8 @@ public class MatchClass {
 
     public ClassNode[] getUncheckedClasses() {
         return matchedClasses.stream()
-                .filter(c -> !checkedClasses.contains(c))
-                .toArray(ClassNode[]::new);
+            .filter(c -> !checkedClasses.contains(c))
+            .toArray(ClassNode[]::new);
     }
 
     public List<ClassNode> getMatches() {

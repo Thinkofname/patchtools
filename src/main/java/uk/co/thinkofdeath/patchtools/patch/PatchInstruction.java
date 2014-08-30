@@ -35,9 +35,9 @@ public class PatchInstruction {
     @Override
     public String toString() {
         return "PatchInstruction{" +
-                "mode=" + mode +
-                ", instruction=" + instruction +
-                ", params=" + Arrays.toString(params) +
-                '}';
+            "mode=" + mode +
+            ", instruction=" + instruction +
+            ", params=" + Arrays.toString(params) +
+            '}';
     }
 }

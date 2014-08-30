@@ -73,7 +73,7 @@ public class LabelInstruction implements InstructionHandler {
             return false;
         }
         patch.append("label ")
-                .append(((LabelNode) insn).getLabel());
+            .append(((LabelNode) insn).getLabel());
         return true;
     }
 }

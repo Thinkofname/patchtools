@@ -43,9 +43,9 @@ class Command {
     @Override
     public String toString() {
         return "Command{" +
-                "mode=" + mode +
-                ", name='" + name + '\'' +
-                ", args=" + Arrays.toString(args) +
-                '}';
+            "mode=" + mode +
+            ", name='" + name + '\'' +
+            ", args=" + Arrays.toString(args) +
+            '}';
     }
 }

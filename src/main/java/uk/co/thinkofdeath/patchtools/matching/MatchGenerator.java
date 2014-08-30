@@ -89,16 +89,16 @@ public class MatchGenerator {
             MatchClass first = group.getFirst();
 
             Arrays.stream(classSet.classes(true))
-                    .map(classSet::getClassWrapper)
-                    .map(ClassWrapper::getNode)
-                    .forEach(first::addMatch);
+                .map(classSet::getClassWrapper)
+                .map(ClassWrapper::getNode)
+                .forEach(first::addMatch);
 
             boolean doneSomething = true;
             while (doneSomething) {
                 doneSomething = false;
                 while (true) {
                     MatchClass cls = group.getClasses().stream()
-                            .filter(MatchClass::hasUnchecked).findAny().orElse(null);
+                        .filter(MatchClass::hasUnchecked).findAny().orElse(null);
                     if (cls == null) {
                         break;
                     }
@@ -129,9 +129,9 @@ public class MatchGenerator {
 
                 while (true) {
                     MatchField field = group.getClasses().stream()
-                            .flatMap(c -> c.getFields().stream())
-                            .filter(MatchField::hasUnchecked)
-                            .findAny().orElse(null);
+                        .flatMap(c -> c.getFields().stream())
+                        .filter(MatchField::hasUnchecked)
+                        .findAny().orElse(null);
                     if (field == null) {
                         break;
                     }
@@ -158,9 +158,9 @@ public class MatchGenerator {
 
                 while (true) {
                     MatchMethod method = group.getClasses().stream()
-                            .flatMap(c -> c.getMethods().stream())
-                            .filter(MatchMethod::hasUnchecked)
-                            .findAny().orElse(null);
+                        .flatMap(c -> c.getMethods().stream())
+                        .filter(MatchMethod::hasUnchecked)
+                        .findAny().orElse(null);
                     if (method == null) {
                         break;
                     }
@@ -210,8 +210,8 @@ public class MatchGenerator {
                         PatchClass pc = patchClasses.getClass(method.getOwner().getName());
                         if (pc != null) {
                             PatchMethod pm = pc.getMethods().stream().filter(
-                                    m -> m.getIdent().getName().equals(method.getName())
-                                            && m.getDescRaw().equals(method.getDesc())
+                                m -> m.getIdent().getName().equals(method.getName())
+                                    && m.getDescRaw().equals(method.getDesc())
                             ).findFirst().orElse(null);
 
                             if (pm != null) {
@@ -238,8 +238,8 @@ public class MatchGenerator {
                                         MethodWrapper wrap = cls.getMethod(methodInsnNode.name, methodInsnNode.desc);
                                         if (wrap != null) {
                                             referencedMethods.add(new MatchMethod.MethodPair(
-                                                    cls.getNode(),
-                                                    cls.getMethodNode(wrap)
+                                                cls.getNode(),
+                                                cls.getMethodNode(wrap)
                                             ));
                                         }
                                     } else if (insn instanceof FieldInsnNode) {
@@ -253,8 +253,8 @@ public class MatchGenerator {
                                         FieldWrapper wrap = cls.getField(fieldInsnNode.name, fieldInsnNode.desc);
                                         if (wrap != null) {
                                             referencedFields.add(new MatchField.FieldPair(
-                                                    cls.getNode(),
-                                                    cls.getFieldNode(wrap)
+                                                cls.getNode(),
+                                                cls.getFieldNode(wrap)
                                             ));
                                         }
                                     }
@@ -264,27 +264,27 @@ public class MatchGenerator {
                                     Instruction in = instruction.instruction;
                                     if (in.getHandler() == null) continue;
                                     in.getHandler().getReferencedClasses(instruction)
-                                            .forEach(c -> referencedClasses.forEach(rc -> {
-                                                        ClassWrapper wrapper = classSet.getClassWrapper(rc.name);
-                                                        if (!wrapper.isHidden()) {
-                                                            matchPairs.add(new MatchPair.ClassMatch(c, rc));
-                                                        }
-                                                    })
-                                            );
+                                        .forEach(c -> referencedClasses.forEach(rc -> {
+                                                ClassWrapper wrapper = classSet.getClassWrapper(rc.name);
+                                                if (!wrapper.isHidden()) {
+                                                    matchPairs.add(new MatchPair.ClassMatch(c, rc));
+                                                }
+                                            })
+                                        );
                                     in.getHandler().getReferencedMethods(instruction)
-                                            .forEach(me -> {
-                                                MatchClass matchClass = group.getClass(me.getOwner());
-                                                group.add(matchClass, classSet);
-                                                final MatchMethod fme = matchClass.addMethod(me);
-                                                referencedMethods.forEach(rm -> matchPairs.add(new MatchPair.MethodMatch(fme, rm.getOwner(), rm.getNode())));
-                                            });
+                                        .forEach(me -> {
+                                            MatchClass matchClass = group.getClass(me.getOwner());
+                                            group.add(matchClass, classSet);
+                                            final MatchMethod fme = matchClass.addMethod(me);
+                                            referencedMethods.forEach(rm -> matchPairs.add(new MatchPair.MethodMatch(fme, rm.getOwner(), rm.getNode())));
+                                        });
                                     in.getHandler().getReferencedFields(instruction)
-                                            .forEach(fe -> {
-                                                MatchClass matchClass = group.getClass(fe.getOwner());
-                                                group.add(matchClass, classSet);
-                                                final MatchField ffe = matchClass.addField(fe);
-                                                referencedFields.forEach(rf -> matchPairs.add(new MatchPair.FieldMatch(ffe, rf.getOwner(), rf.getNode())));
-                                            });
+                                        .forEach(fe -> {
+                                            MatchClass matchClass = group.getClass(fe.getOwner());
+                                            group.add(matchClass, classSet);
+                                            final MatchField ffe = matchClass.addField(fe);
+                                            referencedFields.forEach(rf -> matchPairs.add(new MatchPair.FieldMatch(ffe, rf.getOwner(), rf.getNode())));
+                                        });
                                 }
                             }
                         }
@@ -296,15 +296,15 @@ public class MatchGenerator {
                 if (!doneSomething) {
                     String clss[] = classSet.classes(true);
                     if (group.getClasses().stream()
-                            .filter(c -> c.getMatches().size() == 0 && !c.hasChecked(clss.length))
-                            .count() != 0) {
+                        .filter(c -> c.getMatches().size() == 0 && !c.hasChecked(clss.length))
+                        .count() != 0) {
                         group.getClasses().stream().filter(c -> c.getMatches().size() == 0 && !c.hasChecked(clss.length))
-                                .forEach(c -> {
-                                    Arrays.stream(clss)
-                                            .map(classSet::getClassWrapper)
-                                            .map(ClassWrapper::getNode)
-                                            .forEach(c::addMatch);
-                                });
+                            .forEach(c -> {
+                                Arrays.stream(clss)
+                                    .map(classSet::getClassWrapper)
+                                    .map(ClassWrapper::getNode)
+                                    .forEach(c::addMatch);
+                            });
                         doneSomething = true;
                     }
                 }
@@ -314,9 +314,9 @@ public class MatchGenerator {
                 List<ClassNode> matches = new ArrayList<>(cls.getMatches());
                 for (ClassNode clazz : matches) {
                     if (cls.getMethods().stream()
-                            .anyMatch(m -> !m.usesNode(clazz))
-                            || cls.getFields().stream()
-                            .anyMatch(f -> !f.usesNode(clazz))) {
+                        .anyMatch(m -> !m.usesNode(clazz))
+                        || cls.getFields().stream()
+                        .anyMatch(f -> !f.usesNode(clazz))) {
                         cls.removeMatch(clazz);
                         cls.getMethods().forEach(m -> m.removeMatch(clazz));
                         cls.getFields().forEach(f -> f.removeMatch(clazz));
@@ -329,104 +329,104 @@ public class MatchGenerator {
     private void generateGroups() {
         Map<MatchClass, MatchGroup> visited = new HashMap<>();
         patchClasses.getClasses().stream()
-                .filter(p -> p.getMode() != Mode.ADD)
-                .forEach(clazz -> {
-                    MatchClass cls = new MatchClass(clazz.getIdent().getName());
-                    if (visited.containsKey(cls)) {
-                        return;
-                    }
+            .filter(p -> p.getMode() != Mode.ADD)
+            .forEach(clazz -> {
+                MatchClass cls = new MatchClass(clazz.getIdent().getName());
+                if (visited.containsKey(cls)) {
+                    return;
+                }
 
-                    MatchGroup group = new MatchGroup();
-                    visited.put(cls, group);
-                    groups.add(group);
-                    Stack<MatchClass> visitList = new Stack<>();
-                    visitList.add(cls);
-                    while (!visitList.isEmpty()) {
-                        MatchClass mc = visitList.pop();
-                        PatchClass pc = patchClasses.getClass(mc.getName());
-                        if (pc == null || pc.getMode() == Mode.ADD) continue;
-                        group.add(mc, classSet);
+                MatchGroup group = new MatchGroup();
+                visited.put(cls, group);
+                groups.add(group);
+                Stack<MatchClass> visitList = new Stack<>();
+                visitList.add(cls);
+                while (!visitList.isEmpty()) {
+                    MatchClass mc = visitList.pop();
+                    PatchClass pc = patchClasses.getClass(mc.getName());
+                    if (pc == null || pc.getMode() == Mode.ADD) continue;
+                    group.add(mc, classSet);
 
-                        pc.getExtends().stream()
-                                .filter(c -> c.getMode() != Mode.ADD)
-                                .forEach(c -> {
-                                    MatchClass matchClass = new MatchClass(c.getIdent().getName());
-                                    mc.setSuperClass(matchClass);
-                                    addToVisited(visited, visitList, matchClass, group);
-                                });
-                        pc.getInterfaces().stream()
-                                .filter(c -> c.getMode() != Mode.ADD)
-                                .forEach(c -> {
-                                    MatchClass matchClass = new MatchClass(c.getIdent().getName());
-                                    mc.addInterface(matchClass);
-                                    addToVisited(visited, visitList, matchClass, group);
-                                });
+                    pc.getExtends().stream()
+                        .filter(c -> c.getMode() != Mode.ADD)
+                        .forEach(c -> {
+                            MatchClass matchClass = new MatchClass(c.getIdent().getName());
+                            mc.setSuperClass(matchClass);
+                            addToVisited(visited, visitList, matchClass, group);
+                        });
+                    pc.getInterfaces().stream()
+                        .filter(c -> c.getMode() != Mode.ADD)
+                        .forEach(c -> {
+                            MatchClass matchClass = new MatchClass(c.getIdent().getName());
+                            mc.addInterface(matchClass);
+                            addToVisited(visited, visitList, matchClass, group);
+                        });
 
-                        pc.getFields().stream()
-                                .filter(f -> f.getMode() != Mode.ADD)
-                                .forEach(f -> {
-                                    Type type = f.getDesc();
+                    pc.getFields().stream()
+                        .filter(f -> f.getMode() != Mode.ADD)
+                        .forEach(f -> {
+                            Type type = f.getDesc();
 
-                                    MatchField field = new MatchField(mc, f.getIdent().getName(), f.getDescRaw());
-                                    field = mc.addField(field);
+                            MatchField field = new MatchField(mc, f.getIdent().getName(), f.getDescRaw());
+                            field = mc.addField(field);
 
-                                    Type rt = getRootType(type);
-                                    if (rt.getSort() == Type.OBJECT) {
-                                        MatchClass argCls = new MatchClass(
-                                                new Ident(rt.getInternalName()).getName()
-                                        );
-                                        addToVisited(visited, visitList, argCls, group);
-                                    }
-                                    field.setType(type);
-                                });
+                            Type rt = getRootType(type);
+                            if (rt.getSort() == Type.OBJECT) {
+                                MatchClass argCls = new MatchClass(
+                                    new Ident(rt.getInternalName()).getName()
+                                );
+                                addToVisited(visited, visitList, argCls, group);
+                            }
+                            field.setType(type);
+                        });
 
-                        pc.getMethods().stream()
-                                .filter(m -> m.getMode() != Mode.ADD)
-                                .forEach(m -> {
-                                    Type desc = m.getDesc();
+                    pc.getMethods().stream()
+                        .filter(m -> m.getMode() != Mode.ADD)
+                        .forEach(m -> {
+                            Type desc = m.getDesc();
 
-                                    MatchMethod method = new MatchMethod(mc, m.getIdent().getName(), m.getDescRaw());
-                                    method = mc.addMethod(method);
+                            MatchMethod method = new MatchMethod(mc, m.getIdent().getName(), m.getDescRaw());
+                            method = mc.addMethod(method);
 
-                                    for (Type type : desc.getArgumentTypes()) {
-                                        Type rt = getRootType(type);
-                                        if (rt.getSort() == Type.OBJECT) {
-                                            MatchClass argCls = new MatchClass(
-                                                    new Ident(rt.getInternalName()).getName()
-                                            );
-                                            addToVisited(visited, visitList, argCls, group);
-                                        }
-                                        method.addArgument(type);
-                                    }
-                                    Type type = desc.getReturnType();
-                                    Type rt = getRootType(type);
-                                    if (rt.getSort() == Type.OBJECT) {
-                                        MatchClass argCls = new MatchClass(
-                                                new Ident(rt.getInternalName()).getName()
-                                        );
-                                        addToVisited(visited, visitList, argCls, group);
-                                    }
-                                    method.setReturn(type);
+                            for (Type type : desc.getArgumentTypes()) {
+                                Type rt = getRootType(type);
+                                if (rt.getSort() == Type.OBJECT) {
+                                    MatchClass argCls = new MatchClass(
+                                        new Ident(rt.getInternalName()).getName()
+                                    );
+                                    addToVisited(visited, visitList, argCls, group);
+                                }
+                                method.addArgument(type);
+                            }
+                            Type type = desc.getReturnType();
+                            Type rt = getRootType(type);
+                            if (rt.getSort() == Type.OBJECT) {
+                                MatchClass argCls = new MatchClass(
+                                    new Ident(rt.getInternalName()).getName()
+                                );
+                                addToVisited(visited, visitList, argCls, group);
+                            }
+                            method.setReturn(type);
 
-                                    for (PatchInstruction instruction : m.getInstructions()) {
-                                        Instruction in = instruction.instruction;
-                                        if (in.getHandler() == null) continue;
-                                        in.getHandler().getReferencedClasses(instruction).stream()
-                                                .forEach(c -> addToVisited(visited, visitList, c, group));
-                                        in.getHandler().getReferencedMethods(instruction)
-                                                .forEach(me -> {
-                                                    MatchClass owner = group.getClass(me.getOwner());
-                                                    owner.addMethod(me);
-                                                });
-                                        in.getHandler().getReferencedFields(instruction)
-                                                .forEach(fe -> {
-                                                    MatchClass owner = group.getClass(fe.getOwner());
-                                                    owner.addField(fe);
-                                                });
-                                    }
-                                });
-                    }
-                });
+                            for (PatchInstruction instruction : m.getInstructions()) {
+                                Instruction in = instruction.instruction;
+                                if (in.getHandler() == null) continue;
+                                in.getHandler().getReferencedClasses(instruction).stream()
+                                    .forEach(c -> addToVisited(visited, visitList, c, group));
+                                in.getHandler().getReferencedMethods(instruction)
+                                    .forEach(me -> {
+                                        MatchClass owner = group.getClass(me.getOwner());
+                                        owner.addMethod(me);
+                                    });
+                                in.getHandler().getReferencedFields(instruction)
+                                    .forEach(fe -> {
+                                        MatchClass owner = group.getClass(fe.getOwner());
+                                        owner.addField(fe);
+                                    });
+                            }
+                        });
+                }
+            });
     }
 
     @Contract("null -> fail")

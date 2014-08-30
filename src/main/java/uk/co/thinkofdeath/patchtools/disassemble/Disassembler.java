@@ -42,15 +42,15 @@ public class Disassembler {
         ClassNode node = classWrapper.getNode();
 
         patch.append(".class ")
-                .append(node.name)
-                .append('\n');
+            .append(node.name)
+            .append('\n');
 
         node.fields.forEach(f -> {
             patch.append("    ")
-                    .append(".field ")
-                    .append(f.name)
-                    .append(' ')
-                    .append(f.desc);
+                .append(".field ")
+                .append(f.name)
+                .append(' ')
+                .append(f.desc);
             if ((f.access & Opcodes.ACC_STATIC) != 0) {
                 patch.append(" static");
             }
@@ -68,10 +68,10 @@ public class Disassembler {
 
         node.methods.forEach(m -> {
             patch.append("    ")
-                    .append(".method ")
-                    .append(m.name)
-                    .append(' ')
-                    .append(m.desc);
+                .append(".method ")
+                .append(m.name)
+                .append(' ')
+                .append(m.desc);
             if ((m.access & Opcodes.ACC_STATIC) != 0) {
                 patch.append(" static");
             }
@@ -81,20 +81,20 @@ public class Disassembler {
             patch.append('\n');
 
             Arrays.stream(m.instructions.toArray())
-                    .filter(i -> !(i instanceof LineNumberNode))
-                    .forEach(i -> {
-                        patch.append("    ")
-                                .append("    ")
-                                .append('.');
-                        if (!Instruction.print(patch, m, i)) {
-                            // TODO: throw new UnsupportedOperationException(i.toString());
-                            patch.append("unsupported ").append(i);
-                        }
-                        patch.append('\n');
-                    });
+                .filter(i -> !(i instanceof LineNumberNode))
+                .forEach(i -> {
+                    patch.append("    ")
+                        .append("    ")
+                        .append('.');
+                    if (!Instruction.print(patch, m, i)) {
+                        // TODO: throw new UnsupportedOperationException(i.toString());
+                        patch.append("unsupported ").append(i);
+                    }
+                    patch.append('\n');
+                });
 
             patch.append("    ")
-                    .append(".end-method\n");
+                .append(".end-method\n");
             patch.append('\n');
         });
 

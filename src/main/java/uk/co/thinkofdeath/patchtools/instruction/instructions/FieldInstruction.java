@@ -85,7 +85,7 @@ public class FieldInstruction implements InstructionHandler {
                     FieldWrapper ptField = scope.getField(owner, fieldName, patchInstruction.params[2]);
                     if (ptField == null) { // Assume true
                         scope.putField(classSet.getClassWrapper(node.owner)
-                                .getField(node.name, node.desc), fieldName, patchInstruction.params[2]);
+                            .getField(node.name, node.desc), fieldName, patchInstruction.params[2]);
                         fieldName = node.name;
                     } else {
                         fieldName = ptField.getName();
@@ -125,10 +125,10 @@ public class FieldInstruction implements InstructionHandler {
         Type desc = Type.getType(patchInstruction.params[2]);
         PatchClass.updatedTypeString(classSet, scope, mappedDesc, desc);
         return new FieldInsnNode(
-                opcode,
-                owner,
-                name,
-                mappedDesc.toString()
+            opcode,
+            owner,
+            name,
+            mappedDesc.toString()
         );
     }
 
@@ -155,11 +155,11 @@ public class FieldInstruction implements InstructionHandler {
                 throw new IllegalArgumentException("Invoke opcode: " + fieldInsnNode.getOpcode());
         }
         patch.append(' ')
-                .append(fieldInsnNode.owner)
-                .append(' ')
-                .append(fieldInsnNode.name)
-                .append(' ')
-                .append(fieldInsnNode.desc);
+            .append(fieldInsnNode.owner)
+            .append(' ')
+            .append(fieldInsnNode.name)
+            .append(' ')
+            .append(fieldInsnNode.desc);
         return true;
     }
 
@@ -177,7 +177,7 @@ public class FieldInstruction implements InstructionHandler {
         Type rt = MatchGenerator.getRootType(desc);
         if (rt.getSort() == Type.OBJECT) {
             MatchClass argCls = new MatchClass(
-                    new Ident(rt.getInternalName()).getName()
+                new Ident(rt.getInternalName()).getName()
             );
             classes.add(argCls);
         }

@@ -53,14 +53,14 @@ public class Disassemble {
 
         try (ZipFile zipFile = new ZipFile(inJar)) {
             zipFile.stream()
-                    .filter(c -> c.getName().endsWith(".class"))
-                    .forEach(c -> {
-                        try {
-                            classSet.add(zipFile.getInputStream(c));
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
-                    });
+                .filter(c -> c.getName().endsWith(".class"))
+                .forEach(c -> {
+                    try {
+                        classSet.add(zipFile.getInputStream(c));
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                });
         }
         classSet.simplify();
 

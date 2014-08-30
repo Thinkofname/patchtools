@@ -60,18 +60,18 @@ public class Patch {
 
         try (ZipFile zipFile = new ZipFile(inJar)) {
             zipFile.stream()
-                    .forEach(c -> {
-                        try (InputStream in = zipFile.getInputStream(c)) {
-                            if (c.getName().endsWith(".class")) {
-                                classSet.add(in, false);
-                            } else {
+                .forEach(c -> {
+                    try (InputStream in = zipFile.getInputStream(c)) {
+                        if (c.getName().endsWith(".class")) {
+                            classSet.add(in, false);
+                        } else {
 
-                                resources.put(c.getName(), ByteStreams.toByteArray(in));
-                            }
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
+                            resources.put(c.getName(), ByteStreams.toByteArray(in));
                         }
-                    });
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                });
         }
         classSet.simplify();
 

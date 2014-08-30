@@ -98,8 +98,8 @@ public class MatchMethod {
 
     public MethodPair[] getUncheckedMethods() {
         return matchedMethods.stream()
-                .filter(c -> !checkedMethods.contains(c))
-                .toArray(MethodPair[]::new);
+            .filter(c -> !checkedMethods.contains(c))
+            .toArray(MethodPair[]::new);
     }
 
     public List<MethodNode> getMatches() {
@@ -108,13 +108,13 @@ public class MatchMethod {
 
     public List<MethodNode> getMatches(ClassNode owner) {
         return Arrays.asList(matchedMethods.stream()
-                .filter(m -> m.getOwner() == owner)
-                .map(MethodPair::getNode).toArray(MethodNode[]::new));
+            .filter(m -> m.getOwner() == owner)
+            .map(MethodPair::getNode).toArray(MethodNode[]::new));
     }
 
     public boolean usesNode(ClassNode clazz) {
         return matchedMethods.stream()
-                .anyMatch(m -> m.owner == clazz);
+            .anyMatch(m -> m.owner == clazz);
     }
 
     public static class MethodPair {
@@ -161,8 +161,8 @@ public class MatchMethod {
         MatchMethod that = (MatchMethod) o;
 
         return desc.equals(that.desc)
-                && name.equals(that.name)
-                && owner.equals(that.owner);
+            && name.equals(that.name)
+            && owner.equals(that.owner);
 
     }
 

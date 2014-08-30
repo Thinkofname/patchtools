@@ -183,10 +183,10 @@ public class PatchClass {
 
             if (f.getMode() == Mode.REMOVE) {
                 FieldWrapper fieldWrapper = scope.getField(classWrapper,
-                        f.getIdent().getName(),
-                        f.getDescRaw());
+                    f.getIdent().getName(),
+                    f.getDescRaw());
                 classWrapper.getNode().fields.remove(
-                        classWrapper.getFieldNode(fieldWrapper)
+                    classWrapper.getFieldNode(fieldWrapper)
                 );
             } else {
                 StringBuilder mappedDesc = new StringBuilder();
@@ -194,14 +194,14 @@ public class PatchClass {
                 updatedTypeString(classSet, scope, mappedDesc, desc);
 
                 int access = (f.isPrivate() ? Opcodes.ACC_PRIVATE : Opcodes.ACC_PUBLIC)
-                        | (f.isStatic() ? Opcodes.ACC_STATIC : 0);
+                    | (f.isStatic() ? Opcodes.ACC_STATIC : 0);
 
 
                 FieldNode node = new FieldNode(Opcodes.ASM5,
-                        access,
-                        f.getIdent().getName(),
-                        mappedDesc.toString(),
-                        null, f.getValue());
+                    access,
+                    f.getIdent().getName(),
+                    mappedDesc.toString(),
+                    null, f.getValue());
                 FieldWrapper fieldWrapper = new FieldWrapper(classWrapper, node);
                 scope.putField(fieldWrapper, f.getIdent().getName(), f.getDescRaw());
                 classWrapper.getFields().add(fieldWrapper);
@@ -220,22 +220,22 @@ public class PatchClass {
                 updatedTypeString(classSet, scope, mappedDesc, desc.getReturnType());
 
                 int access = (m.isPrivate() ? Opcodes.ACC_PRIVATE : Opcodes.ACC_PUBLIC)
-                        | (m.isStatic() ? Opcodes.ACC_STATIC : 0);
+                    | (m.isStatic() ? Opcodes.ACC_STATIC : 0);
                 MethodWrapper methodWrapper = null;
 
                 if (((access & Opcodes.ACC_PUBLIC) != 0
-                        || (access & Opcodes.ACC_PROTECTED) != 0)
-                        && (access & Opcodes.ACC_STATIC) == 0) {
+                    || (access & Opcodes.ACC_PROTECTED) != 0)
+                    && (access & Opcodes.ACC_STATIC) == 0) {
                     methodWrapper = searchParent(classSet, scope, classWrapper, m.getIdent(), mappedDesc.toString());
                 }
 
                 String name = methodWrapper == null ? m.getIdent().getName() : methodWrapper.getName();
 
                 MethodNode node = new MethodNode(Opcodes.ASM5,
-                        access,
-                        name,
-                        mappedDesc.toString(),
-                        null, null);
+                    access,
+                    name,
+                    mappedDesc.toString(),
+                    null, null);
                 if (methodWrapper == null) {
                     methodWrapper = new MethodWrapper(classWrapper, node);
                 } else {
@@ -276,8 +276,8 @@ public class PatchClass {
 
             final String finalPName = pName;
             mw = Arrays.stream(classWrapper.getMethods(true))
-                    .filter(m -> m.getName().equals(finalPName) && m.getDesc().equals(mappedDesc.toString()))
-                    .findFirst().orElse(null);
+                .filter(m -> m.getName().equals(finalPName) && m.getDesc().equals(mappedDesc.toString()))
+                .findFirst().orElse(null);
         } catch (IllegalStateException ignored) {
 
         }
@@ -391,11 +391,11 @@ public class PatchClass {
             if (f.getMode() == Mode.ADD) continue;
 
             FieldWrapper fieldWrapper = scope.getField(classWrapper,
-                    f.getIdent().getName(),
-                    f.getDescRaw());
+                f.getIdent().getName(),
+                f.getDescRaw());
 
             if (!f.getIdent().isWeak()
-                    && !fieldWrapper.getName().equals(f.getIdent().getName())) {
+                && !fieldWrapper.getName().equals(f.getIdent().getName())) {
                 return false;
             }
 
@@ -429,10 +429,10 @@ public class PatchClass {
             if (m.getMode() == Mode.ADD) continue;
 
             MethodWrapper methodWrapper = scope.getMethod(classWrapper,
-                    m.getIdent().getName(),
-                    m.getDescRaw());
+                m.getIdent().getName(),
+                m.getDescRaw());
             if (!m.getIdent().isWeak()
-                    && !methodWrapper.getName().equals(m.getIdent().getName())) {
+                && !methodWrapper.getName().equals(m.getIdent().getName())) {
                 return false;
             }
 
@@ -465,8 +465,8 @@ public class PatchClass {
             if (m.getMode() == Mode.ADD) continue;
 
             MethodWrapper methodWrapper = scope.getMethod(classWrapper,
-                    m.getIdent().getName(),
-                    m.getDescRaw());
+                m.getIdent().getName(),
+                m.getDescRaw());
 
             if (!m.checkInstructions(classSet, scope, classWrapper.getMethodNode(methodWrapper))) {
                 return false;

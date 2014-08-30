@@ -34,7 +34,7 @@
 
 .class ~minecraft/GuiMenu
 
-    //.field ~buttonList Ljava/util/List;
+    .field ~buttonList Ljava/util/List;
 
     .extends ~minecraft/GuiScreen
 
@@ -53,10 +53,6 @@
         .push-string ""
         .return
     .end-method
-
-.end-class
-
-.class ~minecraft/GuiScreen
 
 .end-class
 

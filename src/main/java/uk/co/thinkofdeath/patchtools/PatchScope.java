@@ -55,17 +55,17 @@ public class PatchScope {
     @Override
     public String toString() {
         return "PatchScope{" +
-                "classMappings=" + classMappings +
-                ", methodMappings=" + methodMappings +
-                ", fieldMappings=" + fieldMappings +
-                ", methodInstructionMap=" + methodInstructionMap +
-                ", methodLabelMap=" + methodLabelMap +
-                '}';
+            "classMappings=" + classMappings +
+            ", methodMappings=" + methodMappings +
+            ", fieldMappings=" + fieldMappings +
+            ", methodInstructionMap=" + methodInstructionMap +
+            ", methodLabelMap=" + methodLabelMap +
+            '}';
     }
 
     public boolean hasClass(ClassWrapper classWrapper) {
         return classMappings.containsValue(classWrapper)
-                || (parent != null && parent.hasClass(classWrapper));
+            || (parent != null && parent.hasClass(classWrapper));
     }
 
     public boolean putClass(ClassWrapper classWrapper, String name) {
@@ -82,14 +82,14 @@ public class PatchScope {
 
     public String getClass(ClassWrapper cls) {
         return classMappings.entrySet().stream()
-                .filter(e -> e.getValue() == cls)
-                .map(Map.Entry::getKey)
-                .findFirst().orElse(null);
+            .filter(e -> e.getValue() == cls)
+            .map(Map.Entry::getKey)
+            .findFirst().orElse(null);
     }
 
     public boolean hasMethod(MethodWrapper methodWrapper) {
         return methodMappings.containsKey(methodWrapper)
-                || (parent != null && parent.hasMethod(methodWrapper));
+            || (parent != null && parent.hasMethod(methodWrapper));
     }
 
     public boolean putMethod(MethodWrapper methodWrapper, String name, String desc) {
@@ -104,9 +104,9 @@ public class PatchScope {
     public MethodWrapper getMethod(ClassWrapper owner, String name, String desc) {
         String joined = name + desc;
         return getMethodStream()
-                .filter(m -> m.has(owner))
-                .filter(m -> getMethodDesc(m).equals(joined))
-                .findFirst().orElse(null);
+            .filter(m -> m.has(owner))
+            .filter(m -> getMethodDesc(m).equals(joined))
+            .findFirst().orElse(null);
     }
 
     private Stream<MethodWrapper> getMethodStream() {
@@ -126,7 +126,7 @@ public class PatchScope {
 
     public boolean hasField(FieldWrapper field) {
         return fieldMappings.containsKey(field)
-                || (parent != null && parent.hasField(field));
+            || (parent != null && parent.hasField(field));
     }
 
     public boolean putField(FieldWrapper fieldWrapper, String name, String descriptor) {
@@ -140,9 +140,9 @@ public class PatchScope {
     public FieldWrapper getField(ClassWrapper owner, String name, String desc) {
         String joined = name + "::" + desc;
         return getFieldStream()
-                .filter(f -> f.getOwner() == owner)
-                .filter(f -> getFieldDesc(f).equals(joined))
-                .findFirst().orElse(null);
+            .filter(f -> f.getOwner() == owner)
+            .filter(f -> getFieldDesc(f).equals(joined))
+            .findFirst().orElse(null);
     }
 
     private Stream<FieldWrapper> getFieldStream() {
