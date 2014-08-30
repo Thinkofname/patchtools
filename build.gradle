@@ -1,8 +1,10 @@
 apply plugin: 'java'
 apply plugin: 'application'
+apply plugin: 'maven'
 
 sourceCompatibility = 1.8
-version = '1.0'
+version = '0.1-SNAPSHOT'
+group = "uk.co.thinkofdeath.patchtools"
 
 mainClassName = "uk.co.thinkofdeath.patchtools.main.Patch"
 
@@ -19,6 +21,22 @@ jar {
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+artifacts {
+    archives jar
+    archives javadocJar
+    archives sourcesJar
+}
+
 dependencies {
     compile 'net.sf.trove4j:trove4j:3.0.3'
     compile 'org.jetbrains:annotations:13.0'
@@ -26,4 +44,37 @@ dependencies {
     compile group: "com.google.guava", name: 'guava', version: '17.0'
     compile group: 'org.ow2.asm', name: 'asm-debug-all', version: '5.0.2'
     testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+
+            repository(url: "http://repo.thinkofdeath.co.uk/content/repositories/snapshots/") {
+                authentication(userName: thinkUsername, password: thinkPassword)
+            }
+
+            pom.project {
+                name 'Patch Tools'
+                packaging 'jar'
+                description ''
+                url 'https://github.com/thinkofdeath/patchtools'
+
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'thinkofdeath'
+                        name 'Thinkofdeath'
+                    }
+                }
+            }
+        }
+    }
 }
