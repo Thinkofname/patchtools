@@ -16,6 +16,7 @@
 
 package uk.co.thinkofdeath.patchtools.instruction;
 
+import com.google.common.collect.ImmutableList;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
@@ -34,7 +35,11 @@ public interface InstructionHandler {
 
     boolean print(Instruction instruction, StringBuilder patch, MethodNode method, AbstractInsnNode insn);
 
-    List<MatchClass> getReferencedClasses(PatchInstruction instruction);
+    default List<MatchClass> getReferencedClasses(PatchInstruction instruction) {
+        return ImmutableList.of();
+    }
 
-    List<MatchMethod> getReferencedMethods(PatchInstruction instruction);
+    default List<MatchMethod> getReferencedMethods(PatchInstruction instruction) {
+        return ImmutableList.of();
+    }
 }

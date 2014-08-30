@@ -16,7 +16,6 @@
 
 package uk.co.thinkofdeath.patchtools.instruction.instructions;
 
-import com.google.common.collect.ImmutableList;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.LabelNode;
@@ -24,13 +23,9 @@ import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
-import uk.co.thinkofdeath.patchtools.matching.MatchClass;
-import uk.co.thinkofdeath.patchtools.matching.MatchMethod;
 import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
-
-import java.util.List;
 
 public class LabelInstruction implements InstructionHandler {
     @Override
@@ -80,15 +75,5 @@ public class LabelInstruction implements InstructionHandler {
         patch.append("label ")
                 .append(((LabelNode) insn).getLabel());
         return true;
-    }
-
-    @Override
-    public List<MatchClass> getReferencedClasses(PatchInstruction instruction) {
-        return ImmutableList.of();
-    }
-
-    @Override
-    public List<MatchMethod> getReferencedMethods(PatchInstruction instruction) {
-        return ImmutableList.of();
     }
 }
