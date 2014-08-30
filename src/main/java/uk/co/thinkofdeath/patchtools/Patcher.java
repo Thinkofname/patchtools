@@ -17,11 +17,13 @@
 package uk.co.thinkofdeath.patchtools;
 
 import uk.co.thinkofdeath.patchtools.matching.MatchGenerator;
+import uk.co.thinkofdeath.patchtools.patch.PatchClass;
 import uk.co.thinkofdeath.patchtools.patch.PatchClasses;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class Patcher {
 
@@ -55,15 +57,20 @@ public class Patcher {
     }
 
     public PatchScope apply(PatchClasses patchClasses, PatchScope patchScope) {
-        return apply(patchClasses, patchScope, true);
-    }
-
-    public PatchScope apply(PatchClasses patchClasses, PatchScope patchScope, boolean parallel) {
         MatchGenerator generator = new MatchGenerator(classSet, patchClasses, patchScope);
-        PatchScope foundScope = generator.apply(scope -> patchClasses.getClasses().stream().allMatch(c -> c.checkAttributes(scope, classSet))
-                && patchClasses.getClasses().stream().allMatch(c -> c.checkFields(scope, classSet))
-                && patchClasses.getClasses().stream().allMatch(c -> c.checkMethods(scope, classSet))
-                && patchClasses.getClasses().stream().allMatch(c -> c.checkMethodsInstructions(scope, classSet)), parallel);
+        PatchScope foundScope = generator.apply((group, scope) -> {
+                    PatchClass[] classes = group.getClasses().stream()
+                            .map(c -> patchClasses.getClass(c.getName()))
+                            .toArray(PatchClass[]::new);
+                    return Arrays.stream(classes).allMatch(c -> c.checkAttributes(scope, classSet))
+                            && Arrays.stream(classes).allMatch(c -> c.checkFields(scope, classSet))
+                            && Arrays.stream(classes).allMatch(c -> c.checkMethods(scope, classSet))
+                            && Arrays.stream(classes).allMatch(c -> c.checkMethodsInstructions(scope, classSet));
+                }
+        );
+        if (foundScope == null) {
+            return null;
+        }
         patchClasses.getClasses().forEach(c -> c.apply(foundScope, classSet));
         return foundScope;
     }

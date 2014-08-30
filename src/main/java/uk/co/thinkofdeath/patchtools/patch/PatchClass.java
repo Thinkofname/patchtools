@@ -34,16 +34,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-// TODO: Better errors
-// TODO: Finish instructions
-// TODO: Split into 4 passes
 public class PatchClass {
 
     private String type;
     private Ident ident;
     private Mode mode;
-    private List<Command> superCommands = new ArrayList<>();
-    private List<Command> interfaceCommands = new ArrayList<>();
+    private List<ModifierClass> superModifiers = new ArrayList<>();
+    private List<ModifierClass> interfaceModifiers = new ArrayList<>();
 
     private List<PatchMethod> methods = new ArrayList<>();
     private List<PatchField> fields = new ArrayList<>();
@@ -67,11 +64,11 @@ public class PatchClass {
             switch (command.name) {
                 case "extends":
                     if (command.args.length != 1) throw new IllegalArgumentException("extends requires 1 parameter");
-                    superCommands.add(command);
+                    superModifiers.add(new ModifierClass(new Ident(command.args[0]), command.mode));
                     break;
                 case "interface":
                     if (command.args.length != 1) throw new IllegalArgumentException("interface requires 1 parameter");
-                    interfaceCommands.add(command);
+                    interfaceModifiers.add(new ModifierClass(new Ident(command.args[0]), command.mode));
                     break;
                 case "method":
                     methods.add(new PatchMethod(this, command, reader));
@@ -123,9 +120,9 @@ public class PatchClass {
         }
         ClassWrapper classWrapper = scope.getClass(ident.getName());
 
-        for (Command superCommand : superCommands) {
-            if (superCommand.mode == Mode.ADD) {
-                Ident name = new Ident(superCommand.args[0]);
+        for (ModifierClass superModifier : superModifiers) {
+            Ident name = superModifier.getIdent();
+            if (superModifier.getMode() == Mode.ADD) {
                 String clName = name.getName();
                 if (name.isWeak()) {
                     ClassWrapper cl = scope.getClass(clName);
@@ -133,8 +130,7 @@ public class PatchClass {
                     clName = cl.getNode().name;
                 }
                 classWrapper.getNode().superName = clName;
-            } else if (superCommand.mode == Mode.REMOVE) {
-                Ident name = new Ident(superCommand.args[0]);
+            } else if (superModifier.getMode() == Mode.REMOVE) {
                 String clName = name.getName();
                 if (name.isWeak()) {
                     ClassWrapper cl = scope.getClass(clName);
@@ -148,9 +144,9 @@ public class PatchClass {
         }
 
         interLoop:
-        for (Command interCommand : interfaceCommands) {
-            if (interCommand.mode != Mode.ADD) {
-                Ident name = new Ident(interCommand.args[0]);
+        for (ModifierClass interfaceModifier : interfaceModifiers) {
+            Ident name = interfaceModifier.getIdent();
+            if (interfaceModifier.getMode() != Mode.ADD) {
                 String clName = name.getName();
                 if (clName.equals("*") && classWrapper.getNode().interfaces.size() > 0) {
                     continue;
@@ -169,7 +165,6 @@ public class PatchClass {
                 }
                 throw new RuntimeException();
             } else {
-                Ident name = new Ident(interCommand.args[0]);
                 String clName = name.getName();
                 if (name.isWeak()) {
                     ClassWrapper cl = scope.getClass(clName);
@@ -344,9 +339,9 @@ public class PatchClass {
             return false;
         }
 
-        for (Command superCommand : superCommands) {
-            if (superCommand.mode != Mode.ADD) {
-                Ident name = new Ident(superCommand.args[0]);
+        for (ModifierClass superModifier : superModifiers) {
+            if (superModifier.getMode() != Mode.ADD) {
+                Ident name = superModifier.getIdent();
                 String clName = name.getName();
                 if (name.isWeak()) {
                     ClassWrapper cl = scope.getClass(clName);
@@ -363,9 +358,9 @@ public class PatchClass {
         }
 
         interLoop:
-        for (Command interCommand : interfaceCommands) {
-            if (interCommand.mode != Mode.ADD) {
-                Ident name = new Ident(interCommand.args[0]);
+        for (ModifierClass interfaceModifier : interfaceModifiers) {
+            if (interfaceModifier.getMode() != Mode.ADD) {
+                Ident name = interfaceModifier.getIdent();
                 String clName = name.getName();
                 if (clName.equals("*") && classWrapper.getNode().interfaces.size() > 0) {
                     continue;
@@ -488,17 +483,19 @@ public class PatchClass {
         if (pt.getSort() == Type.OBJECT) {
             Ident id = new Ident(pt.getInternalName());
             String cls = id.getName();
-            if (id.isWeak()) {
-                ClassWrapper ptcls = scope.getClass(cls);
-                if (ptcls == null) { // Assume true
-                    cls = t.getInternalName();
-                    scope.putClass(classSet.getClassWrapper(cls), cls);
-                    return true;
+            if (scope != null || !id.isWeak()) {
+                if (id.isWeak()) {
+                    ClassWrapper ptcls = scope.getClass(cls);
+                    if (ptcls == null) { // Assume true
+                        cls = t.getInternalName();
+                        scope.putClass(classSet.getClassWrapper(cls), cls);
+                        return true;
+                    }
+                    cls = ptcls.getNode().name;
                 }
-                cls = ptcls.getNode().name;
-            }
-            if (!cls.equals(t.getInternalName())) {
-                return false;
+                if (!cls.equals(t.getInternalName())) {
+                    return false;
+                }
             }
         } else if (pt.getSort() == Type.ARRAY) {
             return checkTypes(classSet, scope, pt.getElementType(), t.getElementType());
@@ -508,5 +505,13 @@ public class PatchClass {
             }
         }
         return true;
+    }
+
+    public List<ModifierClass> getExtends() {
+        return superModifiers;
+    }
+
+    public List<ModifierClass> getInterfaces() {
+        return interfaceModifiers;
     }
 }

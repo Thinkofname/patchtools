@@ -1,3 +1,8 @@
+
+.class ~minecraft/GuiButton
+
+.end-class
+
 .class ~minecraft/GuiMainMenu
 
     .extends ~minecraft/GuiMenu
@@ -14,6 +19,14 @@
         +push-string "Hello world"
         .push-int 0
         .any
+        .invoke-static ~minecraft/Locale ~localise (Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+        .invoke-special ~minecraft/GuiButton <init> (IIILjava/lang/String;)V
+        .invoke-interface java/util/List add (Ljava/lang/Object;)Z
+        .any
+    .end-method
+
+    .method ~onClick (L~minecraft/GuiButton;)V protected
+        .any
     .end-method
 .end-class
 
@@ -21,12 +34,36 @@
 
     .extends ~minecraft/GuiScreen
 
+    .method ~getClipboard ()Ljava/lang/String; static
+        .invoke-static java/awt/Toolkit getDefaultToolkit ()Ljava/awt/Toolkit;
+        .invoke-virtual java/awt/Toolkit getSystemClipboard ()Ljava/awt/datatransfer/Clipboard;
+        .push-null
+        .invoke-virtual java/awt/datatransfer/Clipboard getContents (Ljava/lang/Object;)Ljava/awt/datatransfer/Transferable;
+        .any
+        .invoke-interface java/awt/datatransfer/Transferable isDataFlavorSupported (Ljava/awt/datatransfer/DataFlavor;)Z
+        .any
+        .invoke-interface java/awt/datatransfer/Transferable getTransferData (Ljava/awt/datatransfer/DataFlavor;)Ljava/lang/Object;
+        .any
+        .return
+        .any
+        .push-string ""
+        .return
+    .end-method
+
 .end-class
 
 .class ~minecraft/GuiScreen
 
 .end-class
 
+.class ~minecraft/Locale
+
+    .method ~localise (Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String; static
+        .any
+        .invoke-virtual * * (Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+        .return
+    .end-method
+.end-class
 
 .class net/minecraft/client/ClientBrandRetriever
 

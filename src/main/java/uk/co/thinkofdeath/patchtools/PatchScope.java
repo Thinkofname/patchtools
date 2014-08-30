@@ -93,6 +93,7 @@ public class PatchScope {
     }
 
     public boolean putMethod(MethodWrapper methodWrapper, String name, String desc) {
+        if (methodWrapper == null) throw new IllegalArgumentException();
         return methodMappings.put(methodWrapper, name + desc) != null;
     }
 
@@ -179,5 +180,13 @@ public class PatchScope {
             methodLabelMap.put(node, Maps.newHashMap());
         }
         methodLabelMap.get(node).put(name, label);
+    }
+
+    public void merge(PatchScope scope) {
+        classMappings.putAll(scope.classMappings);
+        methodMappings.putAll(scope.methodMappings);
+        fieldMappings.putAll(scope.fieldMappings);
+        methodInstructionMap.putAll(scope.methodInstructionMap);
+        methodLabelMap.putAll(scope.methodLabelMap);
     }
 }

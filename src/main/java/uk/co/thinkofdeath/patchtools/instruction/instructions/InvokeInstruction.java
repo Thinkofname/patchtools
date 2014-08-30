@@ -24,12 +24,19 @@ import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
+import uk.co.thinkofdeath.patchtools.matching.MatchClass;
+import uk.co.thinkofdeath.patchtools.matching.MatchGenerator;
+import uk.co.thinkofdeath.patchtools.matching.MatchMethod;
 import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.patch.PatchClass;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.MethodWrapper;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class InvokeInstruction implements InstructionHandler {
 
@@ -53,36 +60,40 @@ public class InvokeInstruction implements InstructionHandler {
         Ident cls = new Ident(patchInstruction.params[0]);
         String clsName = cls.getName();
         if (!clsName.equals("*")) {
-            if (cls.isWeak()) {
-                ClassWrapper ptcls = scope.getClass(clsName);
-                if (ptcls == null) { // Assume true
-                    scope.putClass(classSet.getClassWrapper(node.owner), clsName);
-                    clsName = node.owner;
-                } else {
-                    clsName = ptcls.getNode().name;
+            if (scope != null || !cls.isWeak()) {
+                if (cls.isWeak()) {
+                    ClassWrapper ptcls = scope.getClass(clsName);
+                    if (ptcls == null) { // Assume true
+                        scope.putClass(classSet.getClassWrapper(node.owner), clsName);
+                        clsName = node.owner;
+                    } else {
+                        clsName = ptcls.getNode().name;
+                    }
                 }
-            }
-            if (!clsName.equals(node.owner)) {
-                return false;
+                if (!clsName.equals(node.owner)) {
+                    return false;
+                }
             }
         }
 
         Ident methodIdent = new Ident(patchInstruction.params[1]);
         String methodName = methodIdent.getName();
         if (!methodName.equals("*")) {
-            if (methodIdent.isWeak()) {
-                ClassWrapper owner = classSet.getClassWrapper(node.owner);
-                MethodWrapper ptMethod = scope.getMethod(owner, methodName, patchInstruction.params[2]);
-                if (ptMethod == null) { // Assume true
-                    scope.putMethod(classSet.getClassWrapper(node.owner)
-                            .getMethod(node.name, node.desc), methodName, patchInstruction.params[2]);
-                    methodName = node.name;
-                } else {
-                    methodName = ptMethod.getName();
+            if (scope != null || !methodIdent.isWeak()) {
+                if (methodIdent.isWeak()) {
+                    ClassWrapper owner = classSet.getClassWrapper(node.owner);
+                    MethodWrapper ptMethod = scope.getMethod(owner, methodName, patchInstruction.params[2]);
+                    if (ptMethod == null) { // Assume true
+                        scope.putMethod(classSet.getClassWrapper(node.owner)
+                                .getMethod(node.name, node.desc), methodName, patchInstruction.params[2]);
+                        methodName = node.name;
+                    } else {
+                        methodName = ptMethod.getName();
+                    }
                 }
-            }
-            if (!methodName.equals(node.name)) {
-                return false;
+                if (!methodName.equals(node.name)) {
+                    return false;
+                }
             }
         }
 
@@ -164,5 +175,56 @@ public class InvokeInstruction implements InstructionHandler {
                 .append(' ')
                 .append(methodInsnNode.desc);
         return true;
+    }
+
+    @Override
+    public List<MatchClass> getReferencedClasses(PatchInstruction instruction) {
+        if (instruction.params.length != 3) {
+            throw new RuntimeException("Incorrect number of arguments for invoke");
+        }
+        ArrayList<MatchClass> classes = new ArrayList<>();
+        Ident owner = new Ident(instruction.params[0]);
+        MatchClass omc = new MatchClass(owner.getName());
+        classes.add(omc);
+        Type desc = Type.getMethodType(instruction.params[2]);
+
+        for (Type type : desc.getArgumentTypes()) {
+            Type rt = MatchGenerator.getRootType(type);
+            if (rt.getSort() == Type.OBJECT) {
+                MatchClass argCls = new MatchClass(
+                        new Ident(rt.getInternalName()).getName()
+                );
+                classes.add(argCls);
+            }
+        }
+        Type type = desc.getReturnType();
+        Type rt = MatchGenerator.getRootType(type);
+        if (rt.getSort() == Type.OBJECT) {
+            MatchClass argCls = new MatchClass(
+                    new Ident(rt.getInternalName()).getName()
+            );
+            classes.add(argCls);
+        }
+        return classes;
+    }
+
+    @Override
+    public List<MatchMethod> getReferencedMethods(PatchInstruction instruction) {
+        if (instruction.params.length != 3) {
+            throw new RuntimeException("Incorrect number of arguments for invoke");
+        }
+        Ident owner = new Ident(instruction.params[0]);
+        Ident method = new Ident(instruction.params[1]);
+        MatchClass omc = new MatchClass(owner.getName());
+        MatchMethod mmc = new MatchMethod(omc, method.getName(), instruction.params[2]);
+
+        Type desc = Type.getMethodType(instruction.params[2]);
+
+        for (Type type : desc.getArgumentTypes()) {
+            mmc.addArgument(type);
+        }
+        Type type = desc.getReturnType();
+        mmc.setReturn(type);
+        return Arrays.asList(mmc);
     }
 }

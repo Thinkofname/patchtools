@@ -38,6 +38,7 @@ public class PatchMethod {
     private Mode mode;
     private boolean isStatic;
     private boolean isPrivate;
+    private boolean isProtected;
 
     private List<PatchInstruction> instructions = new ArrayList<>();
 
@@ -53,6 +54,8 @@ public class PatchMethod {
                     isStatic = true;
                 } else if (mCommand.args[i].equals("private")) {
                     isPrivate = true;
+                } else if (mCommand.args[i].equals("protected")) {
+                    isProtected = true;
                 }
             }
         }
@@ -116,6 +119,8 @@ public class PatchMethod {
         }
         if (isPrivate) {
             methodNode.access |= Opcodes.ACC_PRIVATE;
+        } else if (isProtected) {
+            methodNode.access |= Opcodes.ACC_PROTECTED;
         } else {
             methodNode.access |= Opcodes.ACC_PUBLIC;
         }
@@ -162,6 +167,9 @@ public class PatchMethod {
         if (((methodNode.access & Opcodes.ACC_PRIVATE) == 0) == isPrivate) {
             return false;
         }
+        if (((methodNode.access & Opcodes.ACC_PROTECTED) == 0) == isProtected) {
+            return false;
+        }
 
         boolean wildcard = false;
         int wildcardPosition = -1;
@@ -179,7 +187,7 @@ public class PatchMethod {
                 wildcardPosition = -1;
                 wildcardPatchPosition = -1;
                 if (i == instructions.size() - 1) {
-                    position = methodNode.instructions.size();
+                    position = insns.size();
                 }
                 continue;
             }
@@ -235,7 +243,9 @@ public class PatchMethod {
             return false;
         }
 
-        scope.putInstructMap(methodNode, insnMap);
+        if (scope != null) {
+            scope.putInstructMap(methodNode, insnMap);
+        }
         return true;
     }
 

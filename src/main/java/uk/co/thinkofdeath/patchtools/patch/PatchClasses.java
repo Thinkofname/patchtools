@@ -16,6 +16,8 @@
 
 package uk.co.thinkofdeath.patchtools.patch;
 
+import org.jetbrains.annotations.Contract;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,5 +48,13 @@ public class PatchClasses {
 
     public List<PatchClass> getClasses() {
         return classes;
+    }
+
+    @Contract("null -> null")
+    public PatchClass getClass(String name) {
+        return classes.stream()
+                .filter(c -> c.getIdent().getName().equals(name))
+                .findFirst()
+                .orElse(null);
     }
 }

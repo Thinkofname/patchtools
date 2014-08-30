@@ -16,13 +16,18 @@
 
 package uk.co.thinkofdeath.patchtools.instruction.instructions;
 
+import com.google.common.collect.ImmutableList;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
+import uk.co.thinkofdeath.patchtools.matching.MatchClass;
+import uk.co.thinkofdeath.patchtools.matching.MatchMethod;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
+
+import java.util.List;
 
 public class PushIntStruction implements InstructionHandler {
     @Override
@@ -98,5 +103,15 @@ public class PushIntStruction implements InstructionHandler {
             }
         }
         return false;
+    }
+
+    @Override
+    public List<MatchClass> getReferencedClasses(PatchInstruction instruction) {
+        return ImmutableList.of();
+    }
+
+    @Override
+    public List<MatchMethod> getReferencedMethods(PatchInstruction instruction) {
+        return ImmutableList.of();
     }
 }
