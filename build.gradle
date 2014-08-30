@@ -1,13 +1,22 @@
 apply plugin: 'java'
+apply plugin: 'application'
 
 sourceCompatibility = 1.8
 version = '1.0'
+
+mainClassName = "uk.co.thinkofdeath.patchtools.main.Patch"
 
 repositories {
     mavenCentral()
     maven {
         url "http://repo.thinkofdeath.co.uk/content/groups/public/"
     }
+}
+
+jar {
+    archiveName = "PatchTools.jar"
+    manifest.attributes("Main-Class": mainClassName)
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 
 dependencies {
