@@ -80,17 +80,25 @@ public class ClassWrapper {
     }
 
     public MethodNode getMethodNode(MethodWrapper wrapper) {
-        return node.methods.stream()
+        MethodNode mn = node.methods.stream()
                 .filter(m -> m.name.equals(wrapper.getName())
                         && m.desc.equals(wrapper.getDesc()))
                 .findFirst().orElse(null);
+        if (mn == null && node.superName != null) {
+            mn = classSet.getClassWrapper(node.superName).getMethodNode(wrapper);
+        }
+        return mn;
     }
 
     public MethodWrapper getMethod(String name, String desc) {
-        return methods.stream()
+        MethodWrapper wrap = methods.stream()
                 .filter(m -> m.getName().equals(name)
                         && m.getDesc().equals(desc))
                 .findFirst().orElse(null);
+        if (wrap == null && node.superName != null) {
+            wrap = classSet.getClassWrapper(node.superName).getMethod(name, desc);
+        }
+        return wrap;
     }
 
     public List<FieldWrapper> getFields() {
@@ -113,17 +121,25 @@ public class ClassWrapper {
     }
 
     public FieldWrapper getField(String name, String desc) {
-        return fields.stream()
+        FieldWrapper wrap = fields.stream()
                 .filter(f -> f.getName().equals(name)
                         && f.getDesc().equals(desc))
                 .findFirst().orElse(null);
+        if (wrap == null && node.superName != null) {
+            wrap = classSet.getClassWrapper(node.superName).getField(name, desc);
+        }
+        return wrap;
     }
 
     public FieldNode getFieldNode(FieldWrapper fieldWrapper) {
-        return node.fields.stream()
+        FieldNode fn = node.fields.stream()
                 .filter(f -> f.name.equals(fieldWrapper.getName())
                         && f.desc.equals(fieldWrapper.getDesc()))
                 .findFirst().orElse(null);
+        if (fn == null && node.superName != null) {
+            fn = classSet.getClassWrapper(node.superName).getFieldNode(fieldWrapper);
+        }
+        return fn;
     }
 
     @Override

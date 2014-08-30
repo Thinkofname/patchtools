@@ -203,10 +203,10 @@ public enum Instruction {
     // dreturn (return)
     // areturn (return)
     RETURN(new ReturnInstruction()),
-    // TODO: getstatic (get-static)
-    // TODO: putstatic (put-static)
-    // TODO: getfield (get-field)
-    // TODO: putfield (put-field)
+    GET_STATIC(new FieldInstruction(Opcodes.GETSTATIC)),
+    PUT_STATIC(new FieldInstruction(Opcodes.PUTSTATIC)),
+    GET_FIELD(new FieldInstruction(Opcodes.GETFIELD)),
+    PUT_FIELD(new FieldInstruction(Opcodes.PUTFIELD)),
     INVOKE_VIRTUAL(new InvokeInstruction(Opcodes.INVOKEVIRTUAL)),
     INVOKE_SPECIAL(new InvokeInstruction(Opcodes.INVOKESPECIAL)),
     INVOKE_STATIC(new InvokeInstruction(Opcodes.INVOKESTATIC)),

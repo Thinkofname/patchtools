@@ -18,6 +18,8 @@ package uk.co.thinkofdeath.patchtools.matching;
 
 import com.google.common.collect.Maps;
 import org.jetbrains.annotations.NotNull;
+import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
+import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
 
 import java.util.Collection;
 import java.util.Map;
@@ -27,9 +29,15 @@ public class MatchGroup {
     private Map<String, MatchClass> classes = Maps.newHashMap();
     private MatchClass first;
 
-    public void add(@NotNull MatchClass cls) {
+    public void add(@NotNull MatchClass cls, ClassSet classSet) {
         if (first == null) first = cls;
-        classes.put(cls.getName(), cls);
+        ClassWrapper wrp = classSet.getClassWrapper(cls.getName());
+        if (cls.getName().equals("*") || (wrp != null && wrp.isHidden())) {
+            return;
+        }
+        if (!classes.containsKey(cls.getName())) {
+            classes.put(cls.getName(), cls);
+        }
     }
 
     public void merge(MatchGroup other) {

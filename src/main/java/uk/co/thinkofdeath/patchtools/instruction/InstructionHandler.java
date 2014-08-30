@@ -21,6 +21,7 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.matching.MatchClass;
+import uk.co.thinkofdeath.patchtools.matching.MatchField;
 import uk.co.thinkofdeath.patchtools.matching.MatchMethod;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
@@ -40,6 +41,10 @@ public interface InstructionHandler {
     }
 
     default List<MatchMethod> getReferencedMethods(PatchInstruction instruction) {
+        return ImmutableList.of();
+    }
+
+    default List<MatchField> getReferencedFields(PatchInstruction instruction) {
         return ImmutableList.of();
     }
 }

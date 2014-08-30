@@ -32,7 +32,7 @@ public class MatchMethod {
     private Type returnType;
 
     private List<MethodPair> matchedMethods = new ArrayList<>();
-    private Set<MethodNode> checkedMethods = new HashSet<>();
+    private Set<MethodPair> checkedMethods = new HashSet<>();
 
     public MatchMethod(MatchClass owner, String name, String desc) {
         this.owner = owner;
@@ -69,7 +69,7 @@ public class MatchMethod {
     }
 
     public void addMatch(@NotNull ClassNode owner, @NotNull MethodNode methodNode) {
-        if (!checkedMethods.contains(methodNode)) {
+        if (!checkedMethods.contains(new MethodPair(owner, methodNode))) {
             matchedMethods.add(new MethodPair(owner, methodNode));
         }
     }
@@ -88,17 +88,17 @@ public class MatchMethod {
         }
     }
 
-    public void addChecked(@NotNull MethodNode methodNode) {
-        checkedMethods.add(methodNode);
+    public void addChecked(@NotNull ClassNode owner, @NotNull MethodNode methodNode) {
+        checkedMethods.add(new MethodPair(owner, methodNode));
     }
 
     public boolean hasUnchecked() {
-        return matchedMethods.stream().anyMatch(methodPair -> !checkedMethods.contains(methodPair.node));
+        return matchedMethods.stream().anyMatch(methodPair -> !checkedMethods.contains(methodPair));
     }
 
     public MethodPair[] getUncheckedMethods() {
         return matchedMethods.stream()
-                .filter(c -> !checkedMethods.contains(c.node))
+                .filter(c -> !checkedMethods.contains(c))
                 .toArray(MethodPair[]::new);
     }
 

@@ -17,6 +17,7 @@
 package uk.co.thinkofdeath.patchtools.matching;
 
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
 interface MatchPair {
@@ -54,6 +55,24 @@ interface MatchPair {
         @Override
         public void apply() {
             matchMethod.addMatch(classNode, methodNode);
+        }
+    }
+
+    public static class FieldMatch implements MatchPair {
+
+        private MatchField matchField;
+        private ClassNode classNode;
+        private FieldNode fieldNode;
+
+        public FieldMatch(MatchField matchField, ClassNode classNode, FieldNode fieldNode) {
+            this.matchField = matchField;
+            this.classNode = classNode;
+            this.fieldNode = fieldNode;
+        }
+
+        @Override
+        public void apply() {
+            matchField.addMatch(classNode, fieldNode);
         }
     }
 }

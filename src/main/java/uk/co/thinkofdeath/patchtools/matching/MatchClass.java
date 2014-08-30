@@ -54,15 +54,21 @@ public class MatchClass {
         interfaces.add(matchClass);
     }
 
-    public void addMethod(@NotNull MatchMethod method) {
+    public MatchMethod addMethod(@NotNull MatchMethod method) {
         if (!methods.contains(method)) {
             methods.add(method);
+            return method;
+        } else {
+            return methods.stream().filter(method::equals).findAny().orElse(method);
         }
     }
 
-    public void addField(@NotNull MatchField field) {
+    public MatchField addField(@NotNull MatchField field) {
         if (!fields.contains(field)) {
             fields.add(field);
+            return field;
+        } else {
+            return fields.stream().filter(field::equals).findAny().orElse(field);
         }
     }
 

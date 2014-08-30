@@ -23,6 +23,8 @@
         .invoke-special ~minecraft/GuiButton <init> (IIILjava/lang/String;)V
         .invoke-interface java/util/List add (Ljava/lang/Object;)Z
         .any
+        .get-field ~minecraft/GuiMainMenu ~buttonList Ljava/util/List;
+        .any
     .end-method
 
     .method ~onClick (L~minecraft/GuiButton;)V protected
@@ -31,6 +33,8 @@
 .end-class
 
 .class ~minecraft/GuiMenu
+
+    //.field ~buttonList Ljava/util/List;
 
     .extends ~minecraft/GuiScreen
 

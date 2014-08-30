@@ -31,7 +31,7 @@ public class MatchField {
     private Type type;
 
     private List<FieldPair> matchedFields = new ArrayList<>();
-    private Set<FieldNode> checkedFields = new HashSet<>();
+    private Set<FieldPair> checkedFields = new HashSet<>();
 
     public MatchField(MatchClass owner, String name, String desc) {
         this.owner = owner;
@@ -60,7 +60,7 @@ public class MatchField {
     }
 
     public void addMatch(@NotNull ClassNode owner, @NotNull FieldNode fieldNode) {
-        if (!checkedFields.contains(fieldNode)) {
+        if (!checkedFields.contains(new FieldPair(owner, fieldNode))) {
             matchedFields.add(new FieldPair(owner, fieldNode));
         }
     }
@@ -79,17 +79,17 @@ public class MatchField {
         }
     }
 
-    public void addChecked(@NotNull FieldNode fieldNode) {
-        checkedFields.add(fieldNode);
+    public void addChecked(@NotNull ClassNode owner, @NotNull FieldNode fieldNode) {
+        checkedFields.add(new FieldPair(owner, fieldNode));
     }
 
     public boolean hasUnchecked() {
-        return matchedFields.stream().anyMatch(fieldPair -> !checkedFields.contains(fieldPair.node));
+        return matchedFields.stream().anyMatch(fieldPair -> !checkedFields.contains(fieldPair));
     }
 
     public FieldPair[] getUncheckedMethods() {
         return matchedFields.stream()
-                .filter(c -> !checkedFields.contains(c.node))
+                .filter(c -> !checkedFields.contains(c))
                 .toArray(FieldPair[]::new);
     }
 
