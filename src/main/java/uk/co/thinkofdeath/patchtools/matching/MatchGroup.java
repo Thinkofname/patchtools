@@ -28,8 +28,13 @@ public class MatchGroup {
 
     private Map<String, MatchClass> classes = Maps.newHashMap();
     private MatchClass first;
+    private ClassSet classSet;
 
-    public void add(@NotNull MatchClass cls, ClassSet classSet) {
+    public MatchGroup(ClassSet classSet) {
+        this.classSet = classSet;
+    }
+
+    public void add(@NotNull MatchClass cls) {
         if (first == null) first = cls;
         ClassWrapper wrp = classSet.getClassWrapper(cls.getName());
         if (cls.getName().equals("*") || (wrp != null && wrp.isHidden())) {
@@ -48,10 +53,12 @@ public class MatchGroup {
         return classes.values();
     }
 
-    public MatchClass getClass(MatchClass owner) {
-        return classes.values().stream()
+    public MatchClass getClass(@NotNull MatchClass owner) {
+        owner = classes.values().stream()
             .filter(owner::equals)
             .findAny().orElse(owner);
+        add(owner);
+        return owner;
     }
 
     public MatchClass getFirst() {

@@ -266,21 +266,19 @@ public class MatchGenerator {
                                         .forEach(c -> referencedClasses.forEach(rc -> {
                                                 ClassWrapper wrapper = classSet.getClassWrapper(rc.name);
                                                 if (!wrapper.isHidden()) {
-                                                    matchPairs.add(new MatchPair.ClassMatch(c, rc));
+                                                    matchPairs.add(new MatchPair.ClassMatch(group.getClass(c), rc));
                                                 }
                                             })
                                         );
                                     in.getHandler().getReferencedMethods(instruction)
                                         .forEach(me -> {
                                             MatchClass matchClass = group.getClass(me.getOwner());
-                                            group.add(matchClass, classSet);
                                             final MatchMethod fme = matchClass.addMethod(me);
                                             referencedMethods.forEach(rm -> matchPairs.add(new MatchPair.MethodMatch(fme, rm.getOwner(), rm.getNode())));
                                         });
                                     in.getHandler().getReferencedFields(instruction)
                                         .forEach(fe -> {
                                             MatchClass matchClass = group.getClass(fe.getOwner());
-                                            group.add(matchClass, classSet);
                                             final MatchField ffe = matchClass.addField(fe);
                                             referencedFields.forEach(rf -> matchPairs.add(new MatchPair.FieldMatch(ffe, rf.getOwner(), rf.getNode())));
                                         });
@@ -336,7 +334,7 @@ public class MatchGenerator {
                     return;
                 }
 
-                MatchGroup group = new MatchGroup();
+                MatchGroup group = new MatchGroup(classSet);
                 visited.put(cls, group);
                 groups.add(group);
                 Stack<MatchClass> visitList = new Stack<>();
@@ -345,19 +343,19 @@ public class MatchGenerator {
                     MatchClass mc = visitList.pop();
                     PatchClass pc = patchClasses.getClass(mc.getName());
                     if (pc == null || pc.getMode() == Mode.ADD) continue;
-                    group.add(mc, classSet);
+                    group.add(mc);
 
                     pc.getExtends().stream()
                         .filter(c -> c.getMode() != Mode.ADD)
                         .forEach(c -> {
-                            MatchClass matchClass = new MatchClass(c.getIdent().getName());
+                            MatchClass matchClass = group.getClass(new MatchClass(c.getIdent().getName()));
                             mc.setSuperClass(matchClass);
                             addToVisited(visited, visitList, matchClass, group);
                         });
                     pc.getInterfaces().stream()
                         .filter(c -> c.getMode() != Mode.ADD)
                         .forEach(c -> {
-                            MatchClass matchClass = new MatchClass(c.getIdent().getName());
+                            MatchClass matchClass = group.getClass(new MatchClass(c.getIdent().getName()));
                             mc.addInterface(matchClass);
                             addToVisited(visited, visitList, matchClass, group);
                         });
@@ -375,7 +373,7 @@ public class MatchGenerator {
                                 MatchClass argCls = new MatchClass(
                                     new Ident(rt.getInternalName()).getName()
                                 );
-                                addToVisited(visited, visitList, argCls, group);
+                                addToVisited(visited, visitList, group.getClass(argCls), group);
                             }
                             field.setType(type);
                         });
@@ -394,7 +392,7 @@ public class MatchGenerator {
                                     MatchClass argCls = new MatchClass(
                                         new Ident(rt.getInternalName()).getName()
                                     );
-                                    addToVisited(visited, visitList, argCls, group);
+                                    addToVisited(visited, visitList, group.getClass(argCls), group);
                                 }
                                 method.addArgument(type);
                             }
@@ -404,7 +402,7 @@ public class MatchGenerator {
                                 MatchClass argCls = new MatchClass(
                                     new Ident(rt.getInternalName()).getName()
                                 );
-                                addToVisited(visited, visitList, argCls, group);
+                                addToVisited(visited, visitList, group.getClass(argCls), group);
                             }
                             method.setReturn(type);
 
