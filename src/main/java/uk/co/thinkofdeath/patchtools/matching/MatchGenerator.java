@@ -65,22 +65,22 @@ public class MatchGenerator {
             System.out.println("=Group");
             g.getClasses().forEach(c -> {
                 System.out.printf("  %s with %d matches\n", c.getName(), c.getMatches().size());
-                c.getMethods().forEach(m -> {
-                    System.out.printf("    ::%s with %d matches\n", m.getName(), m.getMatches().size());
-                });
-                c.getFields().forEach(f -> {
-                    System.out.printf("    .%s with %d matches\n", f.getName(), f.getMatches().size());
-                });
+                c.getMethods().forEach(
+                    m -> System.out.printf("    ::%s with %d matches\n", m.getName(), m.getMatches().size())
+                );
+                c.getFields().forEach(
+                    f -> System.out.printf("    .%s with %d matches\n", f.getName(), f.getMatches().size())
+                );
             });
         });
 
-        groups.forEach(g -> {
-            g.getClasses().forEach(c -> {
+        groups.stream()
+            .flatMap(g -> g.getClasses().stream())
+            .forEach(c -> {
                 state.put(c, 0);
                 c.getMethods().forEach(m -> state.put(m, 0));
                 c.getFields().forEach(f -> state.put(f, 0));
             });
-        });
     }
 
     private void reduceGroups() {
@@ -145,7 +145,6 @@ public class MatchGenerator {
                         Type type = Type.getType(node.desc);
                         if (type.getSort() != field.getType().getSort()) {
                             field.removeMatch(pair.getOwner(), node);
-                            continue;
                         } else if (type.getSort() == Type.OBJECT) {
                             MatchClass retCls = group.getClass(new MatchClass(new Ident(field.getType().getInternalName()).getName()));
                             ClassWrapper wrapper = classSet.getClassWrapper(type.getInternalName());
@@ -217,7 +216,7 @@ public class MatchGenerator {
                             if (pm != null) {
                                 if (!pm.checkInstructions(classSet, null, node)) {
                                     method.removeMatch(pair.getOwner(), node);
-                                    continue methodCheck;
+                                    continue;
                                 }
 
                                 ListIterator<AbstractInsnNode> it = node.instructions.iterator();
@@ -296,15 +295,16 @@ public class MatchGenerator {
                 if (!doneSomething) {
                     String clss[] = classSet.classes(true);
                     if (group.getClasses().stream()
-                        .filter(c -> c.getMatches().size() == 0 && !c.hasChecked(clss.length))
+                        .filter(c -> c.getMatches().isEmpty())
+                        .filter(c -> !c.hasChecked(clss.length))
                         .count() != 0) {
-                        group.getClasses().stream().filter(c -> c.getMatches().size() == 0 && !c.hasChecked(clss.length))
-                            .forEach(c -> {
-                                Arrays.stream(clss)
-                                    .map(classSet::getClassWrapper)
-                                    .map(ClassWrapper::getNode)
-                                    .forEach(c::addMatch);
-                            });
+                        group.getClasses().stream()
+                            .filter(c -> c.getMatches().isEmpty())
+                            .filter(c -> !c.hasChecked(clss.length))
+                            .forEach(c -> Arrays.stream(clss)
+                                .map(classSet::getClassWrapper)
+                                .map(ClassWrapper::getNode)
+                                .forEach(c::addMatch));
                         doneSomething = true;
                     }
                 }
