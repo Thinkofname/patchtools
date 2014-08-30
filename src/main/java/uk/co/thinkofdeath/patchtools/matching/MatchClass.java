@@ -73,7 +73,7 @@ public class MatchClass {
     }
 
     public void addMatch(@NotNull ClassNode classNode) {
-        if (!checkedClasses.contains(classNode)) {
+        if (!checkedClasses.contains(classNode) && !matchedClasses.contains(classNode)) {
             matchedClasses.add(classNode);
         }
     }

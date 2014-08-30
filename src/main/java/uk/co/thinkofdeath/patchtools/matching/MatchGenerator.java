@@ -110,14 +110,14 @@ public class MatchGenerator {
 
                         if (cls.getSuperClass() != null) {
                             ClassWrapper su = classSet.getClassWrapper(node.superName);
-                            if (!su.isHidden()) {
+                            if (su != null && !su.isHidden()) {
                                 cls.getSuperClass().addMatch(su.getNode());
                             }
                         }
 
                         for (String inter : node.interfaces) {
                             ClassWrapper su = classSet.getClassWrapper(inter);
-                            if (!su.isHidden()) {
+                            if (su != null && !su.isHidden()) {
                                 cls.getInterfaces().forEach(i -> i.addMatch(su.getNode()));
                             }
                         }
@@ -148,7 +148,7 @@ public class MatchGenerator {
                         } else if (type.getSort() == Type.OBJECT) {
                             MatchClass retCls = group.getClass(new MatchClass(new Ident(field.getType().getInternalName()).getName()));
                             ClassWrapper wrapper = classSet.getClassWrapper(type.getInternalName());
-                            if (!wrapper.isHidden()) {
+                            if (wrapper != null && !wrapper.isHidden()) {
                                 retCls.addMatch(wrapper.getNode());
                             }
                         }
@@ -174,6 +174,12 @@ public class MatchGenerator {
                         List<MatchPair> matchPairs = new ArrayList<>();
 
                         Type type = Type.getMethodType(node.desc);
+
+                        if (type.getArgumentTypes().length != method.getArguments().size()) {
+                            method.removeMatch(pair.getOwner(), node);
+                            continue;
+                        }
+
                         Type ret = type.getReturnType();
                         if (ret.getSort() != method.getReturnType().getSort()) {
                             method.removeMatch(pair.getOwner(), node);
@@ -181,14 +187,9 @@ public class MatchGenerator {
                         } else if (ret.getSort() == Type.OBJECT) {
                             MatchClass retCls = group.getClass(new MatchClass(new Ident(method.getReturnType().getInternalName()).getName()));
                             ClassWrapper wrapper = classSet.getClassWrapper(ret.getInternalName());
-                            if (!wrapper.isHidden()) {
+                            if (wrapper != null && !wrapper.isHidden()) {
                                 matchPairs.add(new MatchPair.ClassMatch(retCls, wrapper.getNode()));
                             }
-                        }
-
-                        if (type.getArgumentTypes().length != method.getArguments().size()) {
-                            method.removeMatch(pair.getOwner(), node);
-                            continue;
                         }
 
                         Type[] argumentTypes = type.getArgumentTypes();
@@ -200,7 +201,7 @@ public class MatchGenerator {
                             } else if (arg.getSort() == Type.OBJECT) {
                                 MatchClass argCls = group.getClass(new MatchClass(new Ident(method.getArguments().get(i).getInternalName()).getName()));
                                 ClassWrapper wrapper = classSet.getClassWrapper(arg.getInternalName());
-                                if (!wrapper.isHidden()) {
+                                if (wrapper != null && !wrapper.isHidden()) {
                                     matchPairs.add(new MatchPair.ClassMatch(argCls, wrapper.getNode()));
                                 }
                             }
@@ -340,7 +341,7 @@ public class MatchGenerator {
                 Stack<MatchClass> visitList = new Stack<>();
                 visitList.add(cls);
                 while (!visitList.isEmpty()) {
-                    MatchClass mc = visitList.pop();
+                    MatchClass mc = group.getClass(visitList.pop());
                     PatchClass pc = patchClasses.getClass(mc.getName());
                     if (pc == null || pc.getMode() == Mode.ADD) continue;
                     group.add(mc);

@@ -21,6 +21,10 @@ jar {
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 
+task normalJar(type: Jar) {
+    from sourceSets.main.output
+}
+
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from 'build/docs/javadoc'
@@ -32,7 +36,7 @@ task sourcesJar(type: Jar) {
 }
 
 artifacts {
-    archives jar
+    archives normalJar
     archives javadocJar
     archives sourcesJar
 }

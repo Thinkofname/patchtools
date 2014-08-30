@@ -483,18 +483,20 @@ public class PatchClass {
         if (pt.getSort() == Type.OBJECT) {
             Ident id = new Ident(pt.getInternalName());
             String cls = id.getName();
-            if (scope != null || !id.isWeak()) {
-                if (id.isWeak()) {
-                    ClassWrapper ptcls = scope.getClass(cls);
-                    if (ptcls == null) { // Assume true
-                        cls = t.getInternalName();
-                        scope.putClass(classSet.getClassWrapper(cls), cls);
-                        return true;
+            if (!cls.equals("*")) {
+                if (scope != null || !id.isWeak()) {
+                    if (id.isWeak()) {
+                        ClassWrapper ptcls = scope.getClass(cls);
+                        if (ptcls == null) { // Assume true
+                            cls = t.getInternalName();
+                            scope.putClass(classSet.getClassWrapper(cls), cls);
+                            return true;
+                        }
+                        cls = ptcls.getNode().name;
                     }
-                    cls = ptcls.getNode().name;
-                }
-                if (!cls.equals(t.getInternalName())) {
-                    return false;
+                    if (!cls.equals(t.getInternalName())) {
+                        return false;
+                    }
                 }
             }
         } else if (pt.getSort() == Type.ARRAY) {

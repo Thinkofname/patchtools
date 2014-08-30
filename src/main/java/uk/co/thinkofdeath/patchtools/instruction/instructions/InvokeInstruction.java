@@ -100,6 +100,10 @@ public class InvokeInstruction implements InstructionHandler {
         Type patchDesc = Type.getMethodType(patchInstruction.params[2]);
         Type desc = Type.getMethodType(node.desc);
 
+        if (desc.getArgumentTypes().length != patchDesc.getArgumentTypes().length) {
+            return false;
+        }
+
         for (int i = 0; i < patchDesc.getArgumentTypes().length; i++) {
             Type pt = patchDesc.getArgumentTypes()[i];
             Type t = desc.getArgumentTypes()[i];
