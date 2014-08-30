@@ -61,6 +61,7 @@ public class Patcher {
         PatchScope foundScope = generator.apply((group, scope) -> {
                 PatchClass[] classes = group.getClasses().stream()
                     .map(c -> patchClasses.getClass(c.getName()))
+                    .filter(c -> c != null)
                     .toArray(PatchClass[]::new);
                 return Arrays.stream(classes).allMatch(c -> c.checkAttributes(scope, classSet))
                     && Arrays.stream(classes).allMatch(c -> c.checkFields(scope, classSet))
