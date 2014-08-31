@@ -47,6 +47,7 @@ public enum Instruction {
     // bipush (push-int)
     // sipush (push-int)
     PUSH_STRING(new PushStringInstruction()), // Virtual instruction (ldc)
+    PUSH_CLASS(new PushClassInstruction()), // Virtual instruction (ldc)
     // ldc (push-*)
     // ldc_w (push-*)
     // ldc2_w (push-*)

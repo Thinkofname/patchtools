@@ -16,56 +16,73 @@
 
 package uk.co.thinkofdeath.patchtools.instruction.instructions;
 
-import com.google.common.base.Joiner;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
+import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
+import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
 
-public class PushStringInstruction implements InstructionHandler {
+public class PushClassInstruction implements InstructionHandler {
     @Override
     public boolean check(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction, MethodNode method, AbstractInsnNode insn) {
         if (!(insn instanceof LdcInsnNode)) {
             return false;
         }
+        if (patchInstruction.params.length != 1) {
+            return false;
+        }
         LdcInsnNode ldcInsnNode = (LdcInsnNode) insn;
-        String cst = Joiner.on(' ').join(patchInstruction.params);
+        String className = patchInstruction.params[0];
 
-        if (ldcInsnNode.cst instanceof String) {
-            if (cst.equals("*")) {
+        if (ldcInsnNode.cst instanceof Type) {
+            if (className.equals("*")) {
                 return true;
             }
 
-            if (!cst.startsWith("\"") || !cst.endsWith("\"")) {
-                return false;
-            }
-            cst = cst.substring(1, cst.length() - 1);
-            if (!ldcInsnNode.cst.equals(cst)) {
-                return false;
+            Type type = (Type) ldcInsnNode.cst;
+
+            Ident cls = new Ident(className);
+            String clsName = cls.getName();
+            if (!clsName.equals("*")) {
+                if (scope != null || !cls.isWeak()) {
+                    if (cls.isWeak()) {
+                        ClassWrapper ptcls = scope.getClass(clsName);
+                        if (ptcls == null) { // Assume true
+                            scope.putClass(classSet.getClassWrapper(type.getInternalName()), clsName);
+                            clsName = type.getInternalName();
+                        } else {
+                            clsName = ptcls.getNode().name;
+                        }
+                    }
+                    if (!clsName.equals(type.getInternalName())) {
+                        return false;
+                    }
+                }
             }
         } else {
             return false;
         }
-        return true;
+        return false;
     }
 
     @Override
     public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method) {
-        String cst = Joiner.on(' ').join(instruction.params);
-        return new LdcInsnNode(Utils.parseConstant(cst));
+        return new LdcInsnNode(Type.getType("L" + instruction.params[0]) + ";");
     }
 
     @Override
     public boolean print(Instruction instruction, StringBuilder patch, MethodNode method, AbstractInsnNode insn) {
-        if (!(insn instanceof LdcInsnNode) || !(((LdcInsnNode) insn).cst instanceof String)) {
+        if (!(insn instanceof LdcInsnNode) || !(((LdcInsnNode) insn).cst instanceof Type)) {
             return false;
         }
-        patch.append("push-string ");
-        Utils.printConstant(patch, ((LdcInsnNode) insn).cst);
+        patch.append("push-class ")
+            .append(((Type) ((LdcInsnNode) insn).cst).getInternalName());
         return true;
     }
 }
