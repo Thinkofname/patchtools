@@ -16,6 +16,7 @@
 
 package uk.co.thinkofdeath.patchtools.instruction.instructions;
 
+import com.google.common.collect.ImmutableList;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -170,16 +171,23 @@ public class FieldInstruction implements InstructionHandler {
         }
         ArrayList<MatchClass> classes = new ArrayList<>();
         Ident owner = new Ident(instruction.params[0]);
-        MatchClass omc = new MatchClass(owner.getName());
-        classes.add(omc);
-        Type desc = Type.getType(instruction.params[2]);
+        if (!owner.getName().equals("*")) {
+            MatchClass omc = new MatchClass(owner.getName());
+            classes.add(omc);
+        }
 
-        Type rt = MatchGenerator.getRootType(desc);
-        if (rt.getSort() == Type.OBJECT) {
-            MatchClass argCls = new MatchClass(
-                new Ident(rt.getInternalName()).getName()
-            );
-            classes.add(argCls);
+        if (!instruction.params[2].equals("*")) {
+            Type desc = Type.getType(instruction.params[2]);
+
+            Type rt = MatchGenerator.getRootType(desc);
+            if (rt.getSort() == Type.OBJECT) {
+                MatchClass argCls = new MatchClass(
+                    new Ident(rt.getInternalName()).getName()
+                );
+                if (!argCls.getName().equals("*")) {
+                    classes.add(argCls);
+                }
+            }
         }
         return classes;
     }
@@ -191,11 +199,14 @@ public class FieldInstruction implements InstructionHandler {
         }
         Ident owner = new Ident(instruction.params[0]);
         Ident field = new Ident(instruction.params[1]);
-        MatchClass omc = new MatchClass(owner.getName());
-        MatchField mmc = new MatchField(omc, field.getName(), instruction.params[2]);
+        if (!owner.getName().equals("*") && !field.getName().equals("*")) {
+            MatchClass omc = new MatchClass(owner.getName());
+            MatchField mmc = new MatchField(omc, field.getName(), instruction.params[2]);
 
-        Type desc = Type.getType(instruction.params[2]);
-        mmc.setType(desc);
-        return Arrays.asList(mmc);
+            Type desc = Type.getType(instruction.params[2]);
+            mmc.setType(desc);
+            return Arrays.asList(mmc);
+        }
+        return ImmutableList.of();
     }
 }

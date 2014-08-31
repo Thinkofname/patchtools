@@ -16,6 +16,7 @@
 
 package uk.co.thinkofdeath.patchtools.instruction.instructions;
 
+import com.google.common.collect.ImmutableList;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -188,8 +189,11 @@ public class InvokeInstruction implements InstructionHandler {
         }
         ArrayList<MatchClass> classes = new ArrayList<>();
         Ident owner = new Ident(instruction.params[0]);
-        MatchClass omc = new MatchClass(owner.getName());
-        classes.add(omc);
+
+        if (!owner.getName().equals("*")) {
+            MatchClass omc = new MatchClass(owner.getName());
+            classes.add(omc);
+        }
         Type desc = Type.getMethodType(instruction.params[2]);
 
         for (Type type : desc.getArgumentTypes()) {
@@ -198,7 +202,9 @@ public class InvokeInstruction implements InstructionHandler {
                 MatchClass argCls = new MatchClass(
                     new Ident(rt.getInternalName()).getName()
                 );
-                classes.add(argCls);
+                if (!argCls.getName().equals("*")) {
+                    classes.add(argCls);
+                }
             }
         }
         Type type = desc.getReturnType();
@@ -207,7 +213,9 @@ public class InvokeInstruction implements InstructionHandler {
             MatchClass argCls = new MatchClass(
                 new Ident(rt.getInternalName()).getName()
             );
-            classes.add(argCls);
+            if (!argCls.getName().equals("*")) {
+                classes.add(argCls);
+            }
         }
         return classes;
     }
@@ -219,16 +227,21 @@ public class InvokeInstruction implements InstructionHandler {
         }
         Ident owner = new Ident(instruction.params[0]);
         Ident method = new Ident(instruction.params[1]);
-        MatchClass omc = new MatchClass(owner.getName());
-        MatchMethod mmc = new MatchMethod(omc, method.getName(), instruction.params[2]);
 
-        Type desc = Type.getMethodType(instruction.params[2]);
 
-        for (Type type : desc.getArgumentTypes()) {
-            mmc.addArgument(type);
+        if (!owner.getName().equals("*") && !method.getName().equals("*")) {
+            MatchClass omc = new MatchClass(owner.getName());
+            MatchMethod mmc = new MatchMethod(omc, method.getName(), instruction.params[2]);
+
+            Type desc = Type.getMethodType(instruction.params[2]);
+
+            for (Type type : desc.getArgumentTypes()) {
+                mmc.addArgument(type);
+            }
+            Type type = desc.getReturnType();
+            mmc.setReturn(type);
+            return Arrays.asList(mmc);
         }
-        Type type = desc.getReturnType();
-        mmc.setReturn(type);
-        return Arrays.asList(mmc);
+        return ImmutableList.of();
     }
 }

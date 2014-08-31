@@ -79,6 +79,9 @@ public class Disassembler {
             if ((m.access & Opcodes.ACC_PRIVATE) != 0) {
                 patch.append(" private");
             }
+            if ((m.access & Opcodes.ACC_PROTECTED) != 0) {
+                patch.append(" protected");
+            }
             patch.append('\n');
 
             Arrays.stream(m.instructions.toArray())
