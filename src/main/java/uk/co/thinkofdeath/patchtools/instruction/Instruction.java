@@ -144,7 +144,7 @@ public enum Instruction {
     REM_INT(new SingleInstruction(Opcodes.IREM)),
     REM_LONG(new SingleInstruction(Opcodes.LREM)),
     REM_FLOAT(new SingleInstruction(Opcodes.FREM)),
-    REM_DOULBE(new SingleInstruction(Opcodes.DREM)),
+    REM_DOUBLE(new SingleInstruction(Opcodes.DREM)),
     NEG_INT(new SingleInstruction(Opcodes.INEG)),
     NEG_LONG(new SingleInstruction(Opcodes.LNEG)),
     NEG_FLOAT(new SingleInstruction(Opcodes.FNEG)),
@@ -161,7 +161,7 @@ public enum Instruction {
     OR_LONG(new SingleInstruction(Opcodes.LOR)),
     XOR_INT(new SingleInstruction(Opcodes.IXOR)),
     XOR_LONG(new SingleInstruction(Opcodes.LXOR)),
-    // TODO: iinc (inc)
+    INC_INT(new IntIncInstruction()),
     CONVERT_INT_LONG(new SingleInstruction(Opcodes.I2L)),
     CONVERT_INT_FLOAT(new SingleInstruction(Opcodes.I2F)),
     CONVERT_INT_DOUBLE(new SingleInstruction(Opcodes.I2D)),
