@@ -217,7 +217,7 @@ public enum Instruction {
     INVOKE_INTERFACE(new InvokeInstruction(Opcodes.INVOKEINTERFACE)),
     // TODO: invokedynamic (invoke-dynamic)
     NEW(new TypeInstruction(Opcodes.NEW)),
-    // TODO: newarray (new-array)
+    NEW_ARRAY(new ArrayInstruction()),
     // anewarray (new-array)
     LENGTH_ARRAY(new SingleInstruction(Opcodes.ARRAYLENGTH)),
     THROW(new SingleInstruction(Opcodes.ATHROW)),

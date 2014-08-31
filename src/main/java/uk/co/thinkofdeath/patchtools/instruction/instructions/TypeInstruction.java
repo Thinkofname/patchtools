@@ -17,16 +17,16 @@
 package uk.co.thinkofdeath.patchtools.instruction.instructions;
 
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
-import uk.co.thinkofdeath.patchtools.patch.Ident;
+import uk.co.thinkofdeath.patchtools.patch.PatchClass;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
-import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
 
 public class TypeInstruction implements InstructionHandler {
 
@@ -52,31 +52,20 @@ public class TypeInstruction implements InstructionHandler {
         }
 
         String type = typeInsnNode.desc;
-
-        Ident cls = new Ident(className);
-        String clsName = cls.getName();
-        if (!clsName.equals("*")) {
-            if (scope != null || !cls.isWeak()) {
-                if (cls.isWeak()) {
-                    ClassWrapper ptcls = scope.getClass(clsName);
-                    if (ptcls == null) { // Assume true
-                        scope.putClass(classSet.getClassWrapper(type), clsName);
-                        clsName = type;
-                    } else {
-                        clsName = ptcls.getNode().name;
-                    }
-                }
-                if (!clsName.equals(type)) {
-                    return false;
-                }
-            }
+        if (!type.startsWith("[")) {
+            type = "L" + type + ";";
         }
-        return false;
+
+        return PatchClass.checkTypes(classSet, scope, Type.getType(className), Type.getType("L" + type + ";"));
     }
 
     @Override
     public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method) {
-        return new TypeInsnNode(opcode, instruction.params[0]);
+        String desc = instruction.params[0];
+        if (desc.startsWith("L")) {
+            desc = desc.substring(1, desc.length() - 1);
+        }
+        return new TypeInsnNode(opcode, desc);
     }
 
     @Override
@@ -95,9 +84,13 @@ public class TypeInstruction implements InstructionHandler {
                 patch.append("check-cast");
                 break;
         }
+        String type = ((TypeInsnNode) insn).desc;
+        if (!type.startsWith("[")) {
+            type = "L" + type + ";";
+        }
         patch
             .append(" ")
-            .append(((TypeInsnNode) insn).desc);
+            .append(type);
         return true;
     }
 }

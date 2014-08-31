@@ -11,4 +11,22 @@
         +add-int
         +return
     +end-method
+
+    +method arrayInt ()[I static
+        +push-int 10
+        +new-array I
+        +return
+    +end-method
+
+    +method arrayObject ()[Ljava/lang/Object; static
+        +push-int 20
+        +new-array Ljava/lang/Object;
+        +return
+    +end-method
+
+    +method castTest (Ljava/lang/Object;)V static
+        +load-object 0
+        +check-cast [Ljava/lang/String;
+        +return
+    +end-method
 +end-class

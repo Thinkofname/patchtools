@@ -34,5 +34,13 @@ public class AssembleTest {
 
         int val = (int) res.getMethod("doMagic").invoke(null);
         Assert.assertEquals(5, val);
+
+        int[] a1 = (int[]) res.getMethod("arrayInt").invoke(null);
+        Assert.assertEquals(10, a1.length);
+
+        Object[] a2 = (Object[]) res.getMethod("arrayObject").invoke(null);
+        Assert.assertEquals(20, a2.length);
+
+        res.getMethod("castTest", Object.class).invoke(null, new Object[]{new String[]{"test", "test2"}});
     }
 }
