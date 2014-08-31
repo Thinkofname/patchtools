@@ -16,6 +16,7 @@
 
 package uk.co.thinkofdeath.patchtools.instruction.instructions;
 
+import com.google.common.collect.ImmutableList;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -24,9 +25,15 @@ import org.objectweb.asm.tree.TypeInsnNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
+import uk.co.thinkofdeath.patchtools.matching.MatchClass;
+import uk.co.thinkofdeath.patchtools.matching.MatchGenerator;
+import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.patch.PatchClass;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class TypeInstruction implements InstructionHandler {
 
@@ -94,5 +101,20 @@ public class TypeInstruction implements InstructionHandler {
             .append(" ")
             .append(type);
         return true;
+    }
+
+    @Override
+    public List<MatchClass> getReferencedClasses(PatchInstruction instruction) {
+        String className = instruction.params[0];
+
+        if (className.equals("*")) {
+            return ImmutableList.of();
+        }
+
+        Type type = MatchGenerator.getRootType(Type.getType(className));
+        if (type.getSort() != Type.OBJECT) {
+            return ImmutableList.of();
+        }
+        return Arrays.asList(new MatchClass(new Ident(type.getInternalName()).getName()));
     }
 }
