@@ -226,7 +226,7 @@ public enum Instruction {
     MONITOR_ENTER(new SingleInstruction(Opcodes.MONITORENTER)),
     MONITOR_EXIT(new SingleInstruction(Opcodes.MONITOREXIT)),
     // wide
-    // TODO: multianewarray (new-array-mutli)
+    NEW_ARRAY_MULTI(new MultiArrayInstruction()),
     // TODO: ifnull (if-null)
     // TODO: ifnonnull (if-non-null)
     // goto_w

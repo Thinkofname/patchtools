@@ -28,4 +28,8 @@ public class DisassembleClass {
         i += 0xFFFFF;
         System.out.println(i);
     }
+
+    public static void other() {
+        int[][][] test = new int[5][5][5];
+    }
 }

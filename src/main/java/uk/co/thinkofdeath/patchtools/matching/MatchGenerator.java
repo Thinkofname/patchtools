@@ -275,6 +275,17 @@ public class MatchGenerator {
                                         if (cls == null || cls.isHidden()) continue;
 
                                         referencedClasses.add(cls.getNode());
+                                    } else if (insn instanceof MultiANewArrayInsnNode) {
+                                        MultiANewArrayInsnNode tNode = (MultiANewArrayInsnNode) insn;
+                                        String desc = tNode.desc;
+                                        System.out.println(desc);
+                                        if (!desc.startsWith("[")) {
+                                            desc = "L" + desc + ";";
+                                        }
+                                        ClassWrapper cls = classSet.getClassWrapper(getRootType(Type.getType(desc)).getInternalName());
+                                        if (cls == null || cls.isHidden()) continue;
+
+                                        referencedClasses.add(cls.getNode());
                                     }
                                 }
 
