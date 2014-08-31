@@ -61,7 +61,9 @@ public class TypeInstruction implements InstructionHandler {
 
     @Override
     public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method) {
-        String desc = instruction.params[0];
+        StringBuilder nDesc = new StringBuilder();
+        PatchClass.updatedTypeString(classSet, scope, nDesc, Type.getType(instruction.params[0]));
+        String desc = nDesc.toString();
         if (desc.startsWith("L")) {
             desc = desc.substring(1, desc.length() - 1);
         }

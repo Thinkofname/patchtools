@@ -50,7 +50,12 @@ public class MultiArrayInstruction implements InstructionHandler {
         if (instruction.params.length != 1) {
             throw new RuntimeException();
         }
-        String desc = instruction.params[0];
+        StringBuilder nDesc = new StringBuilder();
+        PatchClass.updatedTypeString(classSet, scope, nDesc, Type.getType(instruction.params[0]));
+        String desc = nDesc.toString();
+        if (desc.startsWith("L")) {
+            desc = desc.substring(1, desc.length() - 1);
+        }
         int dims = Integer.parseInt(instruction.params[1]);
         return new MultiANewArrayInsnNode(desc, dims);
     }

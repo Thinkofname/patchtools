@@ -99,8 +99,9 @@ public class ArrayInstruction implements InstructionHandler {
         Type pType = Type.getType(instruction.params[0]);
 
         if (pType.getSort() == Type.OBJECT || pType.getSort() == Type.ARRAY) {
-
-            String desc = pType.getDescriptor();
+            StringBuilder nDesc = new StringBuilder();
+            PatchClass.updatedTypeString(classSet, scope, nDesc, pType);
+            String desc = nDesc.toString();
             if (desc.startsWith("L")) {
                 desc = desc.substring(1, desc.length() - 1);
             }

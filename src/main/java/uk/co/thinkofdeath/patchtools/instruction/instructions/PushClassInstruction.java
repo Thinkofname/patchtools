@@ -24,6 +24,7 @@ import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
 import uk.co.thinkofdeath.patchtools.patch.Ident;
+import uk.co.thinkofdeath.patchtools.patch.PatchClass;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
@@ -73,7 +74,10 @@ public class PushClassInstruction implements InstructionHandler {
 
     @Override
     public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method) {
-        return new LdcInsnNode(Type.getType("L" + instruction.params[0]) + ";");
+        StringBuilder nDesc = new StringBuilder();
+        PatchClass.updatedTypeString(classSet, scope, nDesc, Type.getType("L" + instruction.params[0] + ";"));
+        String desc = nDesc.toString();
+        return new LdcInsnNode(desc);
     }
 
     @Override
