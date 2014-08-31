@@ -17,7 +17,7 @@
 package uk.co.thinkofdeath.patchtools;
 
 import com.google.common.collect.Maps;
-import org.objectweb.asm.Label;
+import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
@@ -33,7 +33,7 @@ public class PatchScope {
     private Map<MethodWrapper, String> methodMappings = Maps.newHashMap();
     private Map<FieldWrapper, String> fieldMappings = Maps.newHashMap();
     private Map<MethodNode, Map<PatchInstruction, Integer>> methodInstructionMap = Maps.newHashMap();
-    private Map<MethodNode, Map<String, Label>> methodLabelMap = Maps.newHashMap();
+    private Map<MethodNode, Map<String, LabelNode>> methodLabelMap = Maps.newHashMap();
     private final PatchScope parent;
 
     public PatchScope() {
@@ -168,14 +168,14 @@ public class PatchScope {
         methodInstructionMap.put(node, instMap);
     }
 
-    public Label getLabel(MethodNode node, String name) {
+    public LabelNode getLabel(MethodNode node, String name) {
         if (methodLabelMap.containsKey(node)) {
             return methodLabelMap.get(node).get(name);
         }
         return null;
     }
 
-    public void putLabel(MethodNode node, Label label, String name) {
+    public void putLabel(MethodNode node, LabelNode label, String name) {
         if (!methodLabelMap.containsKey(node)) {
             methodLabelMap.put(node, Maps.newHashMap());
         }

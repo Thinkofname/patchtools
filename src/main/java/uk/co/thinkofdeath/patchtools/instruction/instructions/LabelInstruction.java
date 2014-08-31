@@ -43,7 +43,7 @@ public class LabelInstruction implements InstructionHandler {
                 return false;
             }
         } else {
-            scope.putLabel(method, ((LabelNode) insn).getLabel(), ident.getName());
+            scope.putLabel(method, (LabelNode) insn, ident.getName());
         }
         return true;
     }
@@ -59,12 +59,12 @@ public class LabelInstruction implements InstructionHandler {
             throw new UnsupportedOperationException("Weak labels");
         }
 
-        Label label = scope.getLabel(method, ident.getName());
+        LabelNode label = scope.getLabel(method, ident.getName());
         if (label == null) {
-            label = new Label();
+            label = new LabelNode(new Label());
             scope.putLabel(method, label, ident.getName());
         }
-        return new LabelNode(label);
+        return label;
     }
 
     @Override

@@ -183,21 +183,22 @@ public enum Instruction {
     COMPARE_FLOAT_INV(new SingleInstruction(Opcodes.FCMPG)),
     COMPARE_DOUBLE(new SingleInstruction(Opcodes.DCMPL)),
     COMPARE_DOUBLE_INV(new SingleInstruction(Opcodes.DCMPG)),
-    // TODO: lfeq (if-zero)
-    // TODO: lfne (if-not-zero)
-    // TODO: iflt (if-less-zero)
-    // TODO: ifge (if-greater-equal-zero)
-    // TODO: ifgt (if-greater-zero)
-    // TODO: ifle (if-less-equal-zero)
-    // TODO: if_icmpeq (if-equal-int)
-    // TODO: if_icmpne (if-not-equal-int)
-    // TODO: if_icmplt (if-less-int)
-    // TODO: if_icmpge (if-greater-equal-int)
-    // TODO: if_icmpgt (if-greater-int)
-    // TODO: if_icmple (if-less-equal-int)
-    // TODO: if_acmpeq (if-equal-object)
-    // TODO: if_acmpne (if-not-equal-object)
-    // TODO: jsr (goto)
+    IF_ZERO(new JumpInstruction(Opcodes.IFEQ)),
+    IF_NOT_ZERO(new JumpInstruction(Opcodes.IFNE)),
+    IF_LESS_ZERO(new JumpInstruction(Opcodes.IFLT)),
+    IF_GREATER_EQUAL_ZERO(new JumpInstruction(Opcodes.IFGE)),
+    IF_GREATER_ZERO(new JumpInstruction(Opcodes.IFGT)),
+    IF_LESS_EQUAL_ZERO(new JumpInstruction(Opcodes.IFLE)),
+    IF_EQUAL_INT(new JumpInstruction(Opcodes.IF_ICMPEQ)),
+    IF_NOT_EQUAL_INT(new JumpInstruction(Opcodes.IF_ICMPNE)),
+    IF_LESS_INT(new JumpInstruction(Opcodes.IF_ICMPLT)),
+    IF_GREATER_EQUAL_INT(new JumpInstruction(Opcodes.IF_ICMPGE)),
+    IF_GREATER_INT(new JumpInstruction(Opcodes.IF_ICMPGT)),
+    IF_LESS_EQUAL_INT(new JumpInstruction(Opcodes.IF_ICMPLE)),
+    IF_EQUAL_OBJECT(new JumpInstruction(Opcodes.IF_ACMPEQ)),
+    IF_NOT_EQUAL_OBJECT(new JumpInstruction(Opcodes.IF_ACMPNE)),
+    GOTO(new JumpInstruction(Opcodes.GOTO)),
+    JSR(new JumpInstruction(Opcodes.JSR)),
     RET(new VarInstruction(Opcodes.RET)),
     // TODO: tableswitch (switch-table)
     // TODO: lookupswitch (switch-lookup)
@@ -227,8 +228,8 @@ public enum Instruction {
     MONITOR_EXIT(new SingleInstruction(Opcodes.MONITOREXIT)),
     // wide
     NEW_ARRAY_MULTI(new MultiArrayInstruction()),
-    // TODO: ifnull (if-null)
-    // TODO: ifnonnull (if-non-null)
+    IF_NULL(new JumpInstruction(Opcodes.IFNULL)),
+    IF_NOT_NULL(new JumpInstruction(Opcodes.IFNONNULL)),
     // goto_w
     // jsr_w
     // breakpoint
