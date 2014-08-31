@@ -82,6 +82,8 @@ public class Patch {
         PatchScope scope = patcher.apply(new FileInputStream(inPatch));
         System.out.println("Time: " + (System.nanoTime() - start));
 
+        System.out.println(scope);
+
         try (ZipOutputStream zop = new ZipOutputStream(new FileOutputStream(outJar))) {
             for (String cls : classSet.classes(true)) {
                 System.out.println("Saving " + cls);

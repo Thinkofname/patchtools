@@ -257,6 +257,14 @@ public class MatchGenerator {
                                                 cls.getFieldNode(wrap)
                                             ));
                                         }
+                                    } else if (insn instanceof LdcInsnNode) {
+                                        LdcInsnNode ldc = (LdcInsnNode) insn;
+                                        if (ldc.cst instanceof Type) {
+                                            ClassWrapper cls = classSet.getClassWrapper(((Type) ldc.cst).getInternalName());
+                                            if (cls == null || cls.isHidden()) continue;
+
+                                            referencedClasses.add(cls.getNode());
+                                        }
                                     }
                                 }
 
@@ -384,10 +392,21 @@ public class MatchGenerator {
                         .forEach(m -> {
                             Type desc = m.getDesc();
 
-                            MatchMethod method = new MatchMethod(mc, m.getIdent().getName(), m.getDescRaw());
-                            method = mc.addMethod(method);
+                            MatchMethod mTemp = new MatchMethod(mc, m.getIdent().getName(), m.getDescRaw());
+                            MatchMethod method = mc.addMethod(mTemp);
 
-                            for (Type type : desc.getArgumentTypes()) {
+                            if (mTemp == method) {
+                                for (Type type : desc.getArgumentTypes()) {
+                                    Type rt = getRootType(type);
+                                    if (rt.getSort() == Type.OBJECT) {
+                                        MatchClass argCls = new MatchClass(
+                                            new Ident(rt.getInternalName()).getName()
+                                        );
+                                        addToVisited(visited, visitList, group.getClass(argCls), group);
+                                    }
+                                    method.addArgument(type);
+                                }
+                                Type type = desc.getReturnType();
                                 Type rt = getRootType(type);
                                 if (rt.getSort() == Type.OBJECT) {
                                     MatchClass argCls = new MatchClass(
@@ -395,17 +414,8 @@ public class MatchGenerator {
                                     );
                                     addToVisited(visited, visitList, group.getClass(argCls), group);
                                 }
-                                method.addArgument(type);
+                                method.setReturn(type);
                             }
-                            Type type = desc.getReturnType();
-                            Type rt = getRootType(type);
-                            if (rt.getSort() == Type.OBJECT) {
-                                MatchClass argCls = new MatchClass(
-                                    new Ident(rt.getInternalName()).getName()
-                                );
-                                addToVisited(visited, visitList, group.getClass(argCls), group);
-                            }
-                            method.setReturn(type);
 
                             for (PatchInstruction instruction : m.getInstructions()) {
                                 Instruction in = instruction.instruction;
@@ -449,7 +459,6 @@ public class MatchGenerator {
                 if (testScope == null) continue;
 
                 if (test.test(group, testScope)) {
-                    System.out.println("Found");
                     scopes.add(testScope);
                     continue groupCheck;
                 }
