@@ -116,14 +116,14 @@ public enum Instruction {
     ARRAY_STORE_BYTE(new SingleInstruction(Opcodes.BASTORE)),
     ARRAY_STORE_CHAR(new SingleInstruction(Opcodes.CASTORE)),
     ARRAY_STORE_SHORT(new SingleInstruction(Opcodes.SASTORE)),
-    // TODO: pop (pop)
-    // pop2
-    // TODO: dup (dup)
-    // TODO: dup_x1 (dup_x)
-    // dup_x2 (dup_x)
-    // dup2 (dup)
-    // TODO: dup2_x1 (dup2_x)
-    // dup2_x2 (dup2_x)
+    POP(new SingleInstruction(Opcodes.POP)),
+    POP2(new SingleInstruction(Opcodes.POP2)),
+    DUP(new SingleInstruction(Opcodes.DUP)),
+    DUP_X1(new SingleInstruction(Opcodes.DUP_X1)),
+    DUP_X2(new SingleInstruction(Opcodes.DUP_X2)),
+    DUP2(new SingleInstruction(Opcodes.DUP2)),
+    DUP2_X1(new SingleInstruction(Opcodes.DUP2_X1)),
+    DUP2_X2(new SingleInstruction(Opcodes.DUP2_X2)),
     SWAP(new SingleInstruction(Opcodes.SWAP)),
     ADD_INT(new SingleInstruction(Opcodes.IADD)),
     ADD_LONG(new SingleInstruction(Opcodes.LADD)),
@@ -178,10 +178,10 @@ public enum Instruction {
     CONVERT_INT_CHAR(new SingleInstruction(Opcodes.I2C)),
     CONVERT_INT_SHORT(new SingleInstruction(Opcodes.I2S)),
     COMPARE_LONG(new SingleInstruction(Opcodes.LCMP)),
-    // TODO: fcmpl (compare-float)?
-    // TODO: fcmpg (compare-float)?
-    // TODO: dcmpl (compare-long)?
-    // TODO: dcmpg (compare-long)?
+    COMPARE_FLOAT(new SingleInstruction(Opcodes.FCMPL)),
+    COMPARE_FLOAT_INV(new SingleInstruction(Opcodes.FCMPG)),
+    COMPARE_DOUBLE(new SingleInstruction(Opcodes.DCMPG)),
+    COMPARE_DOUBLE_INV(new SingleInstruction(Opcodes.DCMPG)),
     // TODO: lfeq (if-zero)
     // TODO: lfne (if-not-zero)
     // TODO: iflt (if-less-zero)
@@ -218,12 +218,12 @@ public enum Instruction {
     // TODO: new (new)
     // TODO: newarray (new-array)
     // anewarray (new-array)
-    // TODO: arraylength (length-array)
-    // TODO: athrow (throw)
+    LENGTH_ARRAY(new SingleInstruction(Opcodes.ARRAYLENGTH)),
+    THROW(new SingleInstruction(Opcodes.ATHROW)),
     // TODO: checkcast (check-cast)
     // TODO: instanceof (instance-of)
-    // TODO: monitorenter (monitor-enter)
-    // TODO: monitorexit (monitor-exit)
+    MONITOR_ENTER(new SingleInstruction(Opcodes.MONITORENTER)),
+    MONITOR_EXIT(new SingleInstruction(Opcodes.MONITOREXIT)),
     // wide
     // TODO: multianewarray (new-array-mutli)
     // TODO: ifnull (if-null)
