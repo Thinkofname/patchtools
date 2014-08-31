@@ -42,5 +42,8 @@ public class AssembleTest {
         Assert.assertEquals(20, a2.length);
 
         res.getMethod("castTest", Object.class).invoke(null, new Object[]{new String[]{"test", "test2"}});
+
+        Assert.assertEquals("not-null", res.getMethod("branch", Object.class).invoke(null, ""));
+        Assert.assertEquals("null", res.getMethod("branch", Object.class).invoke(null, new Object[]{null}));
     }
 }

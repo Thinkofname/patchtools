@@ -29,4 +29,14 @@
         +check-cast [Ljava/lang/String;
         +return
     +end-method
+
+    +method branch (Ljava/lang/Object;)Ljava/lang/String; static
+        +load-object 0
+        +if-null ~retNull
+        +push-string "not-null"
+        +return
+        +label ~retNull
+        +push-string "null"
+        +return
+    +end-method
 +end-class
