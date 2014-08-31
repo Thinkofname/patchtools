@@ -267,7 +267,11 @@ public class MatchGenerator {
                                         }
                                     } else if (insn instanceof TypeInsnNode) {
                                         TypeInsnNode tNode = (TypeInsnNode) insn;
-                                        ClassWrapper cls = classSet.getClassWrapper(tNode.desc);
+                                        String desc = tNode.desc;
+                                        if (!desc.startsWith("[")) {
+                                            desc = "L" + desc + ";";
+                                        }
+                                        ClassWrapper cls = classSet.getClassWrapper(getRootType(Type.getType(desc)).getInternalName());
                                         if (cls == null || cls.isHidden()) continue;
 
                                         referencedClasses.add(cls.getNode());

@@ -181,7 +181,7 @@ public enum Instruction {
     COMPARE_LONG(new SingleInstruction(Opcodes.LCMP)),
     COMPARE_FLOAT(new SingleInstruction(Opcodes.FCMPL)),
     COMPARE_FLOAT_INV(new SingleInstruction(Opcodes.FCMPG)),
-    COMPARE_DOUBLE(new SingleInstruction(Opcodes.DCMPG)),
+    COMPARE_DOUBLE(new SingleInstruction(Opcodes.DCMPL)),
     COMPARE_DOUBLE_INV(new SingleInstruction(Opcodes.DCMPG)),
     // TODO: lfeq (if-zero)
     // TODO: lfne (if-not-zero)

@@ -16,9 +16,8 @@
 
 package uk.co.thinkofdeath.patchtools.instruction.instructions;
 
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.IntInsnNode;
+import org.objectweb.asm.tree.IincInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
@@ -30,19 +29,29 @@ public class IntIncInstruction implements InstructionHandler {
     @Override
     public boolean check(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method, AbstractInsnNode insn) {
         if (instruction.params.length != 1
-            || !(insn instanceof IntInsnNode)
-            || insn.getOpcode() != Opcodes.IINC) {
+            || !(insn instanceof IincInsnNode)) {
             return false;
         }
-        int val = 0;
+        int var = 0;
         boolean any = false;
         if (instruction.params[0].equals("*")) {
             any = true;
         } else {
-            val = Integer.parseInt(instruction.params[0]);
+            var = Integer.parseInt(instruction.params[0]);
         }
-        int other = ((IntInsnNode) insn).operand;
-        return !(!any && other != val);
+        int other = ((IincInsnNode) insn).var;
+        if (any || var == other) {
+            int val = 0;
+            any = false;
+            if (instruction.params[0].equals("*")) {
+                any = true;
+            } else {
+                val = Integer.parseInt(instruction.params[0]);
+            }
+            other = ((IincInsnNode) insn).incr;
+            return !(!any && other != val);
+        }
+        return false;
     }
 
     @Override
@@ -50,15 +59,18 @@ public class IntIncInstruction implements InstructionHandler {
         if (instruction.params.length != 1) {
             throw new RuntimeException();
         }
-        int val = Integer.parseInt(instruction.params[0]);
-        return new IntInsnNode(Opcodes.IINC, val);
+        int var = Integer.parseInt(instruction.params[0]);
+        int val = Integer.parseInt(instruction.params[1]);
+        return new IincInsnNode(var, val);
     }
 
     @Override
     public boolean print(Instruction instruction, StringBuilder patch, MethodNode method, AbstractInsnNode insn) {
-        if (insn instanceof IntInsnNode && insn.getOpcode() == Opcodes.IINC) {
+        if (insn instanceof IincInsnNode) {
             patch.append("inc-int ")
-                .append(((IntInsnNode) insn).operand);
+                .append(((IincInsnNode) insn).var)
+                .append(' ')
+                .append(((IincInsnNode) insn).incr);
             return true;
         }
         return false;
