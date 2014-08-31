@@ -216,13 +216,13 @@ public enum Instruction {
     INVOKE_STATIC(new InvokeInstruction(Opcodes.INVOKESTATIC)),
     INVOKE_INTERFACE(new InvokeInstruction(Opcodes.INVOKEINTERFACE)),
     // TODO: invokedynamic (invoke-dynamic)
-    // TODO: new (new)
+    NEW(new TypeInstruction(Opcodes.NEW)),
     // TODO: newarray (new-array)
     // anewarray (new-array)
     LENGTH_ARRAY(new SingleInstruction(Opcodes.ARRAYLENGTH)),
     THROW(new SingleInstruction(Opcodes.ATHROW)),
-    // TODO: checkcast (check-cast)
-    // TODO: instanceof (instance-of)
+    CHECK_CAST(new TypeInstruction(Opcodes.CHECKCAST)),
+    INSTANCE_OF(new TypeInstruction(Opcodes.INSTANCEOF)),
     MONITOR_ENTER(new SingleInstruction(Opcodes.MONITORENTER)),
     MONITOR_EXIT(new SingleInstruction(Opcodes.MONITOREXIT)),
     // wide
