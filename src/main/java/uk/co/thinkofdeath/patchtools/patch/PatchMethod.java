@@ -204,7 +204,7 @@ public class PatchMethod {
                 boolean allowLabel = insn instanceof LabelNode
                     && patchInstruction.instruction == Instruction.LABEL;
 
-                if (!(insn instanceof LineNumberNode)
+                if (!(insn instanceof LineNumberNode) && !(insn instanceof FrameNode)
                     && (!(insn instanceof LabelNode) || allowLabel)) {
                     if (patchInstruction.instruction.getHandler()
                         .check(classSet, scope, patchInstruction, methodNode, insn)) {

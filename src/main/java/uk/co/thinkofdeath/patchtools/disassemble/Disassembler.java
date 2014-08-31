@@ -18,6 +18,7 @@ package uk.co.thinkofdeath.patchtools.disassemble;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FrameNode;
 import org.objectweb.asm.tree.LineNumberNode;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.instructions.Utils;
@@ -82,6 +83,7 @@ public class Disassembler {
 
             Arrays.stream(m.instructions.toArray())
                 .filter(i -> !(i instanceof LineNumberNode))
+                .filter(i -> !(i instanceof FrameNode))
                 .forEach(i -> {
                     patch.append("    ")
                         .append("    ")

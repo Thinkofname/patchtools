@@ -26,7 +26,10 @@ public enum Instruction {
     LABEL(new LabelInstruction()), // Virtual instruction
     NOP(new SingleInstruction(Opcodes.NOP)),
     PUSH_NULL(new SingleInstruction(Opcodes.ACONST_NULL)),
-    PUSH_INT(new PushIntStruction()),
+    PUSH_INT(new PushIntInstruction()), // Virtual instruction
+    PUSH_LONG(new PushLongInstruction()), // Virtual instruction
+    PUSH_FLOAT(new PushFloatInstruction()), // Virtual instruction
+    PUSH_DOUBLE(new PushDoubleInstruction()), // Virtual instruction
     // iconst_m1 (push-int)
     // iconst_0 (push-int)
     // iconst_1 (push-int)
