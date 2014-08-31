@@ -50,11 +50,11 @@ public enum Instruction {
     // ldc (push-*)
     // ldc_w (push-*)
     // ldc2_w (push-*)
-    // TODO: iload (load-int)
-    // TODO: lload (load-long)
-    // TODO: ffoad (load-float)
-    // TODO: dfoad (load-double)
-    // TODO: afoad (load-object)
+    LOAD_INT(new VarInstruction(Opcodes.ILOAD)),
+    LOAD_LONG(new VarInstruction(Opcodes.LLOAD)),
+    LOAD_FLOAT(new VarInstruction(Opcodes.FLOAD)),
+    LOAD_DOUBLE(new VarInstruction(Opcodes.DLOAD)),
+    LOAD_OBJECT(new VarInstruction(Opcodes.ALOAD)),
     // iload_0 (load-int)
     // iload_1 (load-int)
     // iload_2 (load-int)
@@ -75,19 +75,19 @@ public enum Instruction {
     // aload_1 (load-object)
     // aload_2 (load-object)
     // aload_3 (load-object)
-    // TODO: iaload (array-load-int)
-    // TODO: laload (array-load-long)
-    // TODO: faload (array-load-float)
-    // TODO: daload (array-load-double)
-    // TODO: aaload (array-load-object)
-    // TODO: baload (array-load-byte)
-    // TODO: caload (array-load-char)
-    // TODO: saload (array-load-short)
-    // TODO: istore (store-int)
-    // TODO: lstore (store-long)
-    // TODO: fstore (store-float)
-    // TODO: dstore (store-double)
-    // TODO: astore (store-object)
+    ARRAY_LOAD_INT(new SingleInstruction(Opcodes.IALOAD)),
+    ARRAY_LOAD_LONG(new SingleInstruction(Opcodes.LALOAD)),
+    ARRAY_LOAD_FLOAT(new SingleInstruction(Opcodes.FALOAD)),
+    ARRAY_LOAD_DOUBLE(new SingleInstruction(Opcodes.DALOAD)),
+    ARRAY_LOAD_OBJECT(new SingleInstruction(Opcodes.AALOAD)),
+    ARRAY_LOAD_BYTE(new SingleInstruction(Opcodes.BALOAD)),
+    ARRAY_LOAD_CHAR(new SingleInstruction(Opcodes.CALOAD)),
+    ARRAY_LOAD_SHORT(new SingleInstruction(Opcodes.SALOAD)),
+    STORE_INT(new VarInstruction(Opcodes.ISTORE)),
+    STORE_LONG(new VarInstruction(Opcodes.LSTORE)),
+    STORE_FLOAT(new VarInstruction(Opcodes.FSTORE)),
+    STORE_DOUBLE(new VarInstruction(Opcodes.DSTORE)),
+    STORE_OBJECT(new VarInstruction(Opcodes.ASTORE)),
     // istore_0 (store-int)
     // istore_1 (store-int)
     // istore_2 (store-int)
@@ -108,14 +108,14 @@ public enum Instruction {
     // astore_1 (store-object)
     // astore_2 (store-object)
     // astore_3 (store-object)
-    // TODO: iastore (array-store-int)
-    // TODO: lastore (array-store-long)
-    // TODO: fastore (array-store-float)
-    // TODO: dastore (array-store-double)
-    // TODO: aastore (array-store-object)
-    // TODO: bastore (array-store-byte)
-    // TODO: castore (array-store-char)
-    // TODO: sastore (array-store-short)
+    ARRAY_STORE_INT(new SingleInstruction(Opcodes.IASTORE)),
+    ARRAY_STORE_LONG(new SingleInstruction(Opcodes.LASTORE)),
+    ARRAY_STORE_FLOAT(new SingleInstruction(Opcodes.FASTORE)),
+    ARRAY_STORE_DOUBLE(new SingleInstruction(Opcodes.DASTORE)),
+    ARRAY_STORE_OBJECT(new SingleInstruction(Opcodes.AASTORE)),
+    ARRAY_STORE_BYTE(new SingleInstruction(Opcodes.BASTORE)),
+    ARRAY_STORE_CHAR(new SingleInstruction(Opcodes.CASTORE)),
+    ARRAY_STORE_SHORT(new SingleInstruction(Opcodes.SASTORE)),
     // TODO: pop (pop)
     // pop2
     // TODO: dup (dup)
@@ -197,7 +197,7 @@ public enum Instruction {
     // TODO: if_acmpeq (if-equal-object)
     // TODO: if_acmpne (if-not-equal-object)
     // TODO: jsr (goto)
-    // TODO: ret (ret)
+    RET(new VarInstruction(Opcodes.RET)),
     // TODO: tableswitch (switch-table)
     // TODO: lookupswitch (switch-lookup)
     // ireturn (return)
