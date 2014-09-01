@@ -51,7 +51,7 @@ public class JumpInstruction implements InstructionHandler {
             if (!ident.getName().equals("*")) {
                 return false;
             }
-        } else {
+        } else if (scope != null) {
             scope.putLabel(method, ((JumpInsnNode) insn).label, ident.getName());
         }
         return true;

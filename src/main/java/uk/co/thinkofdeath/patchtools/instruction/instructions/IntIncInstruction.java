@@ -28,7 +28,7 @@ import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 public class IntIncInstruction implements InstructionHandler {
     @Override
     public boolean check(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method, AbstractInsnNode insn) {
-        if (instruction.params.length != 1
+        if (instruction.params.length != 2
             || !(insn instanceof IincInsnNode)) {
             return false;
         }
@@ -43,10 +43,10 @@ public class IntIncInstruction implements InstructionHandler {
         if (any || var == other) {
             int val = 0;
             any = false;
-            if (instruction.params[0].equals("*")) {
+            if (instruction.params[1].equals("*")) {
                 any = true;
             } else {
-                val = Integer.parseInt(instruction.params[0]);
+                val = Integer.parseInt(instruction.params[1]);
             }
             other = ((IincInsnNode) insn).incr;
             return !(!any && other != val);
