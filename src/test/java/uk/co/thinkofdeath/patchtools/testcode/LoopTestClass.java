@@ -17,4 +17,11 @@ public class LoopTestClass {
         }
         return val;
     }
+
+    public static int testThree(int val) {
+        for (int i = 0; i < val; i++) {
+            val *= 2;
+        }
+        return val;
+    }
 }
