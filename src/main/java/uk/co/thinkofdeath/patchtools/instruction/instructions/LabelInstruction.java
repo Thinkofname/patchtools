@@ -42,7 +42,7 @@ public class LabelInstruction implements InstructionHandler {
             if (!ident.getName().equals("*")) {
                 return false;
             }
-        } else {
+        } else if (scope != null) {
             scope.putLabel(method, (LabelNode) insn, ident.getName());
         }
         return true;

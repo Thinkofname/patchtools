@@ -63,7 +63,7 @@ public class TypeInstruction implements InstructionHandler {
             type = "L" + type + ";";
         }
 
-        return PatchClass.checkTypes(classSet, scope, Type.getType(className), Type.getType("L" + type + ";"));
+        return PatchClass.checkTypes(classSet, scope, Type.getType(className), Type.getType(type));
     }
 
     @Override
