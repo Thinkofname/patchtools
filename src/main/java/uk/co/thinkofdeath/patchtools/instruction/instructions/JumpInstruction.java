@@ -140,6 +140,7 @@ public class JumpInstruction implements InstructionHandler {
                 throw new UnsupportedOperationException("op:" + opcode);
         }
         patch.append(' ')
+            .append('~')
             .append(((JumpInsnNode) insn).label.getLabel());
         return true;
     }

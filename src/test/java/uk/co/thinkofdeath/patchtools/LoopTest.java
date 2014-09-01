@@ -39,8 +39,6 @@ public class LoopTest {
 
         String patch = disassembler.disassemble("uk/co/thinkofdeath/patchtools/testcode/LoopTestClass");
 
-        patch = patch.replaceAll("L(\\d+)", "~L$1");
-
         System.out.println(patch);
 
         Patcher patcher = new Patcher(classSet);
