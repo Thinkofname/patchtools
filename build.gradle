@@ -3,7 +3,7 @@ apply plugin: 'application'
 apply plugin: 'maven'
 
 sourceCompatibility = 1.8
-version = '0.1-SNAPSHOT'
+version = '0.1'
 group = "uk.co.thinkofdeath.patchtools"
 
 mainClassName = "uk.co.thinkofdeath.patchtools.main.Patch"
@@ -54,7 +54,7 @@ uploadArchives {
     repositories {
         mavenDeployer {
 
-            repository(url: "http://repo.thinkofdeath.co.uk/content/repositories/snapshots/") {
+            repository(url: "http://repo.thinkofdeath.co.uk/content/repositories/releases/") {
                 authentication(userName: thinkUsername, password: thinkPassword)
             }
 
