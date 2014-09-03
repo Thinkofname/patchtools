@@ -118,6 +118,12 @@ public class PatchClass {
             classSet.add(classNode);
             scope.putClass(classSet.getClassWrapper(classNode.name), classNode.name);
         }
+
+        if (mode == Mode.REMOVE) {
+            classSet.remove(ident.getName());
+            return;
+        }
+
         ClassWrapper classWrapper = scope.getClass(ident.getName());
 
         for (ModifierClass superModifier : superModifiers) {
