@@ -36,7 +36,7 @@ import java.util.Objects;
 
 public class PatchClass {
 
-    private String type;
+    private ClassType type;
     private Ident ident;
     private Mode mode;
     private List<ModifierClass> superModifiers = new ArrayList<>();
@@ -47,7 +47,7 @@ public class PatchClass {
 
     public PatchClass(Command clCommand, BufferedReader reader) throws IOException {
         if (clCommand.args.length != 1) throw new IllegalArgumentException();
-        type = clCommand.name;
+        type = ClassType.valueOf(clCommand.name.toUpperCase());
         ident = new Ident(clCommand.args[0]);
         mode = clCommand.mode;
         String line;
@@ -108,10 +108,10 @@ public class PatchClass {
             classNode.name = ident.getName();
             classNode.superName = "java/lang/Object";
             switch (type) {
-                case "enum":
+                case ENUM:
                     classNode.access |= Opcodes.ACC_ENUM;
                     break;
-                case "interface":
+                case INTERFACE:
                     classNode.access |= Opcodes.ACC_ENUM;
                     break;
             }
@@ -329,16 +329,14 @@ public class PatchClass {
 
         int mask = 0;
         switch (type) {
-            case "class":
+            case CLASS:
                 break;
-            case "interface":
+            case INTERFACE:
                 mask = Opcodes.ACC_INTERFACE;
                 break;
-            case "enum":
+            case ENUM:
                 mask = Opcodes.ACC_ENUM;
                 break;
-            default:
-                throw new IllegalArgumentException(type);
         }
 
         if (mask != 0 && (classWrapper.getNode().access & mask) == 0) {
