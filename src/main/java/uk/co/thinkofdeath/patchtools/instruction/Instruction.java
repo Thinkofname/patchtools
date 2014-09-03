@@ -200,7 +200,7 @@ public enum Instruction {
     GOTO(new JumpInstruction(Opcodes.GOTO)),
     JSR(new JumpInstruction(Opcodes.JSR)),
     RET(new VarInstruction(Opcodes.RET)),
-    // TODO: tableswitch (switch-table)
+    SWITCH_TABLE(new TableSwitchInstruction(), true),
     // TODO: lookupswitch (switch-lookup)
     // ireturn (return)
     // lreturn (return)
@@ -236,13 +236,24 @@ public enum Instruction {
     ;
 
     private final InstructionHandler handler;
+    private final boolean requiresMeta;
 
     Instruction(InstructionHandler handler) {
         this.handler = handler;
+        requiresMeta = false;
+    }
+
+    Instruction(InstructionHandler handler, boolean requiresMeta) {
+        this.handler = handler;
+        this.requiresMeta = requiresMeta;
     }
 
     public InstructionHandler getHandler() {
         return handler;
+    }
+
+    public boolean isMetaRequired() {
+        return requiresMeta;
     }
 
     public static boolean print(StringBuilder patch, MethodNode method, AbstractInsnNode insn) {

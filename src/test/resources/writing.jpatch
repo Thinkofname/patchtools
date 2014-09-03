@@ -39,4 +39,33 @@
         +push-string "null"
         +return
     +end-method
+
+    +method switch (I)I static
+        +load-int 0
+        +switch-table 0 4 ~def
+            ~A
+            ~B
+            ~C
+            ~D
+            ~E
+        +end-switch-table
+        +label ~A
+        +push-int 5
+        +return
+        +label ~B
+        +push-int 4
+        +return
+        +label ~C
+        +push-int 3
+        +return
+        +label ~D
+        +push-int 2
+        +return
+        +label ~E
+        +push-int 1
+        +return
+        +label ~def
+        +push-int -1
+        +return
+    +end-method
 +end-class

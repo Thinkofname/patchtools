@@ -24,4 +24,19 @@ public class LoopTestClass {
         }
         return val;
     }
+
+    public static int switchTest(int val) {
+        switch (val) {
+            case 0:
+                return 1;
+            case 1:
+                return 2;
+            case 2:
+                return 3;
+            case 3:
+                return 4;
+            default:
+                return -1;
+        }
+    }
 }

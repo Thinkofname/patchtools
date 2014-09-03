@@ -50,11 +50,11 @@ public class PatchMethod {
         desc = mCommand.args[1];
         if (mCommand.args.length >= 3) {
             for (int i = 2; i < mCommand.args.length; i++) {
-                if (mCommand.args[i].equals("static")) {
+                if (mCommand.args[i].equalsIgnoreCase("static")) {
                     isStatic = true;
-                } else if (mCommand.args[i].equals("private")) {
+                } else if (mCommand.args[i].equalsIgnoreCase("private")) {
                     isPrivate = true;
-                } else if (mCommand.args[i].equals("protected")) {
+                } else if (mCommand.args[i].equalsIgnoreCase("protected")) {
                     isProtected = true;
                 }
             }
@@ -71,11 +71,11 @@ public class PatchMethod {
             } else if (mode == Mode.REMOVE && command.mode != Mode.REMOVE) {
                 throw new IllegalArgumentException("In removed methods everything must be -");
             }
-            if (command.name.equals("end-method")) {
+            if (command.name.equalsIgnoreCase("end-method")) {
                 return;
             }
 
-            instructions.add(new PatchInstruction(command));
+            instructions.add(new PatchInstruction(command, reader));
         }
 
     }

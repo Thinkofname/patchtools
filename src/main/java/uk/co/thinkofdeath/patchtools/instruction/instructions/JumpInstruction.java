@@ -16,16 +16,13 @@
 
 package uk.co.thinkofdeath.patchtools.instruction.instructions;
 
-import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.JumpInsnNode;
-import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
-import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
@@ -39,22 +36,9 @@ public class JumpInstruction implements InstructionHandler {
 
     @Override
     public boolean check(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method, AbstractInsnNode insn) {
-        if (!(insn instanceof JumpInsnNode) || insn.getOpcode() != opcode) {
-            return false;
-        }
-        if (instruction.params.length != 1) {
-            return false;
-        }
-
-        Ident ident = new Ident(instruction.params[0]);
-        if (!ident.isWeak()) {
-            if (!ident.getName().equals("*")) {
-                return false;
-            }
-        } else if (scope != null) {
-            scope.putLabel(method, ((JumpInsnNode) insn).label, ident.getName());
-        }
-        return true;
+        return !(!(insn instanceof JumpInsnNode) || insn.getOpcode() != opcode)
+            && instruction.params.length == 1
+            && Utils.checkOrSetLabel(scope, method, instruction.params[0], ((JumpInsnNode) insn).label);
     }
 
     @Override
@@ -63,17 +47,7 @@ public class JumpInstruction implements InstructionHandler {
             throw new RuntimeException("Incorrect number of arguments for label");
         }
 
-        Ident ident = new Ident(instruction.params[0]);
-        if (!ident.isWeak()) {
-            throw new UnsupportedOperationException("Weak labels");
-        }
-
-        LabelNode label = scope.getLabel(method, ident.getName());
-        if (label == null) {
-            label = new LabelNode(new Label());
-            scope.putLabel(method, label, ident.getName());
-        }
-        return new JumpInsnNode(opcode, label);
+        return new JumpInsnNode(opcode, Utils.getLabel(scope, method, instruction.params[0]));
     }
 
     @Override

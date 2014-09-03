@@ -23,27 +23,52 @@ import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 public class AssembleTest {
 
-    @Test
-    public void assemble() throws Exception {
+    private static Class<?> testClass;
+
+    static {
         ClassSet classSet = new ClassSet(new ClassPathWrapper());
         Patcher patcher = new Patcher(classSet);
-        patcher.apply(getClass().getResourceAsStream("/writing.jpatch"));
+        patcher.apply(AssembleTest.class.getResourceAsStream("/writing.jpatch"));
 
         ClassSetLoader loader = new ClassSetLoader(classSet);
-        Class<?> res = loader.loadClass("think.TestClass");
+        try {
+            testClass = loader.loadClass("think.TestClass");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 
-        int val = (int) res.getMethod("doMagic").invoke(null);
+    @Test
+    public void basic() throws Exception {
+        int val = (int) testClass.getMethod("doMagic").invoke(null);
         Assert.assertEquals(5, val);
+    }
 
-        int[] a1 = (int[]) res.getMethod("arrayInt").invoke(null);
+    @Test
+    public void array() throws Exception {
+        int[] a1 = (int[]) testClass.getMethod("arrayInt").invoke(null);
         Assert.assertEquals(10, a1.length);
 
-        Object[] a2 = (Object[]) res.getMethod("arrayObject").invoke(null);
+        Object[] a2 = (Object[]) testClass.getMethod("arrayObject").invoke(null);
         Assert.assertEquals(20, a2.length);
+    }
 
-        res.getMethod("castTest", Object.class).invoke(null, new Object[]{new String[]{"test", "test2"}});
+    @Test
+    public void cast() throws Exception {
+        testClass.getMethod("castTest", Object.class).invoke(null, new Object[]{new String[]{"test", "test2"}});
+    }
 
-        Assert.assertEquals("not-null", res.getMethod("branch", Object.class).invoke(null, ""));
-        Assert.assertEquals("null", res.getMethod("branch", Object.class).invoke(null, new Object[]{null}));
+    @Test
+    public void branch() throws Exception {
+        Assert.assertEquals("not-null", testClass.getMethod("branch", Object.class).invoke(null, ""));
+        Assert.assertEquals("null", testClass.getMethod("branch", Object.class).invoke(null, new Object[]{null}));
+    }
+
+    @Test
+    public void switchTest() throws Exception {
+        for (int i = 0; i < 5; i++) {
+            Assert.assertEquals(5 - i, testClass.getMethod("switch", int.class).invoke(null, i));
+        }
+        Assert.assertEquals(-1, testClass.getMethod("switch", int.class).invoke(null, 20));
     }
 }
