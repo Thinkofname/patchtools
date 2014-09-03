@@ -63,7 +63,7 @@ public class PatchClass {
             }
             switch (command.name.toLowerCase()) {
                 case "super":
-                    if (command.args.length != 1) throw new IllegalArgumentException("extends requires 1 parameter");
+                    if (command.args.length != 1) throw new IllegalArgumentException("super requires 1 parameter");
                     superModifiers.add(new ModifierClass(new Ident(command.args[0]), command.mode));
                     break;
                 case "interface":
