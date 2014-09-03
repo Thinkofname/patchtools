@@ -9,7 +9,7 @@
 .end-class
 
 .class ~B
-    .extends ~A
+    .super ~A
 
     +method ~myMethod ()Ljava/lang/String;
         +push-string "abc"

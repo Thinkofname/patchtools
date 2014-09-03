@@ -62,7 +62,7 @@ public class PatchClass {
                 throw new IllegalArgumentException("In removed classes everything must be -");
             }
             switch (command.name.toLowerCase()) {
-                case "extends":
+                case "super":
                     if (command.args.length != 1) throw new IllegalArgumentException("extends requires 1 parameter");
                     superModifiers.add(new ModifierClass(new Ident(command.args[0]), command.mode));
                     break;

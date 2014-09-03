@@ -5,7 +5,7 @@
 
 .class ~minecraft/GuiMainMenu
 
-    .extends ~minecraft/GuiMenu
+    .super ~minecraft/GuiMenu
 
     .method ~addButtons (II)V private
         .any
@@ -36,7 +36,7 @@
 
     .field ~buttonList Ljava/util/List;
 
-    .extends ~minecraft/GuiScreen
+    .super ~minecraft/GuiScreen
 
     .method ~getClipboard ()Ljava/lang/String; static
         .invoke-static java/awt/Toolkit getDefaultToolkit ()Ljava/awt/Toolkit;
