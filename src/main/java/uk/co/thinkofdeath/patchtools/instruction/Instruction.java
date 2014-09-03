@@ -201,7 +201,7 @@ public enum Instruction {
     JSR(new JumpInstruction(Opcodes.JSR)),
     RET(new VarInstruction(Opcodes.RET)),
     SWITCH_TABLE(new TableSwitchInstruction(), true),
-    // TODO: lookupswitch (switch-lookup)
+    SWITCH_LOOKUP(new LookupSwitchInstruction(), true),
     // ireturn (return)
     // lreturn (return)
     // freturn (return)

@@ -39,4 +39,19 @@ public class LoopTestClass {
                 return -1;
         }
     }
+
+    public static int lookupTest(int val) {
+        switch (val) {
+            case 0:
+                return 1;
+            case 10:
+                return 2;
+            case 100:
+                return 3;
+            case 1000:
+                return 4;
+            default:
+                return -1;
+        }
+    }
 }

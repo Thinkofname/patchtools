@@ -18,33 +18,35 @@ package uk.co.thinkofdeath.patchtools.instruction.instructions;
 
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.LabelNode;
+import org.objectweb.asm.tree.LookupSwitchInsnNode;
 import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.TableSwitchInsnNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
-public class TableSwitchInstruction implements InstructionHandler {
+public class LookupSwitchInstruction implements InstructionHandler {
     @Override
     public boolean check(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method, AbstractInsnNode insn) {
-        if (instruction.params.length != 3
-            || !(insn instanceof TableSwitchInsnNode)) {
+        if (instruction.params.length != 1
+            || !(insn instanceof LookupSwitchInsnNode)) {
             return false;
         }
-        TableSwitchInsnNode insnNode = (TableSwitchInsnNode) insn;
+        LookupSwitchInsnNode insnNode = (LookupSwitchInsnNode) insn;
 
-        if (!Utils.equalOrWild(instruction.params[0], insnNode.min)
-            || !Utils.equalOrWild(instruction.params[1], insnNode.max)
-            || !Utils.checkOrSetLabel(scope, method, instruction.params[2], insnNode.dflt)) {
+        if (!Utils.checkOrSetLabel(scope, method, instruction.params[0], insnNode.dflt)) {
             return false;
         }
 
         if (insnNode.labels.size() < instruction.meta.size()) return false;
 
         for (int i = 0; i < instruction.meta.size(); i++) {
-            if (!Utils.checkOrSetLabel(scope, method, instruction.meta.get(i), insnNode.labels.get(i))) {
+            String[] parts = instruction.meta.get(i).split(":");
+            String key = parts[0].trim();
+            String label = parts[1].trim();
+            if (!Utils.equalOrWild(key, insnNode.keys.get(i))
+                || !Utils.checkOrSetLabel(scope, method, label, insnNode.labels.get(i))) {
                 return false;
             }
         }
@@ -53,47 +55,51 @@ public class TableSwitchInstruction implements InstructionHandler {
 
     @Override
     public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method) {
-        if (instruction.params.length != 3) {
+        if (instruction.params.length != 1) {
             throw new RuntimeException("Incorrect number of arguments for switch-table");
         }
-        TableSwitchInsnNode insnNode = new TableSwitchInsnNode(
-            Integer.parseInt(instruction.params[0]),
-            Integer.parseInt(instruction.params[1]),
-            Utils.getLabel(scope, method, instruction.params[2])
+        LookupSwitchInsnNode insnNode = new LookupSwitchInsnNode(
+            Utils.getLabel(scope, method, instruction.params[0]),
+            null, null
         );
         instruction.meta.stream()
+            .map(label -> label.split(":")[1].trim())
             .map(label -> Utils.getLabel(scope, method, label))
             .forEach(insnNode.labels::add);
+        instruction.meta.stream()
+            .map(label -> label.split(":")[0].trim())
+            .map(Integer::parseInt)
+            .forEach(insnNode.keys::add);
         return insnNode;
     }
 
     @Override
     public boolean print(Instruction instruction, StringBuilder patch, MethodNode method, AbstractInsnNode insn) {
-        if (!(insn instanceof TableSwitchInsnNode)) {
+        if (!(insn instanceof LookupSwitchInsnNode)) {
             return false;
         }
 
-        TableSwitchInsnNode insnNode = (TableSwitchInsnNode) insn;
+        LookupSwitchInsnNode insnNode = (LookupSwitchInsnNode) insn;
 
-        patch.append("switch-table ")
-            .append(insnNode.min)
-            .append(' ')
-            .append(insnNode.max)
-            .append(' ')
+        patch.append("switch-lookup ")
             .append('~')
             .append(insnNode.dflt.getLabel())
             .append('\n');
-        for (LabelNode label : insnNode.labels) {
+        for (int i = 0; i < insnNode.labels.size(); i++) {
+            LabelNode label = insnNode.labels.get(i);
+            int key = insnNode.keys.get(i);
             patch.append("    ")
                 .append("    ")
                 .append("    ")
+                .append(Integer.toString(key))
+                .append(':')
                 .append('~')
                 .append(label.getLabel())
                 .append('\n');
         }
         patch.append("    ")
             .append("    ")
-            .append(".end-switch-table");
+            .append(".end-switch-lookup");
         return true;
     }
 }

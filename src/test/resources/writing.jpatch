@@ -68,4 +68,33 @@
         +push-int -1
         +return
     +end-method
+
+    +method switchL (I)I static
+        +load-int 0
+        +switch-lookup ~def
+            1:~A
+            10:~B
+            100:~C
+            1000:~D
+            10000:~E
+        +end-switch-lookup
+        +label ~A
+        +push-int 5
+        +return
+        +label ~B
+        +push-int 4
+        +return
+        +label ~C
+        +push-int 3
+        +return
+        +label ~D
+        +push-int 2
+        +return
+        +label ~E
+        +push-int 1
+        +return
+        +label ~def
+        +push-int -1
+        +return
+    +end-method
 +end-class

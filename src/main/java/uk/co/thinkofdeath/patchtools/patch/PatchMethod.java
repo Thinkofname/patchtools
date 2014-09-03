@@ -17,6 +17,8 @@
 package uk.co.thinkofdeath.patchtools.patch;
 
 import com.google.common.collect.Maps;
+import org.jetbrains.annotations.NotNull;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
@@ -26,9 +28,7 @@ import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class PatchMethod {
 
@@ -128,7 +128,11 @@ public class PatchMethod {
         } else {
             methodNode.access |= Opcodes.ACC_PUBLIC;
         }
-        InsnList insns = methodNode.instructions;
+        InsnList insns = new InsnList();
+        LabelCloneMap cloneMap = new LabelCloneMap();
+        for (AbstractInsnNode insnNode : methodNode.instructions.toArray()) {
+            insns.add(insnNode.clone(cloneMap));
+        }
 
         Map<PatchInstruction, Integer> insnMap = scope.getInstructMap(methodNode);
         int position = 0;
@@ -139,9 +143,9 @@ public class PatchMethod {
                 AbstractInsnNode newIn = patchInstruction.instruction.getHandler()
                     .create(classSet, scope, patchInstruction, methodNode);
                 if (position - 1 >= 0) {
-                    insns.insert(insns.get(position - 1), newIn);
+                    insns.insert(insns.get(position - 1), newIn.clone(cloneMap));
                 } else {
-                    insns.insert(newIn);
+                    insns.insert(newIn.clone(cloneMap));
                 }
                 position++;
                 offset++;
@@ -159,6 +163,8 @@ public class PatchMethod {
             }
             position = pos + offset + 1;
         }
+
+        methodNode.instructions = insns;
     }
 
     public boolean checkInstructions(ClassSet classSet, PatchScope scope, MethodNode methodNode) {
@@ -253,4 +259,75 @@ public class PatchMethod {
         return true;
     }
 
+    private class LabelCloneMap implements Map<LabelNode, LabelNode> {
+
+        private HashMap<LabelNode, LabelNode> internal = new HashMap<>();
+
+        @Override
+        public int size() {
+            return internal.size();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return internal.isEmpty();
+        }
+
+        @Override
+        public boolean containsKey(Object key) {
+            return internal.containsKey(key);
+        }
+
+        @Override
+        public boolean containsValue(Object value) {
+            return internal.containsValue(value);
+        }
+
+        @Override
+        public LabelNode get(Object key) {
+            LabelNode k = (LabelNode) key;
+            if (!internal.containsKey(key)) {
+                internal.put(k, new LabelNode(new Label()));
+            }
+            return internal.get(key);
+        }
+
+        @Override
+        public LabelNode put(LabelNode key, LabelNode value) {
+            return internal.put(key, value);
+        }
+
+        @Override
+        public LabelNode remove(Object key) {
+            return internal.remove(key);
+        }
+
+        @Override
+        public void putAll(Map<? extends LabelNode, ? extends LabelNode> m) {
+            internal.putAll(m);
+        }
+
+        @Override
+        public void clear() {
+            internal.clear();
+        }
+
+        @NotNull
+        @Override
+        public Set<LabelNode> keySet() {
+            return internal.keySet();
+        }
+
+        @NotNull
+        @Override
+        public Collection<LabelNode> values() {
+            return internal.values();
+        }
+
+        @NotNull
+        @Override
+        public Set<Entry<LabelNode, LabelNode>> entrySet() {
+            return internal.entrySet();
+        }
+    }
 }

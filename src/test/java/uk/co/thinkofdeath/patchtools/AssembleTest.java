@@ -71,4 +71,12 @@ public class AssembleTest {
         }
         Assert.assertEquals(-1, testClass.getMethod("switch", int.class).invoke(null, 20));
     }
+
+    @Test
+    public void switchLookupTest() throws Exception {
+        for (int i = 0; i < 5; i++) {
+            Assert.assertEquals(5 - i, testClass.getMethod("switchL", int.class).invoke(null, (int) Math.pow(10, i)));
+        }
+        Assert.assertEquals(-1, testClass.getMethod("switchL", int.class).invoke(null, 20));
+    }
 }
