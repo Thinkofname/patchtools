@@ -101,7 +101,10 @@ public class PatchClass {
     }
 
     public void apply(PatchScope scope, ClassSet classSet) {
-        if (mode == Mode.ADD) {
+        if (mode == Mode.REMOVE) {
+            classSet.remove(ident.getName());
+            return;
+        } else if (mode == Mode.ADD) {
             ClassNode classNode = new ClassNode(Opcodes.ASM5);
             classNode.version = Opcodes.V1_7;
             classNode.access = Opcodes.ACC_PUBLIC;
@@ -119,30 +122,21 @@ public class PatchClass {
             scope.putClass(classSet.getClassWrapper(classNode.name), classNode.name);
         }
 
-        if (mode == Mode.REMOVE) {
-            classSet.remove(ident.getName());
-            return;
-        }
-
         ClassWrapper classWrapper = scope.getClass(ident.getName());
 
         for (ModifierClass superModifier : superModifiers) {
+            if (superModifier.getMode() == Mode.MATCH) continue;
+
             Ident name = superModifier.getIdent();
+            String clName = name.getName();
+            if (name.isWeak()) {
+                ClassWrapper cl = scope.getClass(clName);
+                if (cl == null) throw new IllegalStateException();
+                clName = cl.getNode().name;
+            }
             if (superModifier.getMode() == Mode.ADD) {
-                String clName = name.getName();
-                if (name.isWeak()) {
-                    ClassWrapper cl = scope.getClass(clName);
-                    if (cl == null) throw new IllegalStateException();
-                    clName = cl.getNode().name;
-                }
                 classWrapper.getNode().superName = clName;
             } else if (superModifier.getMode() == Mode.REMOVE) {
-                String clName = name.getName();
-                if (name.isWeak()) {
-                    ClassWrapper cl = scope.getClass(clName);
-                    if (cl == null) throw new IllegalStateException();
-                    clName = cl.getNode().name;
-                }
                 if (clName.equals("*") || clName.equals(classWrapper.getNode().superName)) {
                     classWrapper.getNode().superName = "java/lang/Object";
                 }
