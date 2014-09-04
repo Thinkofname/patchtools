@@ -471,7 +471,7 @@ public class PatchClass {
                 m.getIdent().getName(),
                 m.getDescRaw());
 
-            if (!m.checkInstructions(classSet, scope, classWrapper.getMethodNode(methodWrapper))) {
+            if (!m.check(classSet, scope, classWrapper.getMethodNode(methodWrapper))) {
                 return false;
             }
         }

@@ -215,7 +215,7 @@ public class MatchGenerator {
                             ).findFirst().orElse(null);
 
                             if (pm != null) {
-                                if (!pm.checkInstructions(classSet, null, node)) {
+                                if (!pm.check(classSet, null, node)) {
                                     method.removeMatch(pair.getOwner(), node);
                                     continue;
                                 }

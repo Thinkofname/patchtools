@@ -85,7 +85,10 @@ public class ClassWrapper {
                 && m.desc.equals(wrapper.getDesc()))
             .findFirst().orElse(null);
         if (mn == null && node.superName != null) {
-            mn = classSet.getClassWrapper(node.superName).getMethodNode(wrapper);
+            ClassWrapper owner = classSet.getClassWrapper(node.superName);
+            if (owner != null) {
+                mn = owner.getMethodNode(wrapper);
+            }
         }
         return mn;
     }
@@ -96,7 +99,10 @@ public class ClassWrapper {
                 && m.getDesc().equals(desc))
             .findFirst().orElse(null);
         if (wrap == null && node.superName != null) {
-            wrap = classSet.getClassWrapper(node.superName).getMethod(name, desc);
+            ClassWrapper owner = classSet.getClassWrapper(node.superName);
+            if (owner != null) {
+                wrap = owner.getMethod(name, desc);
+            }
         }
         return wrap;
     }
@@ -126,7 +132,10 @@ public class ClassWrapper {
                 && f.getDesc().equals(desc))
             .findFirst().orElse(null);
         if (wrap == null && node.superName != null) {
-            wrap = classSet.getClassWrapper(node.superName).getField(name, desc);
+            ClassWrapper owner = classSet.getClassWrapper(node.superName);
+            if (owner != null) {
+                wrap = owner.getField(name, desc);
+            }
         }
         return wrap;
     }
@@ -137,7 +146,10 @@ public class ClassWrapper {
                 && f.desc.equals(fieldWrapper.getDesc()))
             .findFirst().orElse(null);
         if (fn == null && node.superName != null) {
-            fn = classSet.getClassWrapper(node.superName).getFieldNode(fieldWrapper);
+            ClassWrapper owner = classSet.getClassWrapper(node.superName);
+            if (owner != null) {
+                fn = owner.getFieldNode(fieldWrapper);
+            }
         }
         return fn;
     }

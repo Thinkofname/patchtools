@@ -167,7 +167,32 @@ public class PatchMethod {
         methodNode.instructions = insns;
     }
 
-    public boolean checkInstructions(ClassSet classSet, PatchScope scope, MethodNode methodNode) {
+    public boolean check(ClassSet classSet, PatchScope scope, MethodNode methodNode) {
+        if (!getIdent().isWeak()
+            && !methodNode.name.equals(getIdent().getName())) {
+            return false;
+        }
+
+        Type patchDesc = getDesc();
+        Type desc = Type.getMethodType(methodNode.desc);
+
+        if (patchDesc.getArgumentTypes().length != desc.getArgumentTypes().length) {
+            return false;
+        }
+
+        for (int i = 0; i < patchDesc.getArgumentTypes().length; i++) {
+            Type pt = patchDesc.getArgumentTypes()[i];
+            Type t = desc.getArgumentTypes()[i];
+
+            if (!PatchClass.checkTypes(classSet, scope, pt, t)) {
+                return false;
+            }
+        }
+
+        if (!PatchClass.checkTypes(classSet, scope, patchDesc.getReturnType(), desc.getReturnType())) {
+            return false;
+        }
+
         int position = 0;
         InsnList insns = methodNode.instructions;
 
