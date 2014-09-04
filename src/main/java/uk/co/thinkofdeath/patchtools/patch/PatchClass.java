@@ -196,10 +196,15 @@ public class PatchClass {
                 int access = (f.isPrivate() ? Opcodes.ACC_PRIVATE : Opcodes.ACC_PUBLIC)
                     | (f.isStatic() ? Opcodes.ACC_STATIC : 0);
 
+                String name = f.getIdent().getName();
+                if (f.getIdent().isWeak()) {
+                    FieldWrapper field = scope.getField(classWrapper, name, mappedDesc.toString());
+                    name = field.getName();
+                }
 
                 FieldNode node = new FieldNode(Opcodes.ASM5,
                     access,
-                    f.getIdent().getName(),
+                    name,
                     mappedDesc.toString(),
                     null, f.getValue());
                 FieldWrapper fieldWrapper = new FieldWrapper(classWrapper, node);
