@@ -25,7 +25,6 @@ import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.commons.RemappingClassAdapter;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.util.CheckClassAdapter;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 
 import java.io.IOException;
@@ -135,9 +134,6 @@ public class ClassSet implements Iterable<String> {
             return null;
         }
         wrapper.getNode().accept(classWriter);
-        // Verify
-        ClassReader classReader = new ClassReader(classWriter.toByteArray());
-        classReader.accept(new CheckClassAdapter(new ClassNode()), ClassReader.EXPAND_FRAMES);
         return classWriter.toByteArray();
     }
 
