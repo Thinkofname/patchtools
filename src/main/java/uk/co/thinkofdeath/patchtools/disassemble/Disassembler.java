@@ -45,13 +45,13 @@ public class Disassembler {
             .append('\n');
 
         if (node.superName != null) {
-            patch.append(".super ")
+            patch.append("    .super ")
                 .append(node.superName)
                 .append('\n');
         }
 
         for (String inter : node.interfaces) {
-            patch.append(".interface ")
+            patch.append("    .interface ")
                 .append(inter)
                 .append('\n');
 
