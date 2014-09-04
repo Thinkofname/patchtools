@@ -291,7 +291,7 @@ public class MatchGenerator {
 
                                 for (PatchInstruction instruction : pm.getInstructions()) {
                                     Instruction in = instruction.instruction;
-                                    if (in.getHandler() == null) continue;
+                                    if (in.getHandler() == null || instruction.mode == Mode.ADD) continue;
                                     in.getHandler().getReferencedClasses(instruction)
                                         .forEach(c -> referencedClasses.forEach(rc -> {
                                                 ClassWrapper wrapper = classSet.getClassWrapper(rc.name);
