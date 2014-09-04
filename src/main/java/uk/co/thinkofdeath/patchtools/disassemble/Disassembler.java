@@ -17,9 +17,7 @@
 package uk.co.thinkofdeath.patchtools.disassemble;
 
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FrameNode;
-import org.objectweb.asm.tree.LineNumberNode;
+import org.objectweb.asm.tree.*;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.instructions.Utils;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
@@ -87,6 +85,7 @@ public class Disassembler {
             Arrays.stream(m.instructions.toArray())
                 .filter(i -> !(i instanceof LineNumberNode))
                 .filter(i -> !(i instanceof FrameNode))
+                .filter(i -> !(i instanceof LabelNode) || isInUse(m, (LabelNode) i))
                 .forEach(i -> {
                     patch.append("    ")
                         .append("    ")
@@ -109,5 +108,32 @@ public class Disassembler {
         patch.append(".end-class\n");
 
         return patch.toString();
+    }
+
+    private boolean isInUse(MethodNode m, LabelNode label) {
+        for (AbstractInsnNode insnNode : m.instructions.toArray()) {
+            if (insnNode instanceof JumpInsnNode) {
+                if (((JumpInsnNode) insnNode).label == label) {
+                    return true;
+                }
+            } else if (insnNode instanceof LookupSwitchInsnNode) {
+                LookupSwitchInsnNode lookup = (LookupSwitchInsnNode) insnNode;
+                if (lookup.dflt == label) {
+                    return true;
+                }
+                if (lookup.labels.stream().anyMatch(label::equals)) {
+                    return true;
+                }
+            } else if (insnNode instanceof TableSwitchInsnNode) {
+                TableSwitchInsnNode lookup = (TableSwitchInsnNode) insnNode;
+                if (lookup.dflt == label) {
+                    return true;
+                }
+                if (lookup.labels.stream().anyMatch(label::equals)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
