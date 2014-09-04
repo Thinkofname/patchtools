@@ -81,14 +81,14 @@ public class TableSwitchInstruction implements InstructionHandler {
             .append(insnNode.max)
             .append(' ')
             .append('~')
-            .append(insnNode.dflt.getLabel())
+            .append(Utils.printLabel(method, insnNode.dflt))
             .append('\n');
         for (LabelNode label : insnNode.labels) {
             patch.append("    ")
                 .append("    ")
                 .append("    ")
                 .append('~')
-                .append(label.getLabel())
+                .append(Utils.printLabel(method, label))
                 .append('\n');
         }
         patch.append("    ")

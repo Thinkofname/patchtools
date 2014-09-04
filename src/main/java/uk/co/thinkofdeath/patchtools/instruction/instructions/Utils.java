@@ -22,6 +22,9 @@ import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.patch.Ident;
 
+import java.util.Map;
+import java.util.WeakHashMap;
+
 public class Utils {
     public static Object parseConstant(String cst) {
         if (cst.startsWith("\"") && cst.endsWith("\"")) {
@@ -69,5 +72,25 @@ public class Utils {
 
     public static boolean equalOrWild(String val, int other) {
         return val.equals("*") || Integer.parseInt(val) == other;
+    }
+
+    private static Map<MethodNode, Map<Label, String>> labels = new WeakHashMap<>();
+
+    public static String printLabel(MethodNode methodNode, LabelNode labelNode) {
+        if (!labels.containsKey(methodNode)) {
+            labels.put(methodNode, new WeakHashMap<>());
+        }
+        Map<Label, String> lbls = labels.get(methodNode);
+        if (!lbls.containsKey(labelNode.getLabel())) {
+            StringBuilder id = new StringBuilder("label-");
+            int i = lbls.size();
+            do {
+                char c = (char) ('A' + (i % 26));
+                i /= 26;
+                id.append(c);
+            } while (i > 0);
+            lbls.put(labelNode.getLabel(), id.toString());
+        }
+        return lbls.get(labelNode.getLabel());
     }
 }

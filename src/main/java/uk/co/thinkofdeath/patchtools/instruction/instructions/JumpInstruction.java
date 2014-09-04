@@ -115,7 +115,7 @@ public class JumpInstruction implements InstructionHandler {
         }
         patch.append(' ')
             .append('~')
-            .append(((JumpInsnNode) insn).label.getLabel());
+            .append(Utils.printLabel(method, ((JumpInsnNode) insn).label));
         return true;
     }
 }

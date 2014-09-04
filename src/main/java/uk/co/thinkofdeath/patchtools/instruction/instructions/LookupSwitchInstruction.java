@@ -83,7 +83,7 @@ public class LookupSwitchInstruction implements InstructionHandler {
 
         patch.append("switch-lookup ")
             .append('~')
-            .append(insnNode.dflt.getLabel())
+            .append(Utils.printLabel(method, insnNode.dflt))
             .append('\n');
         for (int i = 0; i < insnNode.labels.size(); i++) {
             LabelNode label = insnNode.labels.get(i);
@@ -94,7 +94,7 @@ public class LookupSwitchInstruction implements InstructionHandler {
                 .append(Integer.toString(key))
                 .append(':')
                 .append('~')
-                .append(label.getLabel())
+                .append(Utils.printLabel(method, label))
                 .append('\n');
         }
         patch.append("    ")
