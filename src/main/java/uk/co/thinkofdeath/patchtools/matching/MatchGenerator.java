@@ -440,7 +440,7 @@ public class MatchGenerator {
 
                             for (PatchInstruction instruction : m.getInstructions()) {
                                 Instruction in = instruction.instruction;
-                                if (in.getHandler() == null) continue;
+                                if (in.getHandler() == null || instruction.mode == Mode.ADD) continue;
                                 in.getHandler().getReferencedClasses(instruction).stream()
                                     .forEach(c -> addToVisited(visited, visitList, c, group));
                                 in.getHandler().getReferencedMethods(instruction)
