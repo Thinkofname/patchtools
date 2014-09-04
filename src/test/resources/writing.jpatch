@@ -97,4 +97,20 @@
         +push-int -1
         +return
     +end-method
+
+    +method exception ()I static
+        +try-catch ~start ~end ~handle java/lang/RuntimeException
+        +label ~start
+        +new java/lang/RuntimeException
+        +dup
+        +push-string "test"
+        +invoke-special java/lang/RuntimeException <init> (Ljava/lang/String;)V
+        +throw
+        +label ~end
+        +push-int -1
+        +return
+        +label ~handle
+        +push-int 5
+        +return
+    +end-method
 +end-class

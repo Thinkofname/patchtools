@@ -79,4 +79,9 @@ public class AssembleTest {
         }
         Assert.assertEquals(-1, testClass.getMethod("switchL", int.class).invoke(null, 20));
     }
+
+    @Test
+    public void exception() throws Exception {
+        Assert.assertEquals(5, testClass.getMethod("exception").invoke(null));
+    }
 }

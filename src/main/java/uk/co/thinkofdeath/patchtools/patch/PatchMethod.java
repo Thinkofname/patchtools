@@ -24,6 +24,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
+import uk.co.thinkofdeath.patchtools.instruction.instructions.TryCatchInstruction;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 import java.io.BufferedReader;
@@ -152,6 +153,10 @@ public class PatchMethod {
 
         for (PatchInstruction patchInstruction : instructions) {
             if (patchInstruction.mode == Mode.ADD) {
+                if (patchInstruction.instruction == Instruction.TRY_CATCH) {
+                    TryCatchInstruction.create(classSet, scope, patchInstruction, methodNode, cloneMap);
+                    continue;
+                }
                 AbstractInsnNode newIn = patchInstruction.instruction.getHandler()
                     .create(classSet, scope, patchInstruction, methodNode);
                 if (position - 1 >= 0) {
@@ -161,6 +166,14 @@ public class PatchMethod {
                 }
                 position++;
                 offset++;
+                continue;
+            }
+
+            if (patchInstruction.instruction == Instruction.TRY_CATCH) {
+                if (patchInstruction.mode == Mode.REMOVE) {
+                    TryCatchBlockNode match = TryCatchInstruction.match(classSet, scope, patchInstruction, methodNode);
+                    methodNode.tryCatchBlocks.remove(match);
+                }
                 continue;
             }
 
@@ -251,12 +264,14 @@ public class PatchMethod {
                     AbstractInsnNode insn = insns.get(position);
 
                     boolean allowLabel = insn instanceof LabelNode
-                        && patchInstruction.instruction == Instruction.LABEL;
+                        && (patchInstruction.instruction == Instruction.LABEL
+                        || patchInstruction.instruction == Instruction.TRY_CATCH);
 
                     if (!(insn instanceof LineNumberNode) && !(insn instanceof FrameNode)
                         && (!(insn instanceof LabelNode) || allowLabel)) {
                         if (patchInstruction.instruction.getHandler()
                             .check(classSet, scope, patchInstruction, methodNode, insn)) {
+                            if (patchInstruction.instruction == Instruction.TRY_CATCH) continue check;
                             if (wildcard) {
                                 wildcardPosition = position;
                                 wildcardPatchPosition = i;

@@ -95,6 +95,13 @@ public class Disassembler {
             }
             patch.append('\n');
 
+            Instruction.TRY_CATCH.getHandler().print(
+                Instruction.TRY_CATCH,
+                patch,
+                m,
+                null
+            );
+
             Arrays.stream(m.instructions.toArray())
                 .filter(i -> !(i instanceof LineNumberNode))
                 .filter(i -> !(i instanceof FrameNode))
@@ -124,6 +131,11 @@ public class Disassembler {
     }
 
     private boolean isInUse(MethodNode m, LabelNode label) {
+        for (TryCatchBlockNode tryNode : m.tryCatchBlocks) {
+            if (tryNode.start == label) return true;
+            if (tryNode.end == label) return true;
+            if (tryNode.handler == label) return true;
+        }
         for (AbstractInsnNode insnNode : m.instructions.toArray()) {
             if (insnNode instanceof JumpInsnNode) {
                 if (((JumpInsnNode) insnNode).label == label) {

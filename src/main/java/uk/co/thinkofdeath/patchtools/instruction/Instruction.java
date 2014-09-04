@@ -30,6 +30,7 @@ public enum Instruction {
     PUSH_LONG(new PushLongInstruction()), // Virtual instruction
     PUSH_FLOAT(new PushFloatInstruction()), // Virtual instruction
     PUSH_DOUBLE(new PushDoubleInstruction()), // Virtual instruction
+    TRY_CATCH(new TryCatchInstruction()), // Virtual instruction
     // iconst_m1 (push-int)
     // iconst_0 (push-int)
     // iconst_1 (push-int)
