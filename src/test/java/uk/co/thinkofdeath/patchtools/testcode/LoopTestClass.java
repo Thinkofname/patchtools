@@ -54,4 +54,12 @@ public class LoopTestClass {
                 return -1;
         }
     }
+
+    public static void exception() {
+        try {
+            throw new RuntimeException();
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+        }
+    }
 }

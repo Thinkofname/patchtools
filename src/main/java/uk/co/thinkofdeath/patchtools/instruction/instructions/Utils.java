@@ -50,7 +50,12 @@ public class Utils {
                 return false;
             }
         } else if (scope != null) {
-            scope.putLabel(method, label, ident.getName());
+            LabelNode l = scope.getLabel(method, ident.getName());
+            if (l == null) {
+                scope.putLabel(method, label, ident.getName());
+            } else {
+                return l == label;
+            }
         }
         return true;
     }

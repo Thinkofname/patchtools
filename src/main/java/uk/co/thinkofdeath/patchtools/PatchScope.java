@@ -189,4 +189,12 @@ public class PatchScope {
         methodInstructionMap.putAll(scope.methodInstructionMap);
         methodLabelMap.putAll(scope.methodLabelMap);
     }
+
+    public void clearLabels(MethodNode methodNode) {
+        methodLabelMap.remove(methodNode);
+    }
+
+    public void clearInstructions(MethodNode methodNode) {
+        methodInstructionMap.remove(methodNode);
+    }
 }

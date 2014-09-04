@@ -134,6 +134,18 @@ public class PatchMethod {
             insns.add(insnNode.clone(cloneMap));
         }
 
+        List<TryCatchBlockNode> trys = new ArrayList<>();
+        for (TryCatchBlockNode tryCatchBlockNode : methodNode.tryCatchBlocks) {
+            TryCatchBlockNode newTry = new TryCatchBlockNode(
+                cloneMap.get(tryCatchBlockNode.start),
+                cloneMap.get(tryCatchBlockNode.end),
+                cloneMap.get(tryCatchBlockNode.handler),
+                tryCatchBlockNode.type
+            );
+            trys.add(newTry);
+        }
+        methodNode.tryCatchBlocks = trys;
+
         Map<PatchInstruction, Integer> insnMap = scope.getInstructMap(methodNode);
         int position = 0;
         int offset = 0;
@@ -168,120 +180,131 @@ public class PatchMethod {
     }
 
     public boolean check(ClassSet classSet, PatchScope scope, MethodNode methodNode) {
-        if (!getIdent().isWeak()
-            && !methodNode.name.equals(getIdent().getName())) {
-            return false;
-        }
-
-        Type patchDesc = getDesc();
-        Type desc = Type.getMethodType(methodNode.desc);
-
-        if (patchDesc.getArgumentTypes().length != desc.getArgumentTypes().length) {
-            return false;
-        }
-
-        for (int i = 0; i < patchDesc.getArgumentTypes().length; i++) {
-            Type pt = patchDesc.getArgumentTypes()[i];
-            Type t = desc.getArgumentTypes()[i];
-
-            if (!PatchClass.checkTypes(classSet, scope, pt, t)) {
+        boolean ok = false;
+        try {
+            if (!getIdent().isWeak()
+                && !methodNode.name.equals(getIdent().getName())) {
                 return false;
             }
-        }
 
-        if (!PatchClass.checkTypes(classSet, scope, patchDesc.getReturnType(), desc.getReturnType())) {
-            return false;
-        }
+            Type patchDesc = getDesc();
+            Type desc = Type.getMethodType(methodNode.desc);
 
-        int position = 0;
-        InsnList insns = methodNode.instructions;
-
-        if (((methodNode.access & Opcodes.ACC_STATIC) == 0) == isStatic) {
-            return false;
-        }
-        if (((methodNode.access & Opcodes.ACC_PRIVATE) == 0) == isPrivate) {
-            return false;
-        }
-        if (((methodNode.access & Opcodes.ACC_PROTECTED) == 0) == isProtected) {
-            return false;
-        }
-
-        boolean wildcard = false;
-        int wildcardPosition = -1;
-        int wildcardPatchPosition = -1;
-
-        Map<PatchInstruction, Integer> insnMap = Maps.newHashMap();
-
-        check:
-        for (int i = 0; i < instructions.size(); i++) {
-            PatchInstruction patchInstruction = instructions.get(i);
-            if (patchInstruction.mode == Mode.ADD) continue;
-
-            if (patchInstruction.instruction == Instruction.ANY) {
-                wildcard = true;
-                wildcardPosition = -1;
-                wildcardPatchPosition = -1;
-                if (i == instructions.size() - 1) {
-                    position = insns.size();
-                }
-                continue;
+            if (patchDesc.getArgumentTypes().length != desc.getArgumentTypes().length) {
+                return false;
             }
-            while (true) {
 
-                if (position >= insns.size()) {
-                    if (!wildcard) {
-                        return false;
-                    }
-                    break;
+            for (int i = 0; i < patchDesc.getArgumentTypes().length; i++) {
+                Type pt = patchDesc.getArgumentTypes()[i];
+                Type t = desc.getArgumentTypes()[i];
+
+                if (!PatchClass.checkTypes(classSet, scope, pt, t)) {
+                    return false;
                 }
-                AbstractInsnNode insn = insns.get(position);
+            }
 
-                boolean allowLabel = insn instanceof LabelNode
-                    && patchInstruction.instruction == Instruction.LABEL;
+            if (!PatchClass.checkTypes(classSet, scope, patchDesc.getReturnType(), desc.getReturnType())) {
+                return false;
+            }
 
-                if (!(insn instanceof LineNumberNode) && !(insn instanceof FrameNode)
-                    && (!(insn instanceof LabelNode) || allowLabel)) {
-                    if (patchInstruction.instruction.getHandler()
-                        .check(classSet, scope, patchInstruction, methodNode, insn)) {
-                        if (wildcard) {
-                            wildcardPosition = position;
-                            wildcardPatchPosition = i;
-                        }
-                        insnMap.put(patchInstruction, position);
-                        wildcard = false;
-                        position++;
-                        continue check;
-                    } else {
+            int position = 0;
+            InsnList insns = methodNode.instructions;
+
+            if (((methodNode.access & Opcodes.ACC_STATIC) == 0) == isStatic) {
+                return false;
+            }
+            if (((methodNode.access & Opcodes.ACC_PRIVATE) == 0) == isPrivate) {
+                return false;
+            }
+            if (((methodNode.access & Opcodes.ACC_PROTECTED) == 0) == isProtected) {
+                return false;
+            }
+
+            boolean wildcard = false;
+            int wildcardPosition = -1;
+            int wildcardPatchPosition = -1;
+
+            Map<PatchInstruction, Integer> insnMap = Maps.newHashMap();
+
+            check:
+            for (int i = 0; i < instructions.size(); i++) {
+                PatchInstruction patchInstruction = instructions.get(i);
+                if (patchInstruction.mode == Mode.ADD) continue;
+
+                if (patchInstruction.instruction == Instruction.ANY) {
+                    wildcard = true;
+                    wildcardPosition = -1;
+                    wildcardPatchPosition = -1;
+                    if (i == instructions.size() - 1) {
+                        position = insns.size();
+                    }
+                    continue;
+                }
+                while (true) {
+
+                    if (position >= insns.size()) {
                         if (!wildcard) {
-                            if (wildcardPosition != -1) {
-                                wildcard = true;
-                                position = ++wildcardPosition;
-                                i = --wildcardPatchPosition;
-                                continue check;
-                            } else {
-                                return false;
+                            return false;
+                        }
+                        break;
+                    }
+                    AbstractInsnNode insn = insns.get(position);
+
+                    boolean allowLabel = insn instanceof LabelNode
+                        && patchInstruction.instruction == Instruction.LABEL;
+
+                    if (!(insn instanceof LineNumberNode) && !(insn instanceof FrameNode)
+                        && (!(insn instanceof LabelNode) || allowLabel)) {
+                        if (patchInstruction.instruction.getHandler()
+                            .check(classSet, scope, patchInstruction, methodNode, insn)) {
+                            if (wildcard) {
+                                wildcardPosition = position;
+                                wildcardPatchPosition = i;
+                            }
+                            insnMap.put(patchInstruction, position);
+                            wildcard = false;
+                            position++;
+                            continue check;
+                        } else {
+                            if (!wildcard) {
+                                if (wildcardPosition != -1) {
+                                    wildcard = true;
+                                    position = ++wildcardPosition;
+                                    i = --wildcardPatchPosition;
+                                    continue check;
+                                } else {
+                                    return false;
+                                }
                             }
                         }
                     }
+                    position++;
                 }
-                position++;
+                return false;
             }
-            return false;
-        }
 
-        for (; position < insns.size(); position++) {
-            AbstractInsnNode insn = insns.get(position);
-            if (insn instanceof LineNumberNode
-                || insn instanceof LabelNode) {
-                continue;
+            for (; position < insns.size(); position++) {
+                AbstractInsnNode insn = insns.get(position);
+                if (insn instanceof LineNumberNode
+                    || insn instanceof LabelNode) {
+                    continue;
+                }
+                return false;
             }
-            return false;
-        }
 
-        if (scope != null) {
-            scope.putInstructMap(methodNode, insnMap);
+            if (scope != null) {
+                scope.putInstructMap(methodNode, insnMap);
+            }
+            ok = true;
+            return true;
+        } finally {
+            if (!ok) {
+                if (scope != null) {
+                    scope.clearLabels(methodNode);
+                    scope.clearInstructions(methodNode);
+                }
+            }
         }
-        return true;
     }
 
     private class LabelCloneMap implements Map<LabelNode, LabelNode> {
