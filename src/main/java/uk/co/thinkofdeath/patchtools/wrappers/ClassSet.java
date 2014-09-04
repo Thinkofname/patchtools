@@ -134,7 +134,10 @@ public class ClassSet implements Iterable<String> {
         if (wrapper == null || wrapper.isHidden()) {
             return null;
         }
-        wrapper.getNode().accept(new CheckClassAdapter(classWriter));
+        wrapper.getNode().accept(classWriter);
+        // Verify
+        ClassReader classReader = new ClassReader(classWriter.toByteArray());
+        classReader.accept(new CheckClassAdapter(new ClassNode()), ClassReader.EXPAND_FRAMES);
         return classWriter.toByteArray();
     }
 
