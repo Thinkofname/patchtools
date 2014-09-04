@@ -44,6 +44,19 @@ public class Disassembler {
             .append(node.name)
             .append('\n');
 
+        if (node.superName != null) {
+            patch.append(".super ")
+                .append(node.superName)
+                .append('\n');
+        }
+
+        for (String inter : node.interfaces) {
+            patch.append(".interface ")
+                .append(inter)
+                .append('\n');
+
+        }
+
         node.fields.forEach(f -> {
             patch.append("    ")
                 .append(".field ")
