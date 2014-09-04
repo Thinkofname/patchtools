@@ -214,21 +214,21 @@ public class ClassSet implements Iterable<String> {
 
             while (run1 || run2) {
                 if (run1) {
-                    if (t1.getNode().superName == null) {
+                    if (t1 == null || t1.getNode().superName == null) {
                         run1 = false;
                     } else {
                         t1 = getClassWrapper(t1.getNode().superName);
-                        if (!supers.add(t1.getNode().name)) {
+                        if (t1 != null && !supers.add(t1.getNode().name)) {
                             return t1.getNode().name;
                         }
                     }
                 }
                 if (run2) {
-                    if (t2.getNode().superName == null) {
+                    if (t2 == null || t2.getNode().superName == null) {
                         run2 = false;
                     } else {
                         t2 = getClassWrapper(t2.getNode().superName);
-                        if (!supers.add(t2.getNode().name)) {
+                        if (t2 != null && !supers.add(t2.getNode().name)) {
                             return t2.getNode().name;
                         }
                     }
