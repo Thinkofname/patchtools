@@ -77,7 +77,7 @@ public class PatchClass {
                     fields.add(new PatchField(this, command));
                     break;
                 default:
-                    if (command.name.toLowerCase().endsWith("end-" + type)) {
+                    if (command.name.toLowerCase().endsWith("end-" + type.name().toLowerCase())) {
                         return;
                     }
                     throw new IllegalArgumentException(command.toString());
