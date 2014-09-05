@@ -76,9 +76,10 @@ public class PatchClass {
                 case "field":
                     fields.add(new PatchField(this, command));
                     break;
-                case "end-class":
-                    return;
                 default:
+                    if (command.name.toLowerCase().endsWith("end-" + type)) {
+                        return;
+                    }
                     throw new IllegalArgumentException(command.toString());
             }
         }
