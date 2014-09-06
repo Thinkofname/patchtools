@@ -146,7 +146,7 @@ public class InvokeInstruction implements InstructionHandler {
             owner,
             name,
             mappedDesc.toString(),
-            false
+            opcode == Opcodes.INVOKEINTERFACE
         );
     }
 
