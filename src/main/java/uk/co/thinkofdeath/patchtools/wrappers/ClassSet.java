@@ -133,6 +133,7 @@ public class ClassSet implements Iterable<String> {
         if (wrapper == null || wrapper.isHidden()) {
             return null;
         }
+        wrapper.getNode().version = Opcodes.V1_8;
         wrapper.getNode().accept(classWriter);
         return classWriter.toByteArray();
     }
@@ -144,6 +145,7 @@ public class ClassSet implements Iterable<String> {
         if (wrapper == null || wrapper.isHidden()) {
             return null;
         }
+        wrapper.getNode().version = Opcodes.V1_8;
         classReader.accept(new RemappingClassAdapter(classWriter, new ClassRemapper(scope)), ClassReader.EXPAND_FRAMES);
         return classWriter.toByteArray();
     }
