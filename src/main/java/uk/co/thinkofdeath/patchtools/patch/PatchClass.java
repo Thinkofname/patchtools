@@ -313,7 +313,9 @@ public class PatchClass {
             builder.append(cls);
             builder.append(";");
         } else if (type.getSort() == Type.ARRAY) {
-            builder.append("[");
+            for (int i = 0; i < type.getDimensions(); i++) {
+                builder.append("[");
+            }
             updatedTypeString(classSet, scope, builder, type.getElementType());
         } else {
             builder.append(type.getDescriptor());
@@ -504,7 +506,8 @@ public class PatchClass {
                 }
             }
         } else if (pt.getSort() == Type.ARRAY) {
-            return checkTypes(classSet, scope, pt.getElementType(), t.getElementType());
+            return pt.getDimensions() == t.getDimensions()
+                && checkTypes(classSet, scope, pt.getElementType(), t.getElementType());
         } else {
             if (!pt.equals(t)) {
                 return false;

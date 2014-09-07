@@ -69,7 +69,7 @@ public class Utils {
 
         LabelNode label = scope.getLabel(method, ident.getName());
         if (label == null) {
-            label = new LabelNode(new Label());
+            label = new LabelNode();
             scope.putLabel(method, label, ident.getName());
         }
         return label;

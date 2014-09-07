@@ -18,7 +18,6 @@ package uk.co.thinkofdeath.patchtools.patch;
 
 import com.google.common.collect.Maps;
 import org.jetbrains.annotations.NotNull;
-import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
@@ -350,7 +349,7 @@ public class PatchMethod {
         public LabelNode get(Object key) {
             LabelNode k = (LabelNode) key;
             if (!internal.containsKey(key)) {
-                internal.put(k, new LabelNode(new Label()));
+                internal.put(k, new LabelNode());
             }
             return internal.get(key);
         }
