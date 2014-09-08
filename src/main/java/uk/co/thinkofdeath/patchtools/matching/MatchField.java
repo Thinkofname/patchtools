@@ -20,11 +20,13 @@ import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
+import uk.co.thinkofdeath.patchtools.logging.StateLogger;
 import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class MatchField {
 
@@ -97,13 +99,16 @@ public class MatchField {
     }
 
     public List<FieldNode> getMatches() {
-        return Arrays.asList(matchedFields.stream().map(FieldPair::getNode).toArray(FieldNode[]::new));
+        return matchedFields.stream()
+            .map(FieldPair::getNode)
+            .collect(Collectors.toList());
     }
 
     public List<FieldNode> getMatches(ClassNode owner) {
-        return Arrays.asList(matchedFields.stream()
+        return matchedFields.stream()
             .filter(m -> m.getOwner() == owner)
-            .map(FieldPair::getNode).toArray(FieldNode[]::new));
+            .map(FieldPair::getNode)
+            .collect(Collectors.toList());
     }
 
     public boolean usesNode(ClassNode clazz) {
@@ -111,20 +116,28 @@ public class MatchField {
             .anyMatch(m -> m.owner == clazz);
     }
 
-    public void check(ClassSet classSet, MatchGroup group, FieldPair pair) {
+    public void check(StateLogger logger, ClassSet classSet, MatchGroup group, FieldPair pair) {
         FieldNode node = pair.getNode();
         addChecked(pair.getOwner(), pair.getNode());
 
+        logger.println("- " + node.name);
+        logger.indent();
+
         Type type = Type.getType(node.desc);
         if (type.getSort() != getType().getSort()) {
+            logger.println(StateLogger.typeMismatch(getType(), type));
             removeMatch(pair.getOwner(), node);
         } else if (type.getSort() == Type.OBJECT) {
             MatchClass retCls = group.getClass(new MatchClass(new Ident(getType().getInternalName()).getName()));
             ClassWrapper wrapper = classSet.getClassWrapper(type.getInternalName());
             if (wrapper != null && !wrapper.isHidden()) {
+                logger.println("Adding " + wrapper.getNode().name
+                    + " as a possible match for " + getType().getInternalName());
                 retCls.addMatch(wrapper.getNode());
             }
         }
+
+        logger.unindent();
     }
 
     public static class FieldPair {

@@ -24,6 +24,7 @@ import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
+import uk.co.thinkofdeath.patchtools.logging.LoggableException;
 import uk.co.thinkofdeath.patchtools.logging.StateLogger;
 import uk.co.thinkofdeath.patchtools.patch.*;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
@@ -32,7 +33,6 @@ import uk.co.thinkofdeath.patchtools.wrappers.FieldWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.MethodWrapper;
 
 import java.util.*;
-import java.util.function.BiPredicate;
 
 public class MatchGenerator {
 
@@ -73,8 +73,6 @@ public class MatchGenerator {
         // leaves one or two classes per a patch class
         reduceGroups();
 
-        // TODO: Check if the reduceGroups removed everything and fail
-
         // Setup the initial state
 
         groups.stream()
@@ -98,6 +96,8 @@ public class MatchGenerator {
                 .map(ClassWrapper::getNode)
                 .forEach(first::addMatch);
 
+            logger.println("Adding all classes to " + first.getName());
+
             // Marks whether we made any changes in the last
             // cycle
             boolean doneSomething = true;
@@ -112,10 +112,14 @@ public class MatchGenerator {
                     }
                     MatchClass cls = clazz.get();
                     doneSomething = true;
+                    logger.println("Checking " + cls.getName());
+                    logger.indent();
 
                     ClassNode[] unchecked = cls.getUncheckedClasses();
                     Arrays.stream(unchecked)
-                        .forEach(node -> cls.check(classSet, node));
+                        .forEach(node -> cls.check(logger, classSet, node));
+
+                    logger.unindent();
                 }
 
                 while (true) {
@@ -128,25 +132,35 @@ public class MatchGenerator {
                     }
                     MatchField field = optionalField.get();
                     doneSomething = true;
+                    logger.println("Checking " + field.getOwner().getName() + "." + field.getName());
+                    logger.indent();
 
                     MatchField.FieldPair[] unchecked = field.getUncheckedMethods();
                     Arrays.stream(unchecked)
-                        .forEach(pair -> field.check(classSet, group, pair));
+                        .forEach(pair -> field.check(logger, classSet, group, pair));
+
+                    logger.unindent();
                 }
 
                 while (true) {
-                    MatchMethod method = group.getClasses().stream()
+                    Optional<MatchMethod> optionalMethod = group.getClasses().stream()
                         .flatMap(c -> c.getMethods().stream())
                         .filter(MatchMethod::hasUnchecked)
-                        .findAny().orElse(null);
-                    if (method == null) {
+                        .findAny();
+                    if (!optionalMethod.isPresent()) {
                         break;
                     }
+                    MatchMethod method = optionalMethod.get();
                     doneSomething = true;
+                    logger.println("Checking " + method.getOwner().getName()
+                        + "::" + method.getName() + method.getDesc());
+                    logger.indent();
 
                     MatchMethod.MethodPair[] unchecked = method.getUncheckedMethods();
                     Arrays.stream(unchecked)
-                        .forEach(pair -> method.check(classSet, patchClasses, group, pair));
+                        .forEach(pair -> method.check(logger, classSet, patchClasses, group, pair));
+
+                    logger.unindent();
                 }
 
                 if (!doneSomething) {
@@ -196,6 +210,7 @@ public class MatchGenerator {
                 }
 
                 MatchGroup group = new MatchGroup(classSet);
+
                 visited.put(cls, group);
                 groups.add(group);
                 Stack<MatchClass> visitList = new Stack<>();
@@ -290,7 +305,7 @@ public class MatchGenerator {
             });
     }
 
-    public PatchScope apply(BiPredicate<MatchGroup, PatchScope> test) {
+    public PatchScope apply() {
         List<PatchScope> scopes = new ArrayList<>();
         groupCheck:
         for (MatchGroup group : groups) {
@@ -300,25 +315,34 @@ public class MatchGenerator {
             long tick = 0;
 
             do {
-                if (tick % 10000 == 0) {
-                    System.out.printf("%d ticks\r", tick);
-                }
                 tick++;
 
                 PatchScope testScope = generateScope(group, new PatchScope(scope));
                 if (testScope == null) continue;
 
-                if (test.test(group, testScope)) {
+                if (test(group, testScope)) {
                     scopes.add(testScope);
                     continue groupCheck;
                 }
             } while (tick(tickList));
-            throw new RuntimeException("Unable to find match");
+            logger.failedTicks(tick);
+            throw new LoggableException(logger);
         }
-        System.out.println();
         PatchScope finalScope = new PatchScope(scope);
         scopes.forEach(finalScope::merge);
         return finalScope;
+    }
+
+    private boolean test(MatchGroup group, PatchScope scope) {
+        PatchClass[] classes = group.getClasses().stream()
+            .map(c -> patchClasses.getClass(c.getName()))
+            .filter(c -> c != null)
+            .toArray(PatchClass[]::new);
+        // Slightly faster to do it this way since the instruction checking is the heaviest
+        return Arrays.stream(classes).allMatch(c -> c.checkAttributes(logger, scope, classSet))
+            && Arrays.stream(classes).allMatch(c -> c.checkFields(logger, scope, classSet))
+            && Arrays.stream(classes).allMatch(c -> c.checkMethods(logger, scope, classSet))
+            && Arrays.stream(classes).allMatch(c -> c.checkMethodsInstructions(logger, scope, classSet));
     }
 
     private List<Object> generateTickList(MatchGroup group) {
@@ -382,15 +406,23 @@ public class MatchGenerator {
     }
 
     private PatchScope generateScope(MatchGroup group, PatchScope scope) {
-
         for (MatchClass c : group.getClasses()) {
+
+            if (c.getMatches().isEmpty()) {
+                throw new LoggableException(logger);
+            }
+
             ClassWrapper cls = classSet.getClassWrapper(c.getMatches().get(state.get(c)).name);
             if (scope.putClass(cls, c.getName())) {
                 return null;
             }
 
             for (MatchField f : c.getFields()) {
-                FieldNode node = f.getMatches(cls.getNode()).get(state.get(f));
+                List<FieldNode> matches = f.getMatches(cls.getNode());
+                if (matches.isEmpty()) {
+                    throw new LoggableException(logger);
+                }
+                FieldNode node = matches.get(state.get(f));
                 FieldWrapper met = cls.getField(node.name, node.desc);
                 if (scope.putField(met, f.getName(), f.getDesc())) {
                     return null;
@@ -398,7 +430,11 @@ public class MatchGenerator {
             }
 
             for (MatchMethod m : c.getMethods()) {
-                MethodNode node = m.getMatches(cls.getNode()).get(state.get(m));
+                List<MethodNode> matches = m.getMatches(cls.getNode());
+                if (matches.isEmpty()) {
+                    throw new LoggableException(logger);
+                }
+                MethodNode node = matches.get(state.get(m));
                 MethodWrapper met = cls.getMethod(node.name, node.desc);
                 if (scope.putMethod(met, m.getName(), m.getDesc())) {
                     return null;

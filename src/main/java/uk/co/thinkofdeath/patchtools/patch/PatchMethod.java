@@ -24,6 +24,7 @@ import org.objectweb.asm.tree.*;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.instructions.TryCatchInstruction;
+import uk.co.thinkofdeath.patchtools.logging.StateLogger;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 import java.io.BufferedReader;
@@ -191,11 +192,13 @@ public class PatchMethod {
         methodNode.instructions = insns;
     }
 
-    public boolean check(ClassSet classSet, PatchScope scope, MethodNode methodNode) {
+    public boolean check(StateLogger logger, ClassSet classSet, PatchScope scope, MethodNode methodNode) {
         boolean ok = false;
+        boolean inInstructions = false;
         try {
             if (!getIdent().isWeak()
                 && !methodNode.name.equals(getIdent().getName())) {
+                logger.println("Name mis-match " + getIdent() + " != " + methodNode.name);
                 return false;
             }
 
@@ -203,6 +206,8 @@ public class PatchMethod {
             Type desc = Type.getMethodType(methodNode.desc);
 
             if (patchDesc.getArgumentTypes().length != desc.getArgumentTypes().length) {
+                logger.println("Argument size mis-match " + patchDesc.getArgumentTypes().length
+                    + " != " + desc.getArgumentTypes().length);
                 return false;
             }
 
@@ -211,11 +216,13 @@ public class PatchMethod {
                 Type t = desc.getArgumentTypes()[i];
 
                 if (!PatchClass.checkTypes(classSet, scope, pt, t)) {
+                    logger.println(StateLogger.typeMismatch(pt, t));
                     return false;
                 }
             }
 
             if (!PatchClass.checkTypes(classSet, scope, patchDesc.getReturnType(), desc.getReturnType())) {
+                logger.println(StateLogger.typeMismatch(patchDesc.getReturnType(), desc.getReturnType()));
                 return false;
             }
 
@@ -223,12 +230,15 @@ public class PatchMethod {
             InsnList insns = methodNode.instructions;
 
             if (((methodNode.access & Opcodes.ACC_STATIC) == 0) == isStatic) {
+                logger.println(isStatic ? "Required static" : "Required non-static");
                 return false;
             }
             if (((methodNode.access & Opcodes.ACC_PRIVATE) == 0) == isPrivate) {
+                logger.println(isPrivate ? "Required private" : "Required non-private");
                 return false;
             }
             if (((methodNode.access & Opcodes.ACC_PROTECTED) == 0) == isProtected) {
+                logger.println(isProtected ? "Required protected" : "Required non-protected");
                 return false;
             }
 
@@ -238,12 +248,16 @@ public class PatchMethod {
 
             Map<PatchInstruction, Integer> insnMap = Maps.newHashMap();
 
+            inInstructions = true;
+            logger.indent();
+
             check:
             for (int i = 0; i < instructions.size(); i++) {
                 PatchInstruction patchInstruction = instructions.get(i);
                 if (patchInstruction.mode == Mode.ADD) continue;
 
                 if (patchInstruction.instruction == Instruction.ANY) {
+                    logger.println(i + ": Wild-card");
                     wildcard = true;
                     wildcardPosition = -1;
                     wildcardPatchPosition = -1;
@@ -256,6 +270,7 @@ public class PatchMethod {
 
                     if (position >= insns.size()) {
                         if (!wildcard) {
+                            logger.println("Not enough instructions");
                             return false;
                         }
                         break;
@@ -270,26 +285,33 @@ public class PatchMethod {
                         && (!(insn instanceof LabelNode) || allowLabel)) {
                         if (patchInstruction.instruction.getHandler()
                             .check(classSet, scope, patchInstruction, methodNode, insn)) {
+                            logger.println(i + ": " + patchInstruction + " succeeded on " + insn);
                             if (patchInstruction.instruction == Instruction.TRY_CATCH) continue check;
                             if (wildcard) {
                                 wildcardPosition = position;
                                 wildcardPatchPosition = i;
+                                logger.println("(Saving wildcard state)");
                             }
                             insnMap.put(patchInstruction, position);
                             wildcard = false;
                             position++;
                             continue check;
                         } else {
+                            logger.println(i + ": " + patchInstruction + " failed on " + insn);
                             if (!wildcard) {
                                 if (wildcardPosition != -1) {
+                                    logger.println("Failed");
                                     wildcard = true;
                                     position = ++wildcardPosition;
                                     i = --wildcardPatchPosition;
+                                    logger.println("Rolling back to the last wildcard");
                                     continue check;
                                 } else {
+                                    logger.println("Failed");
                                     return false;
                                 }
                             }
+                            logger.println("Continuing because of wild-card");
                         }
                     }
                     position++;
@@ -303,13 +325,17 @@ public class PatchMethod {
                     || insn instanceof LabelNode) {
                     continue;
                 }
+                logger.println("Too many instructions");
                 return false;
             }
+            inInstructions = false;
+            logger.unindent();
 
             if (scope != null) {
                 scope.putInstructMap(methodNode, insnMap);
             }
             ok = true;
+            logger.println("ok");
             return true;
         } finally {
             if (!ok) {
@@ -317,6 +343,9 @@ public class PatchMethod {
                     scope.clearLabels(methodNode);
                     scope.clearInstructions(methodNode);
                 }
+            }
+            if (inInstructions) {
+                logger.unindent();
             }
         }
     }

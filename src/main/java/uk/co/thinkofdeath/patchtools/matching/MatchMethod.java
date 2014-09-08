@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
+import uk.co.thinkofdeath.patchtools.logging.StateLogger;
 import uk.co.thinkofdeath.patchtools.patch.*;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
@@ -27,6 +28,7 @@ import uk.co.thinkofdeath.patchtools.wrappers.FieldWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.MethodWrapper;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class MatchMethod {
 
@@ -108,13 +110,16 @@ public class MatchMethod {
     }
 
     public List<MethodNode> getMatches() {
-        return Arrays.asList(matchedMethods.stream().map(MethodPair::getNode).toArray(MethodNode[]::new));
+        return matchedMethods.stream()
+            .map(MethodPair::getNode)
+            .collect(Collectors.toList());
     }
 
     public List<MethodNode> getMatches(ClassNode owner) {
-        return Arrays.asList(matchedMethods.stream()
+        return matchedMethods.stream()
             .filter(m -> m.getOwner() == owner)
-            .map(MethodPair::getNode).toArray(MethodNode[]::new));
+            .map(MethodPair::getNode)
+            .collect(Collectors.toList());
     }
 
     public boolean usesNode(ClassNode clazz) {
@@ -122,150 +127,173 @@ public class MatchMethod {
             .anyMatch(m -> m.owner == clazz);
     }
 
-    public void check(ClassSet classSet, PatchClasses patchClasses,
+    public void check(StateLogger logger, ClassSet classSet, PatchClasses patchClasses,
                       MatchGroup group, MethodPair pair) {
         MethodNode node = pair.getNode();
         addChecked(pair.getOwner(), pair.getNode());
 
-        List<MatchPair> matchPairs = new ArrayList<>();
+        logger.println("- " + node.name + node.desc);
+        logger.indent();
+        boolean inCode = false;
 
-        Type type = Type.getMethodType(node.desc);
+        try {
 
-        if (type.getArgumentTypes().length != getArguments().size()) {
-            removeMatch(pair.getOwner(), node);
-            return;
-        }
+            List<MatchPair> matchPairs = new ArrayList<>();
 
-        Type ret = type.getReturnType();
-        if (ret.getSort() != getReturnType().getSort()) {
-            removeMatch(pair.getOwner(), node);
-            return;
-        } else if (ret.getSort() == Type.OBJECT) {
-            MatchClass retCls = group.getClass(new MatchClass(new Ident(getReturnType().getInternalName()).getName()));
-            ClassWrapper wrapper = classSet.getClassWrapper(ret.getInternalName());
-            if (wrapper != null && !wrapper.isHidden()) {
-                matchPairs.add(new MatchPair.ClassMatch(retCls, wrapper.getNode()));
-            }
-        }
+            Type type = Type.getMethodType(node.desc);
 
-        Type[] argumentTypes = type.getArgumentTypes();
-        for (int i = 0; i < argumentTypes.length; i++) {
-            Type arg = argumentTypes[i];
-            if (arg.getSort() != getArguments().get(i).getSort()) {
+            if (type.getArgumentTypes().length != getArguments().size()) {
+                logger.println("Argument size mis-match " + getArguments().size()
+                    + " != " + type.getArgumentTypes().length);
                 removeMatch(pair.getOwner(), node);
                 return;
-            } else if (arg.getSort() == Type.OBJECT) {
-                MatchClass argCls = group.getClass(new MatchClass(new Ident(getArguments().get(i).getInternalName()).getName()));
-                ClassWrapper wrapper = classSet.getClassWrapper(arg.getInternalName());
+            }
+
+            Type ret = type.getReturnType();
+            if (ret.getSort() != getReturnType().getSort()) {
+                removeMatch(pair.getOwner(), node);
+                logger.println(StateLogger.typeMismatch(getReturnType(), ret));
+                return;
+            } else if (ret.getSort() == Type.OBJECT) {
+                MatchClass retCls = group.getClass(new MatchClass(new Ident(getReturnType().getInternalName()).getName()));
+                ClassWrapper wrapper = classSet.getClassWrapper(ret.getInternalName());
                 if (wrapper != null && !wrapper.isHidden()) {
-                    matchPairs.add(new MatchPair.ClassMatch(argCls, wrapper.getNode()));
+                    logger.println(StateLogger.match(wrapper.getNode(), retCls));
+                    matchPairs.add(new MatchPair.ClassMatch(retCls, wrapper.getNode()));
                 }
             }
-        }
 
-        PatchClass pc = patchClasses.getClass(getOwner().getName());
-        if (pc != null) {
-            PatchMethod pm = pc.getMethods().stream().filter(
-                m -> m.getIdent().getName().equals(getName())
-                    && m.getDescRaw().equals(getDesc())
-            ).findFirst().orElse(null);
-
-            if (pm != null) {
-                if (!pm.check(classSet, null, node)) {
+            Type[] argumentTypes = type.getArgumentTypes();
+            for (int i = 0; i < argumentTypes.length; i++) {
+                Type arg = argumentTypes[i];
+                if (arg.getSort() != getArguments().get(i).getSort()) {
                     removeMatch(pair.getOwner(), node);
+                    logger.println(StateLogger.typeMismatch(getArguments().get(i), arg));
                     return;
+                } else if (arg.getSort() == Type.OBJECT) {
+                    MatchClass argCls = group.getClass(new MatchClass(new Ident(getArguments().get(i).getInternalName()).getName()));
+                    ClassWrapper wrapper = classSet.getClassWrapper(arg.getInternalName());
+                    if (wrapper != null && !wrapper.isHidden()) {
+                        logger.println(StateLogger.match(wrapper.getNode(), argCls));
+                        matchPairs.add(new MatchPair.ClassMatch(argCls, wrapper.getNode()));
+                    }
                 }
+            }
 
-                ListIterator<AbstractInsnNode> it = node.instructions.iterator();
-                Set<ClassNode> referencedClasses = new HashSet<>();
-                Set<MatchMethod.MethodPair> referencedMethods = new HashSet<>();
-                Set<MatchField.FieldPair> referencedFields = new HashSet<>();
-                while (it.hasNext()) {
-                    AbstractInsnNode insn = it.next();
+            PatchClass pc = patchClasses.getClass(getOwner().getName());
+            if (pc != null) {
+                PatchMethod pm = pc.getMethods().stream().filter(
+                    m -> m.getIdent().getName().equals(getName())
+                        && m.getDescRaw().equals(getDesc())
+                ).findFirst().orElse(null);
 
-                    if (insn instanceof MethodInsnNode) {
-                        MethodInsnNode methodInsnNode = (MethodInsnNode) insn;
+                if (pm != null) {
+                    logger.println("Entering method");
+                    logger.indent();
+                    inCode = true;
 
-                        ClassWrapper cls = classSet.getClassWrapper(methodInsnNode.owner);
-                        if (cls == null || cls.isHidden()) continue;
+                    if (!pm.check(logger, classSet, null, node)) {
+                        removeMatch(pair.getOwner(), node);
+                        return;
+                    }
 
-                        referencedClasses.add(cls.getNode());
+                    ListIterator<AbstractInsnNode> it = node.instructions.iterator();
+                    Set<ClassNode> referencedClasses = new HashSet<>();
+                    Set<MatchMethod.MethodPair> referencedMethods = new HashSet<>();
+                    Set<MatchField.FieldPair> referencedFields = new HashSet<>();
+                    while (it.hasNext()) {
+                        AbstractInsnNode insn = it.next();
 
-                        MethodWrapper wrap = cls.getMethod(methodInsnNode.name, methodInsnNode.desc);
-                        if (wrap != null) {
-                            referencedMethods.add(new MatchMethod.MethodPair(
-                                cls.getNode(),
-                                cls.getMethodNode(wrap)
-                            ));
-                        }
-                    } else if (insn instanceof FieldInsnNode) {
-                        FieldInsnNode fieldInsnNode = (FieldInsnNode) insn;
+                        if (insn instanceof MethodInsnNode) {
+                            MethodInsnNode methodInsnNode = (MethodInsnNode) insn;
 
-                        ClassWrapper cls = classSet.getClassWrapper(fieldInsnNode.owner);
-                        if (cls == null || cls.isHidden()) continue;
+                            ClassWrapper cls = classSet.getClassWrapper(methodInsnNode.owner);
+                            if (cls == null || cls.isHidden()) continue;
 
-                        referencedClasses.add(cls.getNode());
+                            referencedClasses.add(cls.getNode());
 
-                        FieldWrapper wrap = cls.getField(fieldInsnNode.name, fieldInsnNode.desc);
-                        if (wrap != null) {
-                            referencedFields.add(new MatchField.FieldPair(
-                                cls.getNode(),
-                                cls.getFieldNode(wrap)
-                            ));
-                        }
-                    } else if (insn instanceof LdcInsnNode) {
-                        LdcInsnNode ldc = (LdcInsnNode) insn;
-                        if (ldc.cst instanceof Type) {
-                            ClassWrapper cls = classSet.getClassWrapper(((Type) ldc.cst).getInternalName());
+                            MethodWrapper wrap = cls.getMethod(methodInsnNode.name, methodInsnNode.desc);
+                            if (wrap != null) {
+                                referencedMethods.add(new MatchMethod.MethodPair(
+                                    cls.getNode(),
+                                    cls.getMethodNode(wrap)
+                                ));
+                            }
+                        } else if (insn instanceof FieldInsnNode) {
+                            FieldInsnNode fieldInsnNode = (FieldInsnNode) insn;
+
+                            ClassWrapper cls = classSet.getClassWrapper(fieldInsnNode.owner);
+                            if (cls == null || cls.isHidden()) continue;
+
+                            referencedClasses.add(cls.getNode());
+
+                            FieldWrapper wrap = cls.getField(fieldInsnNode.name, fieldInsnNode.desc);
+                            if (wrap != null) {
+                                referencedFields.add(new MatchField.FieldPair(
+                                    cls.getNode(),
+                                    cls.getFieldNode(wrap)
+                                ));
+                            }
+                        } else if (insn instanceof LdcInsnNode) {
+                            LdcInsnNode ldc = (LdcInsnNode) insn;
+                            if (ldc.cst instanceof Type) {
+                                ClassWrapper cls = classSet.getClassWrapper(((Type) ldc.cst).getInternalName());
+                                if (cls == null || cls.isHidden()) continue;
+
+                                referencedClasses.add(cls.getNode());
+                            }
+                        } else if (insn instanceof TypeInsnNode) {
+                            TypeInsnNode tNode = (TypeInsnNode) insn;
+                            String desc = tNode.desc;
+                            ClassWrapper cls = classSet.getClassWrapper(MatchGenerator.getRootType(Type.getObjectType(desc)).getInternalName());
+                            if (cls == null || cls.isHidden()) continue;
+
+                            referencedClasses.add(cls.getNode());
+                        } else if (insn instanceof MultiANewArrayInsnNode) {
+                            MultiANewArrayInsnNode tNode = (MultiANewArrayInsnNode) insn;
+                            String desc = tNode.desc;
+                            ClassWrapper cls = classSet.getClassWrapper(MatchGenerator.getRootType(Type.getObjectType(desc)).getInternalName());
                             if (cls == null || cls.isHidden()) continue;
 
                             referencedClasses.add(cls.getNode());
                         }
-                    } else if (insn instanceof TypeInsnNode) {
-                        TypeInsnNode tNode = (TypeInsnNode) insn;
-                        String desc = tNode.desc;
-                        ClassWrapper cls = classSet.getClassWrapper(MatchGenerator.getRootType(Type.getObjectType(desc)).getInternalName());
-                        if (cls == null || cls.isHidden()) continue;
-
-                        referencedClasses.add(cls.getNode());
-                    } else if (insn instanceof MultiANewArrayInsnNode) {
-                        MultiANewArrayInsnNode tNode = (MultiANewArrayInsnNode) insn;
-                        String desc = tNode.desc;
-                        ClassWrapper cls = classSet.getClassWrapper(MatchGenerator.getRootType(Type.getObjectType(desc)).getInternalName());
-                        if (cls == null || cls.isHidden()) continue;
-
-                        referencedClasses.add(cls.getNode());
                     }
-                }
 
-                for (PatchInstruction instruction : pm.getInstructions()) {
-                    Instruction in = instruction.instruction;
-                    if (in.getHandler() == null || instruction.mode == Mode.ADD) continue;
-                    in.getHandler().getReferencedClasses(instruction)
-                        .forEach(c -> referencedClasses.forEach(rc -> {
-                                ClassWrapper wrapper = classSet.getClassWrapper(rc.name);
-                                if (!wrapper.isHidden()) {
-                                    matchPairs.add(new MatchPair.ClassMatch(group.getClass(c), rc));
-                                }
-                            })
-                        );
-                    in.getHandler().getReferencedMethods(instruction)
-                        .forEach(me -> {
-                            MatchClass matchClass = group.getClass(me.getOwner());
-                            final MatchMethod fme = matchClass.addMethod(me);
-                            referencedMethods.forEach(rm -> matchPairs.add(new MatchPair.MethodMatch(fme, rm.getOwner(), rm.getNode())));
-                        });
-                    in.getHandler().getReferencedFields(instruction)
-                        .forEach(fe -> {
-                            MatchClass matchClass = group.getClass(fe.getOwner());
-                            final MatchField ffe = matchClass.addField(fe);
-                            referencedFields.forEach(rf -> matchPairs.add(new MatchPair.FieldMatch(ffe, rf.getOwner(), rf.getNode())));
-                        });
+                    for (PatchInstruction instruction : pm.getInstructions()) {
+                        Instruction in = instruction.instruction;
+                        if (in.getHandler() == null || instruction.mode == Mode.ADD) continue;
+                        in.getHandler().getReferencedClasses(instruction)
+                            .forEach(c -> referencedClasses.forEach(rc -> {
+                                    ClassWrapper wrapper = classSet.getClassWrapper(rc.name);
+                                    if (!wrapper.isHidden()) {
+                                        matchPairs.add(new MatchPair.ClassMatch(group.getClass(c), rc));
+                                    }
+                                })
+                            );
+                        in.getHandler().getReferencedMethods(instruction)
+                            .forEach(me -> {
+                                MatchClass matchClass = group.getClass(me.getOwner());
+                                final MatchMethod fme = matchClass.addMethod(me);
+                                referencedMethods.forEach(rm -> matchPairs.add(new MatchPair.MethodMatch(fme, rm.getOwner(), rm.getNode())));
+                            });
+                        in.getHandler().getReferencedFields(instruction)
+                            .forEach(fe -> {
+                                MatchClass matchClass = group.getClass(fe.getOwner());
+                                final MatchField ffe = matchClass.addField(fe);
+                                referencedFields.forEach(rf -> matchPairs.add(new MatchPair.FieldMatch(ffe, rf.getOwner(), rf.getNode())));
+                            });
+                    }
+                    inCode = false;
+                    logger.unindent();
                 }
             }
-        }
+            logger.println("Adding " + matchPairs.size() + " new matches");
 
-        matchPairs.forEach(MatchPair::apply);
+            matchPairs.forEach(MatchPair::apply);
+        } finally {
+            logger.unindent();
+            if (inCode) logger.unindent();
+        }
     }
 
     public static class MethodPair {

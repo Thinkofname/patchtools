@@ -38,11 +38,8 @@ public class LoopTest {
         Disassembler disassembler = new Disassembler(classSet);
 
         String patch = disassembler.disassemble("uk/co/thinkofdeath/patchtools/testcode/LoopTestClass");
-
-        System.out.println(patch);
-
         Patcher patcher = new Patcher(classSet);
-        System.out.println(patcher.apply(new StringReader(patch)));
+        patcher.apply(new StringReader(patch));
     }
 
     public static byte[] getClass(String name) {

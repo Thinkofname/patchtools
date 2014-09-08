@@ -36,9 +36,7 @@ public class DisassembleTest {
 
         Disassembler disassembler = new Disassembler(classSet);
 
-        String patch = disassembler.disassemble("uk/co/thinkofdeath/patchtools/testcode/DisassembleClass");
-        System.out.println("Done:");
-        System.out.println(patch);
+        disassembler.disassemble("uk/co/thinkofdeath/patchtools/testcode/DisassembleClass");
     }
 
     public static byte[] getClass(String name) {

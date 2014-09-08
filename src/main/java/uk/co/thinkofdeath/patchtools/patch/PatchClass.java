@@ -22,6 +22,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
+import uk.co.thinkofdeath.patchtools.logging.StateLogger;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.FieldWrapper;
@@ -322,163 +323,215 @@ public class PatchClass {
         }
     }
 
-    public boolean checkAttributes(PatchScope scope, ClassSet classSet) {
+    public boolean checkAttributes(StateLogger logger, PatchScope scope, ClassSet classSet) {
         if (mode == Mode.ADD) return true;
         ClassWrapper classWrapper = scope.getClass(ident.getName());
-        if (!ident.isWeak() && !classWrapper.getNode().name.equals(ident.getName())) {
-            return false;
-        }
-
-        int mask = 0;
-        switch (type) {
-            case CLASS:
-                break;
-            case INTERFACE:
-                mask = Opcodes.ACC_INTERFACE;
-                break;
-            case ENUM:
-                mask = Opcodes.ACC_ENUM;
-                break;
-        }
-
-        if (mask != 0 && (classWrapper.getNode().access & mask) == 0) {
-            return false;
-        }
-
-        for (ModifierClass superModifier : superModifiers) {
-            if (superModifier.getMode() != Mode.ADD) {
-                Ident name = superModifier.getIdent();
-                String clName = name.getName();
-                if (name.isWeak()) {
-                    ClassWrapper cl = scope.getClass(clName);
-                    if (cl == null) {
-                        cl = classSet.getClassWrapper(classWrapper.getNode().superName);
-                        scope.putClass(cl, clName);
-                    }
-                    clName = cl.getNode().name;
-                }
-                if (!clName.equals("*") && !clName.equals(classWrapper.getNode().superName)) {
-                    return false;
-                }
+        logger.println(" - " + ident + " testing " + classWrapper.getNode().name);
+        logger.indent();
+        try {
+            if (!ident.isWeak() && !classWrapper.getNode().name.equals(ident.getName())) {
+                logger.println("Name mis-match " + getIdent() + " != " + classWrapper.getNode().name);
+                return false;
             }
-        }
 
-        interLoop:
-        for (ModifierClass interfaceModifier : interfaceModifiers) {
-            if (interfaceModifier.getMode() != Mode.ADD) {
-                Ident name = interfaceModifier.getIdent();
-                String clName = name.getName();
-                if (clName.equals("*") && classWrapper.getNode().interfaces.size() > 0) {
-                    continue;
-                }
-                for (String inter : classWrapper.getNode().interfaces) {
+            int mask = 0;
+            switch (type) {
+                case CLASS:
+                    break;
+                case INTERFACE:
+                    mask = Opcodes.ACC_INTERFACE;
+                    break;
+                case ENUM:
+                    mask = Opcodes.ACC_ENUM;
+                    break;
+            }
+
+            if (mask != 0 && (classWrapper.getNode().access & mask) == 0) {
+                logger.println("Incorrect class type");
+                return false;
+            }
+
+            for (ModifierClass superModifier : superModifiers) {
+                if (superModifier.getMode() != Mode.ADD) {
+                    Ident name = superModifier.getIdent();
+                    String clName = name.getName();
                     if (name.isWeak()) {
                         ClassWrapper cl = scope.getClass(clName);
                         if (cl == null) {
-                            cl = classSet.getClassWrapper(inter);
+                            cl = classSet.getClassWrapper(classWrapper.getNode().superName);
                             scope.putClass(cl, clName);
                         }
                         clName = cl.getNode().name;
                     }
-                    if (clName.equals(inter)) {
-                        continue interLoop;
+                    if (!clName.equals("*") && !clName.equals(classWrapper.getNode().superName)) {
+                        logger.println(clName + " != " + classWrapper.getNode().superName);
+                        return false;
                     }
                 }
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public boolean checkFields(PatchScope scope, ClassSet classSet) {
-        if (mode == Mode.ADD) return true;
-        ClassWrapper classWrapper = scope.getClass(ident.getName());
-        for (PatchField f : fields) {
-            if (f.getMode() == Mode.ADD) continue;
-
-            FieldWrapper fieldWrapper = scope.getField(classWrapper,
-                f.getIdent().getName(),
-                f.getDescRaw());
-
-            if (!f.getIdent().isWeak()
-                && !fieldWrapper.getName().equals(f.getIdent().getName())) {
-                return false;
             }
 
-            Type patchDesc = f.getDesc();
-            Type desc = Type.getType(fieldWrapper.getDesc());
-
-            if (!checkTypes(classSet, scope, patchDesc, desc)) {
-                return false;
-            }
-
-            FieldNode fieldNode = classWrapper.getFieldNode(fieldWrapper);
-
-            if (((fieldNode.access & Opcodes.ACC_STATIC) == 0) == f.isStatic()) {
-                return false;
-            }
-            if (((fieldNode.access & Opcodes.ACC_PRIVATE) == 0) == f.isPrivate()) {
-                return false;
-            }
-
-            if (!Objects.equals(fieldNode.value, f.getValue())) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public boolean checkMethods(PatchScope scope, ClassSet classSet) {
-        if (mode == Mode.ADD) return true;
-        ClassWrapper classWrapper = scope.getClass(ident.getName());
-        for (PatchMethod m : methods) {
-            if (m.getMode() == Mode.ADD) continue;
-
-            MethodWrapper methodWrapper = scope.getMethod(classWrapper,
-                m.getIdent().getName(),
-                m.getDescRaw());
-            if (!m.getIdent().isWeak()
-                && !methodWrapper.getName().equals(m.getIdent().getName())) {
-                return false;
-            }
-
-            Type patchDesc = m.getDesc();
-            Type desc = Type.getMethodType(methodWrapper.getDesc());
-
-            if (patchDesc.getArgumentTypes().length != desc.getArgumentTypes().length) {
-                return false;
-            }
-
-            for (int i = 0; i < patchDesc.getArgumentTypes().length; i++) {
-                Type pt = patchDesc.getArgumentTypes()[i];
-                Type t = desc.getArgumentTypes()[i];
-
-                if (!checkTypes(classSet, scope, pt, t)) {
+            interLoop:
+            for (ModifierClass interfaceModifier : interfaceModifiers) {
+                if (interfaceModifier.getMode() != Mode.ADD) {
+                    Ident name = interfaceModifier.getIdent();
+                    String clName = name.getName();
+                    if (clName.equals("*") && classWrapper.getNode().interfaces.size() > 0) {
+                        continue;
+                    }
+                    for (String inter : classWrapper.getNode().interfaces) {
+                        if (name.isWeak()) {
+                            ClassWrapper cl = scope.getClass(clName);
+                            if (cl == null) {
+                                cl = classSet.getClassWrapper(inter);
+                                scope.putClass(cl, clName);
+                            }
+                            clName = cl.getNode().name;
+                        }
+                        if (clName.equals(inter)) {
+                            logger.println(clName + " == " + inter);
+                            continue interLoop;
+                        }
+                        logger.println(clName + " != " + inter);
+                    }
+                    logger.println("interface matching failed");
                     return false;
                 }
             }
-
-            if (!checkTypes(classSet, scope, patchDesc.getReturnType(), desc.getReturnType())) {
-                return false;
-            }
+            return true;
+        } finally {
+            logger.unindent();
         }
-        return true;
     }
 
-    public boolean checkMethodsInstructions(PatchScope scope, ClassSet classSet) {
+    public boolean checkFields(StateLogger logger, PatchScope scope, ClassSet classSet) {
+        if (mode == Mode.ADD) return true;
         ClassWrapper classWrapper = scope.getClass(ident.getName());
-        for (PatchMethod m : methods) {
-            if (m.getMode() == Mode.ADD) continue;
+        logger.println(" - " + ident + " testing " + classWrapper.getNode().name);
+        logger.indent();
+        try {
+            for (PatchField f : fields) {
+                if (f.getMode() == Mode.ADD) continue;
 
-            MethodWrapper methodWrapper = scope.getMethod(classWrapper,
-                m.getIdent().getName(),
-                m.getDescRaw());
+                FieldWrapper fieldWrapper = scope.getField(classWrapper,
+                    f.getIdent().getName(),
+                    f.getDescRaw());
 
-            if (!m.check(classSet, scope, classWrapper.getMethodNode(methodWrapper))) {
-                return false;
+                logger.println(" - " + f.getIdent() + " testing " + fieldWrapper.getName());
+
+                if (!f.getIdent().isWeak()
+                    && !fieldWrapper.getName().equals(f.getIdent().getName())) {
+                    logger.println("Name mis-match " + f.getIdent() + " != " + fieldWrapper.getName());
+                    return false;
+                }
+
+                Type patchDesc = f.getDesc();
+                Type desc = Type.getType(fieldWrapper.getDesc());
+
+                if (!checkTypes(classSet, scope, patchDesc, desc)) {
+                    logger.println(StateLogger.typeMismatch(patchDesc, desc));
+                    return false;
+                }
+
+                FieldNode fieldNode = classWrapper.getFieldNode(fieldWrapper);
+
+                if (((fieldNode.access & Opcodes.ACC_STATIC) == 0) == f.isStatic()) {
+                    logger.println(f.isStatic() ? "Required static" : "Required non-static");
+                    return false;
+                }
+                if (((fieldNode.access & Opcodes.ACC_PRIVATE) == 0) == f.isPrivate()) {
+                    logger.println(f.isPrivate() ? "Required private" : "Required non-private");
+                    return false;
+                }
+
+                if (!Objects.equals(fieldNode.value, f.getValue())) {
+                    logger.println(fieldNode.value + " != " + f.getValue());
+                    return false;
+                }
+                logger.println("ok");
             }
+            return true;
+        } finally {
+            logger.unindent();
         }
-        return true;
+    }
+
+    public boolean checkMethods(StateLogger logger, PatchScope scope, ClassSet classSet) {
+        if (mode == Mode.ADD) return true;
+        ClassWrapper classWrapper = scope.getClass(ident.getName());
+        logger.println(" - " + ident + " testing " + classWrapper.getNode().name);
+        logger.indent();
+        try {
+            for (PatchMethod m : methods) {
+                if (m.getMode() == Mode.ADD) continue;
+
+                MethodWrapper methodWrapper = scope.getMethod(classWrapper,
+                    m.getIdent().getName(),
+                    m.getDescRaw());
+
+                logger.println(" - " + m.getIdent() + m.getDescRaw()
+                    + " testing " + methodWrapper.getName() + methodWrapper.getDesc());
+
+                if (!m.getIdent().isWeak()
+                    && !methodWrapper.getName().equals(m.getIdent().getName())) {
+                    logger.println("Name mis-match " + m.getIdent() + " != " + methodWrapper.getName());
+                    return false;
+                }
+
+                Type patchDesc = m.getDesc();
+                Type desc = Type.getMethodType(methodWrapper.getDesc());
+
+                if (patchDesc.getArgumentTypes().length != desc.getArgumentTypes().length) {
+                    logger.println("Argument size mis-match " + patchDesc.getArgumentTypes().length
+                        + " != " + desc.getArgumentTypes().length);
+                    return false;
+                }
+
+                for (int i = 0; i < patchDesc.getArgumentTypes().length; i++) {
+                    Type pt = patchDesc.getArgumentTypes()[i];
+                    Type t = desc.getArgumentTypes()[i];
+
+                    if (!checkTypes(classSet, scope, pt, t)) {
+                        logger.println(StateLogger.typeMismatch(pt, t));
+                        return false;
+                    }
+                }
+
+                if (!checkTypes(classSet, scope, patchDesc.getReturnType(), desc.getReturnType())) {
+                    logger.println(StateLogger.typeMismatch(patchDesc.getReturnType(), desc.getReturnType()));
+                    return false;
+                }
+                logger.println("ok");
+            }
+            return true;
+        } finally {
+            logger.unindent();
+        }
+    }
+
+    public boolean checkMethodsInstructions(StateLogger logger, PatchScope scope, ClassSet classSet) {
+        ClassWrapper classWrapper = scope.getClass(ident.getName());
+        logger.println(" - " + ident + " testing " + classWrapper.getNode().name);
+        logger.indent();
+        try {
+            for (PatchMethod m : methods) {
+                if (m.getMode() == Mode.ADD) continue;
+
+                MethodWrapper methodWrapper = scope.getMethod(classWrapper,
+                    m.getIdent().getName(),
+                    m.getDescRaw());
+
+                logger.println(" - " + m.getIdent() + m.getDescRaw()
+                    + " testing " + methodWrapper.getName() + methodWrapper.getDesc()
+                    + " instructions");
+
+                if (!m.check(logger, classSet, scope, classWrapper.getMethodNode(methodWrapper))) {
+                    return false;
+                }
+            }
+            return true;
+        } finally {
+            logger.unindent();
+        }
     }
 
     public static boolean checkTypes(ClassSet classSet, PatchScope scope, Type pt, Type t) {

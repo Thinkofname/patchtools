@@ -18,6 +18,7 @@ package uk.co.thinkofdeath.patchtools.matching;
 
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.tree.ClassNode;
+import uk.co.thinkofdeath.patchtools.logging.StateLogger;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
 
@@ -136,12 +137,15 @@ public class MatchClass {
         return cls.hashCode();
     }
 
-    public void check(ClassSet classSet, ClassNode node) {
+    public void check(StateLogger logger, ClassSet classSet, ClassNode node) {
         addChecked(node);
+        logger.println("- " + node.name);
+        logger.indent();
 
         if (getSuperClass() != null) {
             ClassWrapper su = classSet.getClassWrapper(node.superName);
             if (su != null && !su.isHidden()) {
+                logger.println(StateLogger.match(su.getNode(), getSuperClass()));
                 getSuperClass().addMatch(su.getNode());
             }
         }
@@ -149,13 +153,19 @@ public class MatchClass {
         for (String inter : node.interfaces) {
             ClassWrapper su = classSet.getClassWrapper(inter);
             if (su != null && !su.isHidden()) {
+                logger.println("Adding " + su.getNode().name
+                    + " as a possible match for " + getInterfaces().size() + " interfaces");
                 getInterfaces().forEach(i -> i.addMatch(su.getNode()));
             }
         }
+
+        logger.println("Adding methods/fields to be tested");
 
         getFields()
             .forEach(f -> node.fields.forEach(n -> f.addMatch(node, n)));
         getMethods()
             .forEach(m -> node.methods.forEach(n -> m.addMatch(node, n)));
+
+        logger.unindent();
     }
 }
