@@ -20,6 +20,9 @@ import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
+import uk.co.thinkofdeath.patchtools.patch.Ident;
+import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
+import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
 
 import java.util.*;
 
@@ -106,6 +109,22 @@ public class MatchField {
     public boolean usesNode(ClassNode clazz) {
         return matchedFields.stream()
             .anyMatch(m -> m.owner == clazz);
+    }
+
+    public void check(ClassSet classSet, MatchGroup group, FieldPair pair) {
+        FieldNode node = pair.getNode();
+        addChecked(pair.getOwner(), pair.getNode());
+
+        Type type = Type.getType(node.desc);
+        if (type.getSort() != getType().getSort()) {
+            removeMatch(pair.getOwner(), node);
+        } else if (type.getSort() == Type.OBJECT) {
+            MatchClass retCls = group.getClass(new MatchClass(new Ident(getType().getInternalName()).getName()));
+            ClassWrapper wrapper = classSet.getClassWrapper(type.getInternalName());
+            if (wrapper != null && !wrapper.isHidden()) {
+                retCls.addMatch(wrapper.getNode());
+            }
+        }
     }
 
     public static class FieldPair {

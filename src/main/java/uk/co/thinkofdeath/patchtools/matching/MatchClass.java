@@ -18,6 +18,8 @@ package uk.co.thinkofdeath.patchtools.matching;
 
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.tree.ClassNode;
+import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
+import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -132,5 +134,28 @@ public class MatchClass {
     @Override
     public int hashCode() {
         return cls.hashCode();
+    }
+
+    public void check(ClassSet classSet, ClassNode node) {
+        addChecked(node);
+
+        if (getSuperClass() != null) {
+            ClassWrapper su = classSet.getClassWrapper(node.superName);
+            if (su != null && !su.isHidden()) {
+                getSuperClass().addMatch(su.getNode());
+            }
+        }
+
+        for (String inter : node.interfaces) {
+            ClassWrapper su = classSet.getClassWrapper(inter);
+            if (su != null && !su.isHidden()) {
+                getInterfaces().forEach(i -> i.addMatch(su.getNode()));
+            }
+        }
+
+        getFields()
+            .forEach(f -> node.fields.forEach(n -> f.addMatch(node, n)));
+        getMethods()
+            .forEach(m -> node.methods.forEach(n -> m.addMatch(node, n)));
     }
 }

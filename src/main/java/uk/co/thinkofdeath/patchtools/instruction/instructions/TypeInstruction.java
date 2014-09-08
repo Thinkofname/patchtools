@@ -59,11 +59,7 @@ public class TypeInstruction implements InstructionHandler {
         }
 
         String type = typeInsnNode.desc;
-        if (!type.startsWith("[")) {
-            type = "L" + type + ";";
-        }
-
-        return PatchClass.checkTypes(classSet, scope, Type.getType(className), Type.getType(type));
+        return PatchClass.checkTypes(classSet, scope, Type.getType(className), Type.getObjectType(type));
     }
 
     @Override

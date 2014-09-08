@@ -56,10 +56,7 @@ public class ArrayInstruction implements InstructionHandler {
                 return false;
             }
             String type = ((TypeInsnNode) insn).desc;
-            if (!type.startsWith("[")) {
-                type = "L" + type + ";";
-            }
-            return PatchClass.checkTypes(classSet, scope, pType, Type.getType(type));
+            return PatchClass.checkTypes(classSet, scope, pType, Type.getObjectType(type));
         } else {
             if (!(insn instanceof IntInsnNode)) {
                 return false;
@@ -109,10 +106,7 @@ public class ArrayInstruction implements InstructionHandler {
             StringBuilder nDesc = new StringBuilder();
             PatchClass.updatedTypeString(classSet, scope, nDesc, pType);
             String desc = nDesc.toString();
-            if (desc.startsWith("L")) {
-                desc = desc.substring(1, desc.length() - 1);
-            }
-            return new TypeInsnNode(Opcodes.ANEWARRAY, desc);
+            return new TypeInsnNode(Opcodes.ANEWARRAY, Type.getType(desc).getInternalName());
         } else {
             int type;
             switch (pType.getSort()) {
@@ -156,7 +150,7 @@ public class ArrayInstruction implements InstructionHandler {
                 type = "L" + type + ";";
             }
             patch.append("new-array ")
-                .append(type);
+                .append(Type.getObjectType(type).getDescriptor());
             return true;
         }
         if (insn instanceof IntInsnNode && insn.getOpcode() == Opcodes.NEWARRAY) {

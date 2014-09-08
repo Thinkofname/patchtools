@@ -18,11 +18,13 @@ package uk.co.thinkofdeath.patchtools.matching;
 
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
-import org.jetbrains.annotations.Contract;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.*;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
+import uk.co.thinkofdeath.patchtools.logging.StateLogger;
 import uk.co.thinkofdeath.patchtools.patch.*;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
@@ -41,6 +43,8 @@ public class MatchGenerator {
 
     private final TObjectIntMap<Object> state = new TObjectIntHashMap<>();
 
+    private final StateLogger logger = new StateLogger();
+
     public MatchGenerator(ClassSet classSet, PatchClasses patchClasses, PatchScope scope) {
         this.classSet = classSet;
         this.patchClasses = patchClasses;
@@ -49,30 +53,29 @@ public class MatchGenerator {
         // To work out the links between the patch classes
         // we start with a the first class and branch out.
         // Then we move onto the next unvisited class since
-        // not every class in a patch may be linked
+        // not every class in a patch may be linked. This
+        // allows us to split some patches into smaller
+        // sets which are quicker to match and apply
         generateGroups();
-        System.out.println("Groups: " + groups.size());
-        groups.forEach(g -> {
-            System.out.println("=Group");
-            g.getClasses().forEach(c -> System.out.println("  " + c.getName()));
-        });
+        groups.forEach(logger::createGroup);
 
-        System.out.println("Reducing");
+        // As a base every class would be matched to every
+        // class in the class set, for patches with more
+        // than one class this becomes a large number of
+        // tests to work with. To reduce the number of
+        // groups only the first class is given every
+        // class in the set and then the patch is partially
+        // tested (without the checking of class names just
+        // types and instructions) to reduce the number of
+        // classes, the references from the remaining classes
+        // are used to match the others up. With patches that
+        // have a good amount of information this normally
+        // leaves one or two classes per a patch class
         reduceGroups();
 
-        System.out.println("Groups: " + groups.size());
-        groups.forEach(g -> {
-            System.out.println("=Group");
-            g.getClasses().forEach(c -> {
-                System.out.printf("  %s with %d matches\n", c.getName(), c.getMatches().size());
-                c.getMethods().forEach(
-                    m -> System.out.printf("    ::%s with %d matches\n", m.getName(), m.getMatches().size())
-                );
-                c.getFields().forEach(
-                    f -> System.out.printf("    .%s with %d matches\n", f.getName(), f.getMatches().size())
-                );
-            });
-        });
+        // TODO: Check if the reduceGroups removed everything and fail
+
+        // Setup the initial state
 
         groups.stream()
             .flatMap(g -> g.getClasses().stream())
@@ -88,71 +91,47 @@ public class MatchGenerator {
 
             MatchClass first = group.getFirst();
 
+            // Add every class as a match to the first
+            // patch class in the set
             Arrays.stream(classSet.classes(true))
                 .map(classSet::getClassWrapper)
                 .map(ClassWrapper::getNode)
                 .forEach(first::addMatch);
 
+            // Marks whether we made any changes in the last
+            // cycle
             boolean doneSomething = true;
             while (doneSomething) {
                 doneSomething = false;
                 while (true) {
-                    MatchClass cls = group.getClasses().stream()
-                        .filter(MatchClass::hasUnchecked).findAny().orElse(null);
-                    if (cls == null) {
+                    Optional<MatchClass> clazz = group.getClasses().stream()
+                        .filter(MatchClass::hasUnchecked)
+                        .findAny();
+                    if (!clazz.isPresent()) {
                         break;
                     }
+                    MatchClass cls = clazz.get();
                     doneSomething = true;
 
                     ClassNode[] unchecked = cls.getUncheckedClasses();
-                    for (ClassNode node : unchecked) {
-                        cls.addChecked(node);
-
-                        if (cls.getSuperClass() != null) {
-                            ClassWrapper su = classSet.getClassWrapper(node.superName);
-                            if (su != null && !su.isHidden()) {
-                                cls.getSuperClass().addMatch(su.getNode());
-                            }
-                        }
-
-                        for (String inter : node.interfaces) {
-                            ClassWrapper su = classSet.getClassWrapper(inter);
-                            if (su != null && !su.isHidden()) {
-                                cls.getInterfaces().forEach(i -> i.addMatch(su.getNode()));
-                            }
-                        }
-
-                        cls.getFields().forEach(f -> node.fields.forEach(n -> f.addMatch(node, n)));
-                        cls.getMethods().forEach(m -> node.methods.forEach(n -> m.addMatch(node, n)));
-                    }
+                    Arrays.stream(unchecked)
+                        .forEach(node -> cls.check(classSet, node));
                 }
 
                 while (true) {
-                    MatchField field = group.getClasses().stream()
+                    Optional<MatchField> optionalField = group.getClasses().stream()
                         .flatMap(c -> c.getFields().stream())
                         .filter(MatchField::hasUnchecked)
-                        .findAny().orElse(null);
-                    if (field == null) {
+                        .findAny();
+                    if (!optionalField.isPresent()) {
                         break;
                     }
+                    MatchField field = optionalField.get();
                     doneSomething = true;
 
                     MatchField.FieldPair[] unchecked = field.getUncheckedMethods();
-                    for (MatchField.FieldPair pair : unchecked) {
-                        FieldNode node = pair.getNode();
-                        field.addChecked(pair.getOwner(), pair.getNode());
-
-                        Type type = Type.getType(node.desc);
-                        if (type.getSort() != field.getType().getSort()) {
-                            field.removeMatch(pair.getOwner(), node);
-                        } else if (type.getSort() == Type.OBJECT) {
-                            MatchClass retCls = group.getClass(new MatchClass(new Ident(field.getType().getInternalName()).getName()));
-                            ClassWrapper wrapper = classSet.getClassWrapper(type.getInternalName());
-                            if (wrapper != null && !wrapper.isHidden()) {
-                                retCls.addMatch(wrapper.getNode());
-                            }
-                        }
-                    }
+                    Arrays.stream(unchecked)
+                        .forEach(pair -> field.check(classSet, group, pair));
                 }
 
                 while (true) {
@@ -166,170 +145,23 @@ public class MatchGenerator {
                     doneSomething = true;
 
                     MatchMethod.MethodPair[] unchecked = method.getUncheckedMethods();
-                    methodCheck:
-                    for (MatchMethod.MethodPair pair : unchecked) {
-                        MethodNode node = pair.getNode();
-                        method.addChecked(pair.getOwner(), pair.getNode());
-
-                        List<MatchPair> matchPairs = new ArrayList<>();
-
-                        Type type = Type.getMethodType(node.desc);
-
-                        if (type.getArgumentTypes().length != method.getArguments().size()) {
-                            method.removeMatch(pair.getOwner(), node);
-                            continue;
-                        }
-
-                        Type ret = type.getReturnType();
-                        if (ret.getSort() != method.getReturnType().getSort()) {
-                            method.removeMatch(pair.getOwner(), node);
-                            continue;
-                        } else if (ret.getSort() == Type.OBJECT) {
-                            MatchClass retCls = group.getClass(new MatchClass(new Ident(method.getReturnType().getInternalName()).getName()));
-                            ClassWrapper wrapper = classSet.getClassWrapper(ret.getInternalName());
-                            if (wrapper != null && !wrapper.isHidden()) {
-                                matchPairs.add(new MatchPair.ClassMatch(retCls, wrapper.getNode()));
-                            }
-                        }
-
-                        Type[] argumentTypes = type.getArgumentTypes();
-                        for (int i = 0; i < argumentTypes.length; i++) {
-                            Type arg = argumentTypes[i];
-                            if (arg.getSort() != method.getArguments().get(i).getSort()) {
-                                method.removeMatch(pair.getOwner(), node);
-                                continue methodCheck;
-                            } else if (arg.getSort() == Type.OBJECT) {
-                                MatchClass argCls = group.getClass(new MatchClass(new Ident(method.getArguments().get(i).getInternalName()).getName()));
-                                ClassWrapper wrapper = classSet.getClassWrapper(arg.getInternalName());
-                                if (wrapper != null && !wrapper.isHidden()) {
-                                    matchPairs.add(new MatchPair.ClassMatch(argCls, wrapper.getNode()));
-                                }
-                            }
-                        }
-
-                        PatchClass pc = patchClasses.getClass(method.getOwner().getName());
-                        if (pc != null) {
-                            PatchMethod pm = pc.getMethods().stream().filter(
-                                m -> m.getIdent().getName().equals(method.getName())
-                                    && m.getDescRaw().equals(method.getDesc())
-                            ).findFirst().orElse(null);
-
-                            if (pm != null) {
-                                if (!pm.check(classSet, null, node)) {
-                                    method.removeMatch(pair.getOwner(), node);
-                                    continue;
-                                }
-
-                                ListIterator<AbstractInsnNode> it = node.instructions.iterator();
-                                Set<ClassNode> referencedClasses = new HashSet<>();
-                                Set<MatchMethod.MethodPair> referencedMethods = new HashSet<>();
-                                Set<MatchField.FieldPair> referencedFields = new HashSet<>();
-                                while (it.hasNext()) {
-                                    AbstractInsnNode insn = it.next();
-
-                                    if (insn instanceof MethodInsnNode) {
-                                        MethodInsnNode methodInsnNode = (MethodInsnNode) insn;
-
-                                        ClassWrapper cls = classSet.getClassWrapper(methodInsnNode.owner);
-                                        if (cls == null || cls.isHidden()) continue;
-
-                                        referencedClasses.add(cls.getNode());
-
-                                        MethodWrapper wrap = cls.getMethod(methodInsnNode.name, methodInsnNode.desc);
-                                        if (wrap != null) {
-                                            referencedMethods.add(new MatchMethod.MethodPair(
-                                                cls.getNode(),
-                                                cls.getMethodNode(wrap)
-                                            ));
-                                        }
-                                    } else if (insn instanceof FieldInsnNode) {
-                                        FieldInsnNode fieldInsnNode = (FieldInsnNode) insn;
-
-                                        ClassWrapper cls = classSet.getClassWrapper(fieldInsnNode.owner);
-                                        if (cls == null || cls.isHidden()) continue;
-
-                                        referencedClasses.add(cls.getNode());
-
-                                        FieldWrapper wrap = cls.getField(fieldInsnNode.name, fieldInsnNode.desc);
-                                        if (wrap != null) {
-                                            referencedFields.add(new MatchField.FieldPair(
-                                                cls.getNode(),
-                                                cls.getFieldNode(wrap)
-                                            ));
-                                        }
-                                    } else if (insn instanceof LdcInsnNode) {
-                                        LdcInsnNode ldc = (LdcInsnNode) insn;
-                                        if (ldc.cst instanceof Type) {
-                                            ClassWrapper cls = classSet.getClassWrapper(((Type) ldc.cst).getInternalName());
-                                            if (cls == null || cls.isHidden()) continue;
-
-                                            referencedClasses.add(cls.getNode());
-                                        }
-                                    } else if (insn instanceof TypeInsnNode) {
-                                        TypeInsnNode tNode = (TypeInsnNode) insn;
-                                        String desc = tNode.desc;
-                                        if (!desc.startsWith("[")) {
-                                            desc = "L" + desc + ";";
-                                        }
-                                        ClassWrapper cls = classSet.getClassWrapper(getRootType(Type.getType(desc)).getInternalName());
-                                        if (cls == null || cls.isHidden()) continue;
-
-                                        referencedClasses.add(cls.getNode());
-                                    } else if (insn instanceof MultiANewArrayInsnNode) {
-                                        MultiANewArrayInsnNode tNode = (MultiANewArrayInsnNode) insn;
-                                        String desc = tNode.desc;
-                                        System.out.println(desc);
-                                        if (!desc.startsWith("[")) {
-                                            desc = "L" + desc + ";";
-                                        }
-                                        ClassWrapper cls = classSet.getClassWrapper(getRootType(Type.getType(desc)).getInternalName());
-                                        if (cls == null || cls.isHidden()) continue;
-
-                                        referencedClasses.add(cls.getNode());
-                                    }
-                                }
-
-                                for (PatchInstruction instruction : pm.getInstructions()) {
-                                    Instruction in = instruction.instruction;
-                                    if (in.getHandler() == null || instruction.mode == Mode.ADD) continue;
-                                    in.getHandler().getReferencedClasses(instruction)
-                                        .forEach(c -> referencedClasses.forEach(rc -> {
-                                                ClassWrapper wrapper = classSet.getClassWrapper(rc.name);
-                                                if (!wrapper.isHidden()) {
-                                                    matchPairs.add(new MatchPair.ClassMatch(group.getClass(c), rc));
-                                                }
-                                            })
-                                        );
-                                    in.getHandler().getReferencedMethods(instruction)
-                                        .forEach(me -> {
-                                            MatchClass matchClass = group.getClass(me.getOwner());
-                                            final MatchMethod fme = matchClass.addMethod(me);
-                                            referencedMethods.forEach(rm -> matchPairs.add(new MatchPair.MethodMatch(fme, rm.getOwner(), rm.getNode())));
-                                        });
-                                    in.getHandler().getReferencedFields(instruction)
-                                        .forEach(fe -> {
-                                            MatchClass matchClass = group.getClass(fe.getOwner());
-                                            final MatchField ffe = matchClass.addField(fe);
-                                            referencedFields.forEach(rf -> matchPairs.add(new MatchPair.FieldMatch(ffe, rf.getOwner(), rf.getNode())));
-                                        });
-                                }
-                            }
-                        }
-
-                        matchPairs.forEach(MatchPair::apply);
-                    }
+                    Arrays.stream(unchecked)
+                        .forEach(pair -> method.check(classSet, patchClasses, group, pair));
                 }
 
                 if (!doneSomething) {
-                    String clss[] = classSet.classes(true);
-                    if (group.getClasses().stream()
+                    String[] classes = classSet.classes(true);
+                    // Check for classes without a match and as a last ditch
+                    // method check against the rest of the classes
+                    boolean anyUnmatched = group.getClasses().stream()
                         .filter(c -> c.getMatches().isEmpty())
-                        .filter(c -> !c.hasChecked(clss.length))
-                        .count() != 0) {
+                        .anyMatch(c -> !c.hasChecked(classes.length));
+
+                    if (anyUnmatched) {
                         group.getClasses().stream()
                             .filter(c -> c.getMatches().isEmpty())
-                            .filter(c -> !c.hasChecked(clss.length))
-                            .forEach(c -> Arrays.stream(clss)
+                            .filter(c -> !c.hasChecked(classes.length))
+                            .forEach(c -> Arrays.stream(classes)
                                 .map(classSet::getClassWrapper)
                                 .map(ClassWrapper::getNode)
                                 .forEach(c::addMatch));
@@ -338,18 +170,17 @@ public class MatchGenerator {
                 }
             }
 
+            // Remove incomplete classes
             for (MatchClass cls : group.getClasses()) {
                 List<ClassNode> matches = new ArrayList<>(cls.getMatches());
-                for (ClassNode clazz : matches) {
-                    if (cls.getMethods().stream()
-                        .anyMatch(m -> !m.usesNode(clazz))
-                        || cls.getFields().stream()
-                        .anyMatch(f -> !f.usesNode(clazz))) {
+                matches.stream()
+                    .filter(clazz -> cls.getMethods().stream().anyMatch(m -> !m.usesNode(clazz))
+                        || cls.getFields().stream().anyMatch(f -> !f.usesNode(clazz)))
+                    .forEach(clazz -> {
                         cls.removeMatch(clazz);
                         cls.getMethods().forEach(m -> m.removeMatch(clazz));
                         cls.getFields().forEach(f -> f.removeMatch(clazz));
-                    }
-                }
+                    });
             }
         }
     }
@@ -459,9 +290,7 @@ public class MatchGenerator {
             });
     }
 
-    @Contract("null -> fail")
     public PatchScope apply(BiPredicate<MatchGroup, PatchScope> test) {
-
         List<PatchScope> scopes = new ArrayList<>();
         groupCheck:
         for (MatchGroup group : groups) {

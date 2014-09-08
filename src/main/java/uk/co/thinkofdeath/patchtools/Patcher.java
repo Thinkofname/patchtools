@@ -59,6 +59,7 @@ public class Patcher {
     public PatchScope apply(PatchClasses patchClasses, PatchScope patchScope) {
         MatchGenerator generator = new MatchGenerator(classSet, patchClasses, patchScope);
         PatchScope foundScope = generator.apply((group, scope) -> {
+                // Filter down the set of classes to the ones in this group
                 PatchClass[] classes = group.getClasses().stream()
                     .map(c -> patchClasses.getClass(c.getName()))
                     .filter(c -> c != null)
