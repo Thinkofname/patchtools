@@ -81,7 +81,7 @@ public class PushClassInstruction implements InstructionHandler {
     @Override
     public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method) {
         StringBuilder nDesc = new StringBuilder();
-        PatchClass.updatedTypeString(classSet, scope, nDesc, Type.getType("L" + instruction.params[0] + ";"));
+        PatchClass.updatedTypeString(classSet, scope, nDesc, Type.getObjectType(instruction.params[0]));
         String desc = nDesc.toString();
         return new LdcInsnNode(desc);
     }
