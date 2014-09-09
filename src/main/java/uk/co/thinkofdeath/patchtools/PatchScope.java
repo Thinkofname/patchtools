@@ -140,7 +140,7 @@ public class PatchScope {
     public FieldWrapper getField(ClassWrapper owner, String name, String desc) {
         String joined = name + "::" + desc;
         return getFieldStream()
-            .filter(f -> f.getOwner() == owner)
+            .filter(f -> f.has(owner))
             .filter(f -> getFieldDesc(f).equals(joined))
             .findFirst().orElse(null);
     }

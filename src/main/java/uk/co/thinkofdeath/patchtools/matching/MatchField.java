@@ -120,7 +120,7 @@ public class MatchField {
         FieldNode node = pair.getNode();
         addChecked(pair.getOwner(), pair.getNode());
 
-        logger.println("- " + node.name);
+        logger.println("- " + pair.getOwner().name + "." + node.name);
         logger.indent();
 
         Type type = Type.getType(node.desc);

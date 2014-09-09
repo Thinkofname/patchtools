@@ -24,6 +24,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.commons.RemappingClassAdapter;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 
@@ -49,19 +50,53 @@ public class ClassSet implements Iterable<String> {
         // Safety copy
         new ArrayList<>(classes.values()).stream()
             .filter(v -> !v.isHidden())
-            .forEach(v -> v.getMethods().stream()
-                .filter(m -> !m.isHidden())
-                .forEach(m -> {
-                    MethodNode node = v.getMethodNode(m);
-                    if (((node.access & Opcodes.ACC_PUBLIC) != 0
-                        || (node.access & Opcodes.ACC_PROTECTED) != 0)
-                        && (node.access & Opcodes.ACC_STATIC) == 0) {
-                        for (String inter : v.getNode().interfaces) {
-                            replaceMethod(m, inter);
+            .forEach(v -> {
+                v.getMethods().stream()
+                    .filter(m -> !m.isHidden())
+                    .forEach(m -> {
+                        MethodNode node = v.getMethodNode(m);
+                        if (((node.access & Opcodes.ACC_PUBLIC) != 0
+                            || (node.access & Opcodes.ACC_PROTECTED) != 0)
+                            && (node.access & Opcodes.ACC_STATIC) == 0) {
+                            for (String inter : v.getNode().interfaces) {
+                                replaceMethod(m, inter);
+                            }
+                            replaceMethod(m, v.getNode().superName);
                         }
-                        replaceMethod(m, v.getNode().superName);
-                    }
-                }));
+                    });
+            });
+
+        // Second pass to add everything to each other
+        new ArrayList<>(classes.values()).stream()
+            .filter(v -> !v.isHidden())
+            .forEach(v -> grab(v, v));
+    }
+
+    private void grab(ClassWrapper root, ClassWrapper current) {
+        if (current == null) return;
+        current.getFields().stream()
+            .filter(f -> !f.isHidden())
+            .filter(f -> {
+                FieldNode node = current.getFieldNode(f);
+                return ((node.access & Opcodes.ACC_PUBLIC) != 0
+                    || (node.access & Opcodes.ACC_PROTECTED) != 0)
+                    && (node.access & Opcodes.ACC_STATIC) == 0;
+            })
+            .forEach(f -> f.add(root));
+        current.getMethods().stream()
+            .filter(m -> !m.isHidden())
+            .filter(m -> {
+                MethodNode node = current.getMethodNode(m);
+                return ((node.access & Opcodes.ACC_PUBLIC) != 0
+                    || (node.access & Opcodes.ACC_PROTECTED) != 0)
+                    && (node.access & Opcodes.ACC_STATIC) == 0;
+            })
+            .forEach(m -> m.add(root));
+
+        for (String inter : current.getNode().interfaces) {
+            grab(root, getClassWrapper(inter));
+        }
+        grab(root, getClassWrapper(current.getNode().superName));
     }
 
     private void replaceMethod(MethodWrapper methodWrapper, String clazz) {
@@ -77,8 +112,8 @@ public class ClassSet implements Iterable<String> {
             .filter(m -> {
                 MethodNode node = finalCl.getMethodNode(m);
                 return (((node.access & Opcodes.ACC_PUBLIC) != 0
-                    || (node.access & Opcodes.ACC_PROTECTED) != 0)
-                    && (node.access & Opcodes.ACC_STATIC) == 0);
+                    || (node.access & Opcodes.ACC_PROTECTED) != 0))
+                    && (node.access & Opcodes.ACC_STATIC) == 0;
             })
             .findFirst().orElse(null);
         if (target != null) {
@@ -87,7 +122,7 @@ public class ClassSet implements Iterable<String> {
             }
             cl.getMethods().remove(target);
             cl.getMethods().add(methodWrapper);
-            methodWrapper.add(cl);
+            methodWrapper.add(target);
         }
         for (String inter : cl.getNode().interfaces) {
             replaceMethod(methodWrapper, inter);

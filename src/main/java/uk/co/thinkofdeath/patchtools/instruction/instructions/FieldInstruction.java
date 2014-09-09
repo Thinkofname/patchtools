@@ -119,7 +119,10 @@ public class FieldInstruction implements InstructionHandler {
         String name = nameId.getName();
         if (nameId.isWeak()) {
             ClassWrapper cls = classSet.getClassWrapper(owner);
-            name = scope.getField(cls, name, patchInstruction.params[2]).getName();
+            FieldWrapper wrapper = scope.getField(cls, name, patchInstruction.params[2]);
+            if (wrapper != null) {
+                name = wrapper.getName();
+            }
         }
 
         StringBuilder mappedDesc = new StringBuilder();

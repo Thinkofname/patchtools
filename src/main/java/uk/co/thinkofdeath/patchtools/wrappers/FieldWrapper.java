@@ -18,18 +18,21 @@ package uk.co.thinkofdeath.patchtools.wrappers;
 
 import org.objectweb.asm.tree.FieldNode;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class FieldWrapper {
 
     private final ClassSet classSet;
     private final String name;
     private final String desc;
     private final Object value;
-    private ClassWrapper owner;
+    private Set<ClassWrapper> classWrappers = new HashSet<>();
     public boolean hidden;
 
     public FieldWrapper(ClassWrapper classWrapper, FieldNode node) {
         this.classSet = classWrapper.getClassSet();
-        owner = classWrapper;
+        classWrappers.add(classWrapper);
         name = node.name;
         desc = node.desc;
         value = node.value;
@@ -49,10 +52,14 @@ public class FieldWrapper {
 
     @Override
     public String toString() {
-        return "FieldWrapper{" + name + "}";
+        return "FieldWrapper{" + name + " " + desc + "} " + classWrappers;
     }
 
-    public ClassWrapper getOwner() {
-        return owner;
+    public void add(ClassWrapper classWrapper) {
+        classWrappers.add(classWrapper);
+    }
+
+    public boolean has(ClassWrapper wrapper) {
+        return classWrappers.contains(wrapper);
     }
 }

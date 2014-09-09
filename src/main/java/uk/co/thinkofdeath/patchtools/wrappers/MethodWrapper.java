@@ -52,6 +52,12 @@ public class MethodWrapper {
         classWrappers.add(classWrapper);
     }
 
+    public void add(MethodWrapper methodWrapper) {
+        for (ClassWrapper cls : methodWrapper.classWrappers) {
+            add(cls);
+        }
+    }
+
     public boolean has(ClassWrapper classWrapper) {
         return classWrappers.contains(classWrapper);
     }

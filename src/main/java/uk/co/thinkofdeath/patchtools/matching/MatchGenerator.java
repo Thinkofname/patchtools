@@ -50,38 +50,44 @@ public class MatchGenerator {
         this.patchClasses = patchClasses;
         this.scope = scope;
 
-        // To work out the links between the patch classes
-        // we start with a the first class and branch out.
-        // Then we move onto the next unvisited class since
-        // not every class in a patch may be linked. This
-        // allows us to split some patches into smaller
-        // sets which are quicker to match and apply
-        generateGroups();
-        groups.forEach(logger::createGroup);
+        try {
+            // To work out the links between the patch classes
+            // we start with a the first class and branch out.
+            // Then we move onto the next unvisited class since
+            // not every class in a patch may be linked. This
+            // allows us to split some patches into smaller
+            // sets which are quicker to match and apply
+            generateGroups();
+            groups.forEach(logger::createGroup);
 
-        // As a base every class would be matched to every
-        // class in the class set, for patches with more
-        // than one class this becomes a large number of
-        // tests to work with. To reduce the number of
-        // groups only the first class is given every
-        // class in the set and then the patch is partially
-        // tested (without the checking of class names just
-        // types and instructions) to reduce the number of
-        // classes, the references from the remaining classes
-        // are used to match the others up. With patches that
-        // have a good amount of information this normally
-        // leaves one or two classes per a patch class
-        reduceGroups();
+            // As a base every class would be matched to every
+            // class in the class set, for patches with more
+            // than one class this becomes a large number of
+            // tests to work with. To reduce the number of
+            // groups only the first class is given every
+            // class in the set and then the patch is partially
+            // tested (without the checking of class names just
+            // types and instructions) to reduce the number of
+            // classes, the references from the remaining classes
+            // are used to match the others up. With patches that
+            // have a good amount of information this normally
+            // leaves one or two classes per a patch class
+            reduceGroups();
 
-        // Setup the initial state
+            // Setup the initial state
 
-        groups.stream()
-            .flatMap(g -> g.getClasses().stream())
-            .forEach(c -> {
-                state.put(c, 0);
-                c.getMethods().forEach(m -> state.put(m, 0));
-                c.getFields().forEach(f -> state.put(f, 0));
-            });
+            groups.stream()
+                .flatMap(g -> g.getClasses().stream())
+                .forEach(c -> {
+                    state.put(c, 0);
+                    c.getMethods().forEach(m -> state.put(m, 0));
+                    c.getFields().forEach(f -> state.put(f, 0));
+                });
+        } catch (Exception e) {
+            e.printStackTrace();
+            e.printStackTrace(logger.getPrintWriter());
+            throw new LoggableException(logger);
+        }
     }
 
     private void reduceGroups() {
@@ -306,31 +312,37 @@ public class MatchGenerator {
     }
 
     public PatchScope apply() {
-        List<PatchScope> scopes = new ArrayList<>();
-        groupCheck:
-        for (MatchGroup group : groups) {
+        try {
+            List<PatchScope> scopes = new ArrayList<>();
+            groupCheck:
+            for (MatchGroup group : groups) {
 
-            List<Object> tickList = generateTickList(group);
+                List<Object> tickList = generateTickList(group);
 
-            long tick = 0;
+                long tick = 0;
 
-            do {
-                tick++;
+                do {
+                    tick++;
 
-                PatchScope testScope = generateScope(group, new PatchScope(scope));
-                if (testScope == null) continue;
+                    PatchScope testScope = generateScope(group, new PatchScope(scope));
+                    if (testScope == null) continue;
 
-                if (test(group, testScope)) {
-                    scopes.add(testScope);
-                    continue groupCheck;
-                }
-            } while (tick(tickList));
-            logger.failedTicks(tick);
+                    if (test(group, testScope)) {
+                        scopes.add(testScope);
+                        continue groupCheck;
+                    }
+                } while (tick(tickList));
+                logger.failedTicks(tick);
+                throw new LoggableException(logger);
+            }
+            PatchScope finalScope = new PatchScope(scope);
+            scopes.forEach(finalScope::merge);
+            return finalScope;
+        } catch (Exception e) {
+            e.printStackTrace();
+            e.printStackTrace(logger.getPrintWriter());
             throw new LoggableException(logger);
         }
-        PatchScope finalScope = new PatchScope(scope);
-        scopes.forEach(finalScope::merge);
-        return finalScope;
     }
 
     private boolean test(MatchGroup group, PatchScope scope) {

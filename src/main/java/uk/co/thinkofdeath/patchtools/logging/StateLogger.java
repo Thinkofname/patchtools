@@ -5,6 +5,7 @@ import org.objectweb.asm.tree.ClassNode;
 import uk.co.thinkofdeath.patchtools.matching.MatchClass;
 import uk.co.thinkofdeath.patchtools.matching.MatchGroup;
 
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.LinkedHashMap;
 import java.util.function.Supplier;
@@ -56,5 +57,9 @@ public class StateLogger {
 
     public static Supplier<String> match(ClassNode node, MatchClass clazz) {
         return () -> "Adding " + node.name + " as a possible match for " + clazz.getName();
+    }
+
+    public PrintWriter getPrintWriter() {
+        return new PrintWriter(writer);
     }
 }

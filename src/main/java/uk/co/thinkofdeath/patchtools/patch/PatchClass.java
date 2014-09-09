@@ -326,7 +326,7 @@ public class PatchClass {
     public boolean checkAttributes(StateLogger logger, PatchScope scope, ClassSet classSet) {
         if (mode == Mode.ADD) return true;
         ClassWrapper classWrapper = scope.getClass(ident.getName());
-        logger.println(" - " + ident + " testing " + classWrapper.getNode().name);
+        logger.println("- " + ident + " testing " + classWrapper.getNode().name);
         logger.indent();
         try {
             if (!ident.isWeak() && !classWrapper.getNode().name.equals(ident.getName())) {
@@ -416,7 +416,8 @@ public class PatchClass {
                     f.getIdent().getName(),
                     f.getDescRaw());
 
-                logger.println(" - " + f.getIdent() + " testing " + fieldWrapper.getName());
+                logger.println("- " + f.getIdent());
+                logger.println(" testing " + fieldWrapper.getName());
 
                 if (!f.getIdent().isWeak()
                     && !fieldWrapper.getName().equals(f.getIdent().getName())) {
@@ -458,7 +459,7 @@ public class PatchClass {
     public boolean checkMethods(StateLogger logger, PatchScope scope, ClassSet classSet) {
         if (mode == Mode.ADD) return true;
         ClassWrapper classWrapper = scope.getClass(ident.getName());
-        logger.println(" - " + ident + " testing " + classWrapper.getNode().name);
+        logger.println("- " + ident + " testing " + classWrapper.getNode().name);
         logger.indent();
         try {
             for (PatchMethod m : methods) {
@@ -468,8 +469,8 @@ public class PatchClass {
                     m.getIdent().getName(),
                     m.getDescRaw());
 
-                logger.println(" - " + m.getIdent() + m.getDescRaw()
-                    + " testing " + methodWrapper.getName() + methodWrapper.getDesc());
+                logger.println("- " + m.getIdent() + m.getDescRaw());
+                logger.println(" testing " + methodWrapper.getName() + methodWrapper.getDesc());
 
                 if (!m.getIdent().isWeak()
                     && !methodWrapper.getName().equals(m.getIdent().getName())) {
@@ -510,7 +511,7 @@ public class PatchClass {
 
     public boolean checkMethodsInstructions(StateLogger logger, PatchScope scope, ClassSet classSet) {
         ClassWrapper classWrapper = scope.getClass(ident.getName());
-        logger.println(" - " + ident + " testing " + classWrapper.getNode().name);
+        logger.println("- " + ident + " testing " + classWrapper.getNode().name);
         logger.indent();
         try {
             for (PatchMethod m : methods) {
@@ -520,7 +521,7 @@ public class PatchClass {
                     m.getIdent().getName(),
                     m.getDescRaw());
 
-                logger.println(" - " + m.getIdent() + m.getDescRaw()
+                logger.println("- " + m.getIdent() + m.getDescRaw()
                     + " testing " + methodWrapper.getName() + methodWrapper.getDesc()
                     + " instructions");
 

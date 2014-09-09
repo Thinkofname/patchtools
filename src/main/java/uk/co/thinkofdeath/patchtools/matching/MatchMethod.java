@@ -132,7 +132,7 @@ public class MatchMethod {
         MethodNode node = pair.getNode();
         addChecked(pair.getOwner(), pair.getNode());
 
-        logger.println("- " + node.name + node.desc);
+        logger.println("- " + pair.getOwner().name + "::" + node.name + node.desc);
         logger.indent();
         boolean inCode = false;
 
