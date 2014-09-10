@@ -28,7 +28,6 @@ import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.FieldWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.MethodWrapper;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,8 +45,11 @@ public class PatchClass {
     private List<PatchMethod> methods = new ArrayList<>();
     private List<PatchField> fields = new ArrayList<>();
 
-    public PatchClass(Command clCommand, BufferedReader reader) throws IOException {
-        if (clCommand.args.length != 1) throw new IllegalArgumentException();
+    public PatchClass(Command clCommand, LineReader reader) throws IOException {
+        if (clCommand.args.length != 1) {
+            throw new ValidateException("Incorrect number of arguments for class")
+                .setLineNumber(reader.getLineNumber());
+        }
         type = ClassType.valueOf(clCommand.name.toUpperCase());
         ident = new Ident(clCommand.args[0]);
         mode = clCommand.mode;
@@ -58,11 +60,13 @@ public class PatchClass {
 
             Command command = Command.from(line);
             if (mode == Mode.ADD && command.mode != Mode.ADD) {
-                throw new IllegalArgumentException("In added classes everything must be +");
+                throw new ValidateException("In added classes everything must be +")
+                    .setLineNumber(reader.getLineNumber());
             } else if (mode == Mode.REMOVE && command.mode != Mode.REMOVE) {
-                throw new IllegalArgumentException("In removed classes everything must be -");
+                throw new ValidateException("In removed classes everything must be -")
+                    .setLineNumber(reader.getLineNumber());
             }
-            switch (command.name.toLowerCase()) {
+            switch (command.name) {
                 case "super":
                     if (command.args.length != 1) throw new IllegalArgumentException("super requires 1 parameter");
                     superModifiers.add(new ModifierClass(new Ident(command.args[0]), command.mode));
@@ -75,13 +79,18 @@ public class PatchClass {
                     methods.add(new PatchMethod(this, command, reader));
                     break;
                 case "field":
-                    fields.add(new PatchField(this, command));
+                    try {
+                        fields.add(new PatchField(this, command));
+                    } catch (ValidateException e) {
+                        throw e.setLineNumber(reader.getLineNumber());
+                    }
                     break;
                 default:
-                    if (command.name.toLowerCase().endsWith("end-" + type.name().toLowerCase())) {
+                    if (command.name.endsWith("end-" + type.name().toLowerCase())) {
                         return;
                     }
-                    throw new IllegalArgumentException(command.toString());
+                    throw new ValidateException(command.toString())
+                        .setLineNumber(reader.getLineNumber());
             }
         }
     }

@@ -21,6 +21,7 @@ import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.patch.Ident;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -97,5 +98,96 @@ public class Utils {
             lbls.put(labelNode.getLabel(), id.toString());
         }
         return lbls.get(labelNode.getLabel());
+    }
+
+    public static int validateType(String type) {
+        int offset = validateType(type, 0);
+        if (offset != type.length()) {
+            throw new ValidateException("Extra characters found '" + type.substring(offset) + "'");
+        }
+        return offset;
+    }
+
+    private static int validateType(String type, int offset) {
+        int i = offset;
+        boolean inObject = false;
+        while (i < type.length()) {
+            int c = type.codePointAt(i);
+            i += Character.charCount(c);
+            if (inObject) {
+                if (c == ';') {
+                    return i;
+                }
+            } else {
+                switch (c) {
+                    case 'L':
+                        inObject = true;
+                        break;
+                    case '[':
+                        break; // Array
+                    case 'B': // Byte
+                    case 'C': // Char
+                    case 'D': // Double
+                    case 'F': // Float
+                    case 'I': // Int
+                    case 'J': // Long
+                    case 'S': // Short
+                    case 'Z': // Boolean
+                    case 'V': // Void
+                        return i;
+                    default:
+                        throw new ValidateException("Unexpected " + Character.toString((char) c));
+                }
+            }
+        }
+        if (inObject) {
+            throw new ValidateException("Unexpected end of type, expected ';' (object end)");
+        }
+        throw new ValidateException("Unexpected end of type");
+    }
+
+    public static void validateMethodType(String type) {
+        int i = 0;
+        int state = 0;
+        while (i < type.length()) {
+            int c = type.codePointAt(i);
+            i += Character.charCount(c);
+            if (state == 0) {
+                if (c != '(') {
+                    throw new ValidateException("Expected '('");
+                }
+                state = 1;
+            } else if (state == 1) {
+                if (c == ')') {
+                    state = 2;
+                    continue;
+                }
+                i -= Character.charCount(c);
+                i = validateType(type, i);
+            } else {
+                i -= Character.charCount(c);
+                i = validateType(type, i);
+                state = 3;
+                break;
+            }
+        }
+        switch (state) {
+            case 0:
+                throw new ValidateException("Unexpected end of type, expected '('");
+            case 1:
+                throw new ValidateException("Unexpected end of type, expected ')'");
+            case 2:
+                throw new ValidateException("Unexpected end of type, expected return type");
+            case 3:
+                if (i == type.length()) {
+                    return;
+                }
+                throw new ValidateException("Extra characters found '" + type.substring(i) + "'");
+        }
+        throw new ValidateException("Unexpected end of type");
+    }
+
+    public static void validateObjectType(String param) {
+        validateType(param.startsWith("[") ? param : "L" + param + ";");
     }
 }

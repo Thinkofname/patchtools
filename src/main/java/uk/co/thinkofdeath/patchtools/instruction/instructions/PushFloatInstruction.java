@@ -25,6 +25,7 @@ import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 public class PushFloatInstruction implements InstructionHandler {
@@ -84,5 +85,20 @@ public class PushFloatInstruction implements InstructionHandler {
             }
         }
         return false;
+    }
+
+    @Override
+    public void validate(PatchInstruction instruction) throws ValidateException {
+        if (instruction.params.length != 1) {
+            throw new ValidateException("Incorrect number of arguments for push-float");
+        }
+
+        try {
+            if (!instruction.params[0].equals("*")) {
+                Float.parseFloat(instruction.params[0]);
+            }
+        } catch (NumberFormatException e) {
+            throw new ValidateException("Invalid number " + e.getMessage());
+        }
     }
 }

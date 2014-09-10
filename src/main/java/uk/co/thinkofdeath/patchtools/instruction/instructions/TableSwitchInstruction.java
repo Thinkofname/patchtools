@@ -23,14 +23,15 @@ import org.objectweb.asm.tree.TableSwitchInsnNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
+import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 public class TableSwitchInstruction implements InstructionHandler {
     @Override
     public boolean check(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method, AbstractInsnNode insn) {
-        if (instruction.params.length != 3
-            || !(insn instanceof TableSwitchInsnNode)) {
+        if (!(insn instanceof TableSwitchInsnNode)) {
             return false;
         }
         TableSwitchInsnNode insnNode = (TableSwitchInsnNode) insn;
@@ -53,9 +54,6 @@ public class TableSwitchInstruction implements InstructionHandler {
 
     @Override
     public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method) {
-        if (instruction.params.length != 3) {
-            throw new RuntimeException("Incorrect number of arguments for switch-table");
-        }
         TableSwitchInsnNode insnNode = new TableSwitchInsnNode(
             Integer.parseInt(instruction.params[0]),
             Integer.parseInt(instruction.params[1]),
@@ -95,5 +93,33 @@ public class TableSwitchInstruction implements InstructionHandler {
             .append("    ")
             .append(".end-switch-table");
         return true;
+    }
+
+    @Override
+    public void validate(PatchInstruction instruction) throws ValidateException {
+        if (instruction.params.length != 3) {
+            throw new ValidateException("Incorrect number of arguments for switch-table");
+        }
+        try {
+            if (!instruction.params[0].equals("*")) {
+                Integer.parseInt(instruction.params[0]);
+            }
+            if (!instruction.params[1].equals("*")) {
+                Integer.parseInt(instruction.params[1]);
+            }
+        } catch (NumberFormatException e) {
+            throw new ValidateException("Invalid number " + e.getMessage());
+        }
+
+        if (!instruction.params[2].equals("*")
+            && !new Ident(instruction.params[2]).isWeak()) {
+            throw new ValidateException("Non-weak label ");
+        }
+
+        if (instruction.meta.stream()
+            .filter(label -> !label.equals("*"))
+            .anyMatch(label -> !new Ident(label).isWeak())) {
+            throw new ValidateException("Non-weak label");
+        }
     }
 }

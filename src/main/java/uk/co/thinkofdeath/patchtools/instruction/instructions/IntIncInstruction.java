@@ -23,13 +23,13 @@ import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 public class IntIncInstruction implements InstructionHandler {
     @Override
     public boolean check(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method, AbstractInsnNode insn) {
-        if (instruction.params.length != 2
-            || !(insn instanceof IincInsnNode)) {
+        if (!(insn instanceof IincInsnNode)) {
             return false;
         }
         int var = 0;
@@ -56,9 +56,6 @@ public class IntIncInstruction implements InstructionHandler {
 
     @Override
     public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method) {
-        if (instruction.params.length != 1) {
-            throw new RuntimeException();
-        }
         int var = Integer.parseInt(instruction.params[0]);
         int val = Integer.parseInt(instruction.params[1]);
         return new IincInsnNode(var, val);
@@ -74,5 +71,22 @@ public class IntIncInstruction implements InstructionHandler {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void validate(PatchInstruction instruction) throws ValidateException {
+        if (instruction.params.length != 2) {
+            throw new ValidateException("Incorrect number of arguments for int-inc");
+        }
+        try {
+            if (!instruction.params[0].equals("*")) {
+                Integer.parseInt(instruction.params[0]);
+            }
+            if (!instruction.params[1].equals("*")) {
+                Integer.parseInt(instruction.params[1]);
+            }
+        } catch (NumberFormatException e) {
+            throw new ValidateException("Invalid number " + e.getMessage());
+        }
     }
 }

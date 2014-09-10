@@ -29,8 +29,8 @@ import uk.co.thinkofdeath.patchtools.matching.MatchGenerator;
 import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.patch.PatchClass;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
-import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,9 +39,6 @@ public class PushClassInstruction implements InstructionHandler {
     @Override
     public boolean check(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction, MethodNode method, AbstractInsnNode insn) {
         if (!(insn instanceof LdcInsnNode)) {
-            return false;
-        }
-        if (patchInstruction.params.length != 1) {
             return false;
         }
         LdcInsnNode ldcInsnNode = (LdcInsnNode) insn;
@@ -54,28 +51,10 @@ public class PushClassInstruction implements InstructionHandler {
 
             Type type = (Type) ldcInsnNode.cst;
 
-            Ident cls = new Ident(className);
-            String clsName = cls.getName();
-            if (!clsName.equals("*")) {
-                if (scope != null || !cls.isWeak()) {
-                    if (cls.isWeak()) {
-                        ClassWrapper ptcls = scope.getClass(clsName);
-                        if (ptcls == null) { // Assume true
-                            scope.putClass(classSet.getClassWrapper(type.getInternalName()), clsName);
-                            clsName = type.getInternalName();
-                        } else {
-                            clsName = ptcls.getNode().name;
-                        }
-                    }
-                    if (!clsName.equals(type.getInternalName())) {
-                        return false;
-                    }
-                }
-            }
+            return PatchClass.checkTypes(classSet, scope, Type.getObjectType(className), type);
         } else {
             return false;
         }
-        return false;
     }
 
     @Override
@@ -94,6 +73,15 @@ public class PushClassInstruction implements InstructionHandler {
         patch.append("push-class ")
             .append(((Type) ((LdcInsnNode) insn).cst).getInternalName());
         return true;
+    }
+
+    @Override
+    public void validate(PatchInstruction instruction) throws ValidateException {
+        if (instruction.params.length != 1) {
+            throw new ValidateException("Incorrect number of arguments for push-class");
+        }
+
+        Utils.validateObjectType(instruction.params[0]);
     }
 
     @Override

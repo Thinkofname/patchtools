@@ -26,7 +26,7 @@ class Command {
         if (args.length < 1) throw new IllegalArgumentException();
         char mode = args[0].charAt(0);
         command.mode = Mode.values()[".-+".indexOf(mode)];
-        command.name = args[0].substring(1);
+        command.name = args[0].substring(1).toLowerCase();
         command.args = new String[args.length - 1];
         System.arraycopy(args, 1, command.args, 0, command.args.length);
         return command;

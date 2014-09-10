@@ -24,6 +24,7 @@ import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 public class VarInstruction implements InstructionHandler {
@@ -36,8 +37,7 @@ public class VarInstruction implements InstructionHandler {
 
     @Override
     public boolean check(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method, AbstractInsnNode insn) {
-        if (instruction.params.length != 1
-            || !(insn instanceof VarInsnNode)
+        if (!(insn instanceof VarInsnNode)
             || insn.getOpcode() != opcode) {
             return false;
         }
@@ -55,9 +55,6 @@ public class VarInstruction implements InstructionHandler {
 
     @Override
     public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method) {
-        if (instruction.params.length != 1) {
-            throw new RuntimeException();
-        }
         return new VarInsnNode(opcode, Integer.parseInt(instruction.params[0]));
     }
 
@@ -105,5 +102,19 @@ public class VarInstruction implements InstructionHandler {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void validate(PatchInstruction instruction) throws ValidateException {
+        if (instruction.params.length != 1) {
+            throw new ValidateException("Incorrect number of arguments for var instruction");
+        }
+        try {
+            if (!instruction.params[0].equals("*")) {
+                Integer.parseInt(instruction.params[0]);
+            }
+        } catch (NumberFormatException e) {
+            throw new ValidateException("Invalid number " + e.getMessage());
+        }
     }
 }

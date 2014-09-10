@@ -24,10 +24,10 @@ import org.objectweb.asm.tree.*;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.instructions.TryCatchInstruction;
+import uk.co.thinkofdeath.patchtools.instruction.instructions.Utils;
 import uk.co.thinkofdeath.patchtools.logging.StateLogger;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.*;
 
@@ -43,12 +43,20 @@ public class PatchMethod {
 
     private List<PatchInstruction> instructions = new ArrayList<>();
 
-    public PatchMethod(PatchClass owner, Command mCommand, BufferedReader reader) throws IOException {
+    public PatchMethod(PatchClass owner, Command mCommand, LineReader reader) throws IOException {
         this.owner = owner;
-        if (mCommand.args.length < 2) throw new IllegalArgumentException();
+        if (mCommand.args.length < 2) {
+            throw new ValidateException("Incorrect number of arguments for method")
+                .setLineNumber(reader.getLineNumber());
+        }
         ident = new Ident(mCommand.args[0]);
         mode = mCommand.mode;
-        desc = mCommand.args[1];
+        try {
+            desc = mCommand.args[1];
+            Utils.validateMethodType(desc);
+        } catch (ValidateException e) {
+            throw e.setLineNumber(reader.getLineNumber());
+        }
         if (mCommand.args.length >= 3) {
             for (int i = 2; i < mCommand.args.length; i++) {
                 if (mCommand.args[i].equalsIgnoreCase("static")) {
@@ -57,6 +65,9 @@ public class PatchMethod {
                     isPrivate = true;
                 } else if (mCommand.args[i].equalsIgnoreCase("protected")) {
                     isProtected = true;
+                } else {
+                    throw new ValidateException("Unexpected " + mCommand.args[i])
+                        .setLineNumber(reader.getLineNumber());
                 }
             }
         }
@@ -68,15 +79,25 @@ public class PatchMethod {
 
             Command command = Command.from(line);
             if (mode == Mode.ADD && command.mode != Mode.ADD) {
-                throw new IllegalArgumentException("In added methods everything must be +");
+                throw new ValidateException("In added methods everything must be +")
+                    .setLineNumber(reader.getLineNumber());
             } else if (mode == Mode.REMOVE && command.mode != Mode.REMOVE) {
-                throw new IllegalArgumentException("In removed methods everything must be -");
+                throw new ValidateException("In removed methods everything must be -")
+                    .setLineNumber(reader.getLineNumber());
             }
             if (command.name.equalsIgnoreCase("end-method")) {
                 return;
             }
-
-            instructions.add(new PatchInstruction(command, reader));
+            int lineNo = reader.getLineNumber();
+            try {
+                PatchInstruction insn = new PatchInstruction(command, reader);
+                if (insn.instruction.getHandler() != null) {
+                    insn.instruction.getHandler().validate(insn);
+                }
+                instructions.add(insn);
+            } catch (ValidateException e) {
+                throw e.setLineNumber(lineNo);
+            }
         }
 
     }

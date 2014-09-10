@@ -31,6 +31,7 @@ import uk.co.thinkofdeath.patchtools.matching.MatchMethod;
 import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.patch.PatchClass;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.MethodWrapper;
@@ -53,10 +54,6 @@ public class InvokeInstruction implements InstructionHandler {
             return false;
         }
         MethodInsnNode node = (MethodInsnNode) insn;
-
-        if (patchInstruction.params.length != 3) {
-            return false;
-        }
 
         Ident cls = new Ident(patchInstruction.params[0]);
         String clsName = cls.getName();
@@ -118,10 +115,6 @@ public class InvokeInstruction implements InstructionHandler {
 
     @Override
     public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction, MethodNode method) {
-        if (patchInstruction.params.length != 3) {
-            throw new RuntimeException("Incorrect number of arguments for invoke");
-        }
-
         Ident ownerId = new Ident(patchInstruction.params[0]);
         String owner = ownerId.getName();
         if (ownerId.isWeak()) {
@@ -180,6 +173,17 @@ public class InvokeInstruction implements InstructionHandler {
             .append(' ')
             .append(methodInsnNode.desc);
         return true;
+    }
+
+
+    @Override
+    public void validate(PatchInstruction instruction) throws ValidateException {
+        if (instruction.params.length != 3) {
+            throw new ValidateException("Incorrect number of arguments for invoke instruction");
+        }
+        // First & second param we assume is correct
+
+        Utils.validateMethodType(instruction.params[2]);
     }
 
     @Override

@@ -31,6 +31,7 @@ import uk.co.thinkofdeath.patchtools.matching.MatchGenerator;
 import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.patch.PatchClass;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.FieldWrapper;
@@ -53,10 +54,6 @@ public class FieldInstruction implements InstructionHandler {
             return false;
         }
         FieldInsnNode node = (FieldInsnNode) insn;
-
-        if (patchInstruction.params.length != 3) {
-            return false;
-        }
 
         Ident cls = new Ident(patchInstruction.params[0]);
         String clsName = cls.getName();
@@ -106,10 +103,6 @@ public class FieldInstruction implements InstructionHandler {
 
     @Override
     public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction, MethodNode method) {
-        if (patchInstruction.params.length != 3) {
-            throw new RuntimeException("Incorrect number of arguments for field");
-        }
-
         Ident ownerId = new Ident(patchInstruction.params[0]);
         String owner = ownerId.getName();
         if (ownerId.isWeak()) {
@@ -168,10 +161,17 @@ public class FieldInstruction implements InstructionHandler {
     }
 
     @Override
-    public List<MatchClass> getReferencedClasses(PatchInstruction instruction) {
+    public void validate(PatchInstruction instruction) throws ValidateException {
         if (instruction.params.length != 3) {
-            throw new RuntimeException("Incorrect number of arguments for field");
+            throw new ValidateException("Incorrect number of arguments for field instruction");
         }
+        // First & second param we assume is correct
+
+        Utils.validateType(instruction.params[2]);
+    }
+
+    @Override
+    public List<MatchClass> getReferencedClasses(PatchInstruction instruction) {
         ArrayList<MatchClass> classes = new ArrayList<>();
         Ident owner = new Ident(instruction.params[0]);
         if (!owner.getName().equals("*")) {
@@ -197,9 +197,6 @@ public class FieldInstruction implements InstructionHandler {
 
     @Override
     public List<MatchField> getReferencedFields(PatchInstruction instruction) {
-        if (instruction.params.length != 3) {
-            throw new RuntimeException("Incorrect number of arguments for field");
-        }
         Ident owner = new Ident(instruction.params[0]);
         Ident field = new Ident(instruction.params[1]);
         if (!owner.getName().equals("*") && !field.getName().equals("*")) {

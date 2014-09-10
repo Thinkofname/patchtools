@@ -34,10 +34,13 @@ public class PatchField {
 
     public PatchField(PatchClass owner, Command mCommand) throws IOException {
         this.owner = owner;
-        if (mCommand.args.length < 2) throw new IllegalArgumentException();
+        if (mCommand.args.length < 2) {
+            throw new ValidateException("Incorrect number of arguments for field");
+        }
         ident = new Ident(mCommand.args[0]);
         mode = mCommand.mode;
         desc = mCommand.args[1];
+        Utils.validateType(desc);
         if (mCommand.args.length >= 3) {
             int i;
             accessModi:

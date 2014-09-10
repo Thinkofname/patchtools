@@ -31,6 +31,7 @@ import uk.co.thinkofdeath.patchtools.matching.MatchGenerator;
 import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.patch.PatchClass;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 import java.util.Arrays;
@@ -40,10 +41,6 @@ public class ArrayInstruction implements InstructionHandler {
 
     @Override
     public boolean check(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction, MethodNode method, AbstractInsnNode insn) {
-        if (patchInstruction.params.length != 1) {
-            return false;
-        }
-
         if (patchInstruction.params[0].equals("*")) {
             return (insn instanceof TypeInsnNode && insn.getOpcode() == Opcodes.ANEWARRAY)
                 || (insn instanceof IntInsnNode && insn.getOpcode() == Opcodes.NEWARRAY);
@@ -97,9 +94,6 @@ public class ArrayInstruction implements InstructionHandler {
 
     @Override
     public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method) {
-        if (instruction.params.length != 1) {
-            throw new RuntimeException();
-        }
         Type pType = Type.getType(instruction.params[0]);
 
         if (pType.getSort() == Type.OBJECT || pType.getSort() == Type.ARRAY) {
@@ -108,7 +102,7 @@ public class ArrayInstruction implements InstructionHandler {
             String desc = nDesc.toString();
             return new TypeInsnNode(Opcodes.ANEWARRAY, Type.getType(desc).getInternalName());
         } else {
-            int type;
+            int type = -1;
             switch (pType.getSort()) {
                 case Type.BOOLEAN:
                     type = 4;
@@ -134,9 +128,6 @@ public class ArrayInstruction implements InstructionHandler {
                 case Type.LONG:
                     type = 11;
                     break;
-                default:
-                    type = -1;
-                    break;
             }
             return new IntInsnNode(Opcodes.NEWARRAY, type);
         }
@@ -146,9 +137,6 @@ public class ArrayInstruction implements InstructionHandler {
     public boolean print(Instruction instruction, StringBuilder patch, MethodNode method, AbstractInsnNode insn) {
         if ((insn instanceof TypeInsnNode && insn.getOpcode() == Opcodes.ANEWARRAY)) {
             String type = ((TypeInsnNode) insn).desc;
-            if (!type.startsWith("[")) {
-                type = "L" + type + ";";
-            }
             patch.append("new-array ")
                 .append(Type.getObjectType(type).getDescriptor());
             return true;
@@ -189,6 +177,33 @@ public class ArrayInstruction implements InstructionHandler {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void validate(PatchInstruction instruction) throws ValidateException {
+        if (instruction.params.length != 1) {
+            throw new ValidateException("Incorrect number of arguments for new-array");
+        }
+
+        Utils.validateType(instruction.params[0]);
+
+        Type pType = Type.getType(instruction.params[0]);
+
+        if (pType.getSort() != Type.OBJECT && pType.getSort() != Type.ARRAY) {
+            switch (pType.getSort()) {
+                case Type.BOOLEAN:
+                case Type.CHAR:
+                case Type.FLOAT:
+                case Type.DOUBLE:
+                case Type.BYTE:
+                case Type.SHORT:
+                case Type.INT:
+                case Type.LONG:
+                    break;
+                default:
+                    throw new ValidateException("Invalid type for new-array " + pType.getDescriptor());
+            }
+        }
     }
 
     @Override

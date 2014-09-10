@@ -29,6 +29,7 @@ import uk.co.thinkofdeath.patchtools.matching.MatchGenerator;
 import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.patch.PatchClass;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 import java.util.Arrays;
@@ -38,8 +39,7 @@ public class MultiArrayInstruction implements InstructionHandler {
 
     @Override
     public boolean check(ClassSet classSet, PatchScope scope, PatchInstruction patchInstruction, MethodNode method, AbstractInsnNode insn) {
-        if (patchInstruction.params.length != 2
-            || !(insn instanceof MultiANewArrayInsnNode)) {
+        if (!(insn instanceof MultiANewArrayInsnNode)) {
             return false;
         }
 
@@ -57,17 +57,11 @@ public class MultiArrayInstruction implements InstructionHandler {
 
     @Override
     public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method) {
-        if (instruction.params.length != 1) {
-            throw new RuntimeException();
-        }
         StringBuilder nDesc = new StringBuilder();
         PatchClass.updatedTypeString(classSet, scope, nDesc, Type.getType(instruction.params[0]));
         String desc = nDesc.toString();
-        if (desc.startsWith("L")) {
-            desc = desc.substring(1, desc.length() - 1);
-        }
         int dims = Integer.parseInt(instruction.params[1]);
-        return new MultiANewArrayInsnNode(desc, dims);
+        return new MultiANewArrayInsnNode(Type.getType(desc).getInternalName(), dims);
     }
 
     @Override
@@ -80,6 +74,24 @@ public class MultiArrayInstruction implements InstructionHandler {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void validate(PatchInstruction instruction) throws ValidateException {
+        if (instruction.params.length != 2) {
+            throw new ValidateException("Incorrect number of arguments for new-array-multi");
+        }
+
+        Utils.validateType(instruction.params[0]);
+
+        try {
+            if (!instruction.params[1].equals("*")) {
+                Integer.parseInt(instruction.params[1]);
+            }
+        } catch (NumberFormatException e) {
+            throw new ValidateException("Invalid number " + e.getMessage());
+        }
+
     }
 
     @Override

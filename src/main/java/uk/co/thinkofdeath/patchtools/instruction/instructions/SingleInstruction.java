@@ -23,6 +23,7 @@ import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 public class SingleInstruction implements InstructionHandler {
@@ -53,5 +54,10 @@ public class SingleInstruction implements InstructionHandler {
         }
         patch.append(instruction.name().toLowerCase().replace('_', '-'));
         return true;
+    }
+
+    @Override
+    public void validate(PatchInstruction instruction) throws ValidateException {
+
     }
 }

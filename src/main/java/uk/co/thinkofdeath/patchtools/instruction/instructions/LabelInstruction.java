@@ -22,7 +22,9 @@ import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
+import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 public class LabelInstruction implements InstructionHandler {
@@ -50,5 +52,15 @@ public class LabelInstruction implements InstructionHandler {
         patch.append("label ~")
             .append(Utils.printLabel(method, (LabelNode) insn));
         return true;
+    }
+
+    @Override
+    public void validate(PatchInstruction instruction) throws ValidateException {
+        if (instruction.params.length != 1) {
+            throw new ValidateException("Incorrect number of arguments for label");
+        }
+        if (!instruction.params[0].equals("*") && !new Ident(instruction.params[0]).isWeak()) {
+            throw new ValidateException("Non-weak label");
+        }
     }
 }

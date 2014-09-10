@@ -24,8 +24,10 @@ import org.objectweb.asm.tree.TryCatchBlockNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
+import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.patch.PatchClass;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 import java.util.Map;
@@ -33,7 +35,7 @@ import java.util.Map;
 public class TryCatchInstruction implements InstructionHandler {
     @Override
     public boolean check(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method, AbstractInsnNode insn) {
-        return instruction.params.length == 4 && match(classSet, scope, instruction, method) != null;
+        return match(classSet, scope, instruction, method) != null;
     }
 
     public static TryCatchBlockNode match(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method) {
@@ -55,7 +57,7 @@ public class TryCatchInstruction implements InstructionHandler {
                 }
             } else {
                 if (!PatchClass.checkTypes(classSet, scope,
-                    Type.getType("L" + type + ";"), Type.getType("L" + tryNode.type + ";"))) {
+                    Type.getObjectType(type), Type.getObjectType(tryNode.type))) {
                     continue;
                 }
             }
@@ -70,9 +72,6 @@ public class TryCatchInstruction implements InstructionHandler {
     }
 
     public static void create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method, Map<LabelNode, LabelNode> labels) {
-        if (instruction.params.length != 4) {
-            throw new RuntimeException("try catch, invalid number of arguments");
-        }
         StringBuilder type = new StringBuilder();
         PatchClass.updatedTypeString(classSet, scope, type, Type.getType("L" + instruction.params[3] + ";"));
         TryCatchBlockNode tryNode = new TryCatchBlockNode(
@@ -102,5 +101,22 @@ public class TryCatchInstruction implements InstructionHandler {
                 .append('\n');
         }
         return true;
+    }
+
+    @Override
+    public void validate(PatchInstruction instruction) throws ValidateException {
+        if (instruction.params.length != 4) {
+            throw new ValidateException("Incorrect number of arguments for try-catch");
+        }
+        if (!instruction.params[0].equals("*") && !new Ident(instruction.params[0]).isWeak()) {
+            throw new ValidateException("Non-weak label");
+        }
+        if (!instruction.params[1].equals("*") && !new Ident(instruction.params[0]).isWeak()) {
+            throw new ValidateException("Non-weak label");
+        }
+        if (!instruction.params[2].equals("*") && !new Ident(instruction.params[0]).isWeak()) {
+            throw new ValidateException("Non-weak label");
+        }
+        Utils.validateObjectType(instruction.params[3]);
     }
 }

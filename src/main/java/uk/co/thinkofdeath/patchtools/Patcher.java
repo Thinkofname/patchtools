@@ -17,6 +17,7 @@
 package uk.co.thinkofdeath.patchtools;
 
 import uk.co.thinkofdeath.patchtools.matching.MatchGenerator;
+import uk.co.thinkofdeath.patchtools.patch.LineReader;
 import uk.co.thinkofdeath.patchtools.patch.PatchClasses;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
@@ -37,16 +38,16 @@ public class Patcher {
     }
 
     public PatchScope apply(Reader reader) {
-        return apply(new BufferedReader(reader));
+        return apply(new LineReader(reader));
     }
 
-    public PatchScope apply(BufferedReader reader) {
+    public PatchScope apply(LineReader reader) {
         return apply(reader, new PatchScope());
     }
 
-    public PatchScope apply(BufferedReader reader, PatchScope patchScope) {
+    public PatchScope apply(LineReader reader, PatchScope patchScope) {
         PatchClasses patchClasses;
-        try (BufferedReader ignored = reader) {
+        try (LineReader ignored = reader) {
             patchClasses = new PatchClasses(reader);
             return apply(patchClasses, patchScope);
         } catch (IOException e) {

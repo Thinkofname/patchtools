@@ -23,7 +23,9 @@ import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
+import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 public class JumpInstruction implements InstructionHandler {
@@ -37,16 +39,11 @@ public class JumpInstruction implements InstructionHandler {
     @Override
     public boolean check(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method, AbstractInsnNode insn) {
         return !(!(insn instanceof JumpInsnNode) || insn.getOpcode() != opcode)
-            && instruction.params.length == 1
             && Utils.checkOrSetLabel(scope, method, instruction.params[0], ((JumpInsnNode) insn).label);
     }
 
     @Override
     public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method) {
-        if (instruction.params.length != 1) {
-            throw new RuntimeException("Incorrect number of arguments for label");
-        }
-
         return new JumpInsnNode(opcode, Utils.getLabel(scope, method, instruction.params[0]));
     }
 
@@ -117,5 +114,15 @@ public class JumpInstruction implements InstructionHandler {
             .append('~')
             .append(Utils.printLabel(method, ((JumpInsnNode) insn).label));
         return true;
+    }
+
+    @Override
+    public void validate(PatchInstruction instruction) throws ValidateException {
+        if (instruction.params.length != 1) {
+            throw new ValidateException("Incorrect number of arguments for jump");
+        }
+        if (!instruction.params[0].equals("*") && !new Ident(instruction.params[0]).isWeak()) {
+            throw new ValidateException("Non-weak label");
+        }
     }
 }

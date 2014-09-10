@@ -18,7 +18,6 @@ package uk.co.thinkofdeath.patchtools.patch;
 
 import org.jetbrains.annotations.Contract;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +26,7 @@ public class PatchClasses {
 
     private List<PatchClass> classes = new ArrayList<>();
 
-    public PatchClasses(BufferedReader reader) throws IOException {
+    public PatchClasses(LineReader reader) throws IOException {
         String line;
         while ((line = reader.readLine()) != null) {
             line = line.trim();
@@ -41,7 +40,8 @@ public class PatchClasses {
                     classes.add(new PatchClass(command, reader));
                     break;
                 default:
-                    throw new IllegalArgumentException(command.toString());
+                    throw new ValidateException("Unexpected " + command.name)
+                        .setLineNumber(reader.getLineNumber());
             }
         }
     }
@@ -58,3 +58,4 @@ public class PatchClasses {
             .orElse(null);
     }
 }
+

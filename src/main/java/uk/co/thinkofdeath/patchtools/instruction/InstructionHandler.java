@@ -24,6 +24,7 @@ import uk.co.thinkofdeath.patchtools.matching.MatchClass;
 import uk.co.thinkofdeath.patchtools.matching.MatchField;
 import uk.co.thinkofdeath.patchtools.matching.MatchMethod;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 import java.util.List;
@@ -35,6 +36,8 @@ public interface InstructionHandler {
     AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method);
 
     boolean print(Instruction instruction, StringBuilder patch, MethodNode method, AbstractInsnNode insn);
+
+    void validate(PatchInstruction instruction) throws ValidateException;
 
     default List<MatchClass> getReferencedClasses(PatchInstruction instruction) {
         return ImmutableList.of();

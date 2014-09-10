@@ -24,6 +24,7 @@ import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 public class PushStringInstruction implements InstructionHandler {
@@ -67,5 +68,17 @@ public class PushStringInstruction implements InstructionHandler {
         patch.append("push-string ");
         Utils.printConstant(patch, ((LdcInsnNode) insn).cst);
         return true;
+    }
+
+    @Override
+    public void validate(PatchInstruction instruction) throws ValidateException {
+        String cst = Joiner.on(' ').join(instruction.params);
+        if (cst.equals("*")) {
+            return;
+        }
+
+        if (!cst.startsWith("\"") || !cst.endsWith("\"")) {
+            throw new ValidateException("Invalid string");
+        }
     }
 }

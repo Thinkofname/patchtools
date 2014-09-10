@@ -30,6 +30,7 @@ import uk.co.thinkofdeath.patchtools.matching.MatchGenerator;
 import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.patch.PatchClass;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 import java.util.Arrays;
@@ -48,9 +49,6 @@ public class TypeInstruction implements InstructionHandler {
         if (!(insn instanceof TypeInsnNode) || insn.getOpcode() != opcode) {
             return false;
         }
-        if (patchInstruction.params.length != 1) {
-            return false;
-        }
         TypeInsnNode typeInsnNode = (TypeInsnNode) insn;
         String className = patchInstruction.params[0];
 
@@ -59,13 +57,13 @@ public class TypeInstruction implements InstructionHandler {
         }
 
         String type = typeInsnNode.desc;
-        return PatchClass.checkTypes(classSet, scope, Type.getType(className), Type.getObjectType(type));
+        return PatchClass.checkTypes(classSet, scope, Type.getObjectType(className), Type.getObjectType(type));
     }
 
     @Override
     public AbstractInsnNode create(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method) {
         StringBuilder nDesc = new StringBuilder();
-        PatchClass.updatedTypeString(classSet, scope, nDesc, Type.getType(instruction.params[0]));
+        PatchClass.updatedTypeString(classSet, scope, nDesc, Type.getObjectType(instruction.params[0]));
         Type desc = Type.getType(nDesc.toString());
         return new TypeInsnNode(opcode, desc.getInternalName());
     }
@@ -87,13 +85,19 @@ public class TypeInstruction implements InstructionHandler {
                 break;
         }
         String type = ((TypeInsnNode) insn).desc;
-        if (!type.startsWith("[")) {
-            type = "L" + type + ";";
-        }
         patch
             .append(" ")
             .append(type);
         return true;
+    }
+
+    @Override
+    public void validate(PatchInstruction instruction) throws ValidateException {
+        if (instruction.params.length != 1) {
+            throw new ValidateException("Incorrect number of arguments for type instruction");
+        }
+
+        Utils.validateObjectType(instruction.params[0]);
     }
 
     @Override
@@ -104,7 +108,7 @@ public class TypeInstruction implements InstructionHandler {
             return ImmutableList.of();
         }
 
-        Type type = MatchGenerator.getRootType(Type.getType(className));
+        Type type = MatchGenerator.getRootType(Type.getObjectType(className));
         if (type.getSort() != Type.OBJECT) {
             return ImmutableList.of();
         }

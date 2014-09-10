@@ -23,14 +23,15 @@ import org.objectweb.asm.tree.MethodNode;
 import uk.co.thinkofdeath.patchtools.PatchScope;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
 import uk.co.thinkofdeath.patchtools.instruction.InstructionHandler;
+import uk.co.thinkofdeath.patchtools.patch.Ident;
 import uk.co.thinkofdeath.patchtools.patch.PatchInstruction;
+import uk.co.thinkofdeath.patchtools.patch.ValidateException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 public class LookupSwitchInstruction implements InstructionHandler {
     @Override
     public boolean check(ClassSet classSet, PatchScope scope, PatchInstruction instruction, MethodNode method, AbstractInsnNode insn) {
-        if (instruction.params.length != 1
-            || !(insn instanceof LookupSwitchInsnNode)) {
+        if (!(insn instanceof LookupSwitchInsnNode)) {
             return false;
         }
         LookupSwitchInsnNode insnNode = (LookupSwitchInsnNode) insn;
@@ -101,5 +102,32 @@ public class LookupSwitchInstruction implements InstructionHandler {
             .append("    ")
             .append(".end-switch-lookup");
         return true;
+    }
+
+    @Override
+    public void validate(PatchInstruction instruction) throws ValidateException {
+        if (instruction.params.length != 1) {
+            throw new ValidateException("Incorrect number of arguments for switch-lookup");
+        }
+
+        if (!instruction.params[0].equals("*")
+            && !new Ident(instruction.params[0]).isWeak()) {
+            throw new ValidateException("Non-weak label");
+        }
+
+        if (instruction.meta.stream()
+            .map(label -> label.split(":")[1].trim())
+            .filter(label -> !label.equals("*"))
+            .anyMatch(label -> !new Ident(label).isWeak())) {
+            throw new ValidateException("Non-weak label");
+        }
+        try {
+            instruction.meta.stream()
+                .map(label -> label.split(":")[0].trim())
+                .filter(k -> !k.equals("*"))
+                .forEach(Integer::parseInt);
+        } catch (NumberFormatException e) {
+            throw new ValidateException("Invalid number " + e.getMessage());
+        }
     }
 }
