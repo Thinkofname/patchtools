@@ -339,7 +339,6 @@ public class MatchGenerator {
             scopes.forEach(finalScope::merge);
             return finalScope;
         } catch (Exception e) {
-            e.printStackTrace();
             e.printStackTrace(logger.getPrintWriter());
             throw new LoggableException(logger);
         }
