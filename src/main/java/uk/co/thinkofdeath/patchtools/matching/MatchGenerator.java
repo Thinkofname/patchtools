@@ -340,6 +340,9 @@ public class MatchGenerator {
             return finalScope;
         } catch (Exception e) {
             e.printStackTrace(logger.getPrintWriter());
+            if (e instanceof LoggableException) {
+                throw e;
+            }
             throw new LoggableException(logger);
         }
     }
