@@ -41,7 +41,11 @@ public class Patch {
         File inPatch = new File(args[2]);
         boolean map = args.length >= 4 && args[3].equals("true");
 
-        if (!outJar.getParentFile().exists() && !outJar.getParentFile().mkdirs()) {
+        File outParent = outJar.getParentFile();
+        // if null, this is a local file and we assume it exists
+        // if it doesn't exist, try creating it
+        // if it failed to create, error
+        if (outParent != null && !outParent.exists() && !outParent.mkdirs()) {
             throw new RuntimeException("Failed to setup output dir");
         }
 
