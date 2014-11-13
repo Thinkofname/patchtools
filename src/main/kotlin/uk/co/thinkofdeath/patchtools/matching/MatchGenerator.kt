@@ -241,7 +241,7 @@ public class MatchGenerator(private val classSet: ClassSet, private val patchCla
                     pc.fields
                         .filter { it.mode != Mode.ADD }
                         .forEach {
-                            val type = it.getDesc()
+                            val type = it.desc
 
                             var field = MatchField(mc, it.ident.name, it.descRaw)
                             field = mc.addField(field)
@@ -256,9 +256,9 @@ public class MatchGenerator(private val classSet: ClassSet, private val patchCla
                     pc.methods
                         .filter { it.mode != Mode.ADD }
                         .forEach {
-                            val desc = it.getDesc()
+                            val desc = it.desc
 
-                            val mTemp = MatchMethod(mc, it.ident.name, it.descRaw!!)
+                            val mTemp = MatchMethod(mc, it.ident.name, it.descRaw)
                             val method = mc.addMethod(mTemp)
 
                             if (mTemp == method) {

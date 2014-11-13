@@ -18,32 +18,33 @@ package uk.co.thinkofdeath.patchtools.patch
 
 import uk.co.thinkofdeath.patchtools.instruction.Instruction
 
-import java.io.BufferedReader
-import java.util.ArrayList
 import java.util.Arrays
 
-public class PatchInstruction(command: Command, reader: BufferedReader) {
+public class PatchInstruction(command: Command, reader: LineReader) {
 
     public var mode: Mode
     public var instruction: Instruction
     public var params: Array<String>
-    public var meta: MutableList<String> = ArrayList<String>()
+    public var meta: MutableList<String> = arrayListOf()
 
         ;{
         mode = command.mode
         instruction = Instruction.valueOf(command.name.toUpperCase().replace('-', '_'))
         params = command.args
         if (instruction.isMetaRequired()) {
-            var line: String? = null
-            while ({ line = reader.readLine(); line != null }()) {
-                val l = line!!.trim()
-                if (l.startsWith("//") || l.length() == 0) continue
+            reader.whileHasLine {
+                (it: String): Boolean ->
+                val l = it.trim()
+                if (l.startsWith("//") || l.length() == 0) {
+                    return@whileHasLine false
+                }
 
                 if (l.equalsIgnoreCase(".-+".charAt(mode.ordinal()) + "end-" + command.name.toLowerCase())) {
-                    break
+                    return@whileHasLine true
                 }
 
                 meta.add(l)
+                return@whileHasLine false
             }
         }
     }

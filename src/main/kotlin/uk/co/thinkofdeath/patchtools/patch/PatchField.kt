@@ -23,11 +23,12 @@ import uk.co.thinkofdeath.patchtools.instruction.instructions.Utils
 public class PatchField(public val owner: PatchClass, mCommand: Command) {
     public val ident: Ident
     public val descRaw: String
+    public val desc: Type
+        get() = Type.getMethodType(descRaw)
     public val mode: Mode
-    public var value: Any? = null
-        private set
-    private var isStatic: Boolean = false
-    private var isPrivate: Boolean = false
+    public val value: Any?
+    public val isStatic: Boolean
+    public val isPrivate: Boolean
 
     {
         if (mCommand.args.size < 2) {
@@ -37,13 +38,16 @@ public class PatchField(public val owner: PatchClass, mCommand: Command) {
         mode = mCommand.mode
         descRaw = mCommand.args[1]
         Utils.validateType(descRaw)
+        var isS = false
+        var isP = false
+        var v: Any? = null
         if (mCommand.args.size >= 3) {
             var i = 2
             @accessModi
             while (i < mCommand.args.size) {
                 when (mCommand.args[i]) {
-                    "static" -> isStatic = true
-                    "private" -> isPrivate = true
+                    "static" -> isS = true
+                    "private" -> isP = true
                     else -> break@accessModi
                 }
                 i++
@@ -51,20 +55,11 @@ public class PatchField(public val owner: PatchClass, mCommand: Command) {
             val parts = arrayOfNulls<String>(mCommand.args.size - i)
             if (parts.size != 0) {
                 System.arraycopy(mCommand.args, i, parts, 0, parts.size)
-                value = Utils.parseConstant(Joiner.on(' ').join(parts))
+                v = Utils.parseConstant(Joiner.on(' ').join(parts))
             }
         }
-    }
-
-    public fun getDesc(): Type {
-        return Type.getMethodType(descRaw)
-    }
-
-    public fun isStatic(): Boolean {
-        return isStatic
-    }
-
-    public fun isPrivate(): Boolean {
-        return isPrivate
+        isStatic = isS
+        isPrivate = isP
+        value = v
     }
 }

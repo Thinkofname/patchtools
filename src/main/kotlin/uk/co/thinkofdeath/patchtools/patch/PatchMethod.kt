@@ -29,13 +29,14 @@ import uk.co.thinkofdeath.patchtools.wrappers.ClassSet
 import java.util.*
 
 public class PatchMethod(public val owner: PatchClass, mCommand: Command, reader: LineReader) {
-    public var ident: Ident
-    public var descRaw: String? = null
-        private set
-    public var mode: Mode
-    private var isStatic: Boolean = false
-    private var isPrivate: Boolean = false
-    private var isProtected: Boolean = false
+    public val ident: Ident
+    public val descRaw: String
+    public val desc: Type
+        get() = Type.getMethodType(descRaw)
+    public val mode: Mode
+    public val isStatic: Boolean
+    public val isPrivate: Boolean
+    public val isProtected: Boolean
 
     public val instructions: MutableList<PatchInstruction> = ArrayList()
 
@@ -46,30 +47,36 @@ public class PatchMethod(public val owner: PatchClass, mCommand: Command, reader
         ident = Ident(mCommand.args[0])
         mode = mCommand.mode
         try {
-            descRaw = mCommand.args[1]
-            Utils.validateMethodType(descRaw!!)
+            $descRaw = mCommand.args[1]
+            Utils.validateMethodType(descRaw)
         } catch (e: ValidateException) {
             throw e.setLineNumber(reader.lineNumber)
         }
 
+        var isS = false
+        var isP = false
+        var isPo = false
         if (mCommand.args.size >= 3) {
             for (i in 2..mCommand.args.size - 1) {
                 if (mCommand.args[i].equalsIgnoreCase("static")) {
-                    isStatic = true
+                    isS = true
                 } else if (mCommand.args[i].equalsIgnoreCase("private")) {
-                    isPrivate = true
+                    isP = true
                 } else if (mCommand.args[i].equalsIgnoreCase("protected")) {
-                    isProtected = true
+                    isPo = true
                 } else {
                     throw ValidateException("Unexpected " + mCommand.args[i]).setLineNumber(reader.lineNumber)
                 }
             }
         }
+        isStatic = isS
+        isPrivate = isP
+        isProtected = isPo
 
-        var line: String? = null
-        while ({ line = reader.readLine();line != null }()) {
-            val l = line!!.trim()
-            if (l.startsWith("//") || l.length() == 0) continue
+        reader.whileHasLine {
+            (it: String): Boolean ->
+            val l = it.trim()
+            if (l.startsWith("//") || l.length() == 0) return@whileHasLine false
 
             val command = Command.from(l)
             if (mode == Mode.ADD && command.mode != Mode.ADD) {
@@ -78,7 +85,7 @@ public class PatchMethod(public val owner: PatchClass, mCommand: Command, reader
                 throw ValidateException("In removed methods everything must be -").setLineNumber(reader.lineNumber)
             }
             if (command.name.equalsIgnoreCase("end-method")) {
-                break
+                return@whileHasLine true
             }
             val lineNo = reader.lineNumber
             try {
@@ -91,23 +98,8 @@ public class PatchMethod(public val owner: PatchClass, mCommand: Command, reader
                 throw e.setLineNumber(lineNo)
             }
 
+            return@whileHasLine false
         }
-    }
-
-    public fun getDesc(): Type {
-        return Type.getMethodType(descRaw)
-    }
-
-    public fun isStatic(): Boolean {
-        return isStatic
-    }
-
-    public fun isPrivate(): Boolean {
-        return isPrivate
-    }
-
-    public fun isProtected(): Boolean {
-        return isProtected
     }
 
     public fun apply(classSet: ClassSet, scope: PatchScope, methodNode: MethodNode) {
@@ -122,18 +114,18 @@ public class PatchMethod(public val owner: PatchClass, mCommand: Command, reader
         } else {
             methodNode.access = methodNode.access or Opcodes.ACC_PUBLIC
         }
-        val insns = InsnList()
+        val outInstructions = InsnList()
         val cloneMap = LabelCloneMap()
         for (insnNode in methodNode.instructions.toArray()) {
-            insns.add(insnNode.clone(cloneMap))
+            outInstructions.add(insnNode.clone(cloneMap))
         }
 
-        val trys = ArrayList<TryCatchBlockNode>()
+        val tries = ArrayList<TryCatchBlockNode>()
         for (tryCatchBlockNode in methodNode.tryCatchBlocks) {
             val newTry = TryCatchBlockNode(cloneMap.get(tryCatchBlockNode.start), cloneMap.get(tryCatchBlockNode.end), cloneMap.get(tryCatchBlockNode.handler), tryCatchBlockNode.`type`)
-            trys.add(newTry)
+            tries.add(newTry)
         }
-        methodNode.tryCatchBlocks = trys
+        methodNode.tryCatchBlocks = tries
 
         val insnMap = scope.getInstructMap(methodNode)
         var position = 0
@@ -147,9 +139,9 @@ public class PatchMethod(public val owner: PatchClass, mCommand: Command, reader
                 }
                 val newIn = patchInstruction.instruction.handler!!.create(classSet, scope, patchInstruction, methodNode)
                 if (position - 1 >= 0) {
-                    insns.insert(insns.get(position - 1), newIn.clone(cloneMap))
+                    outInstructions.insert(outInstructions.get(position - 1), newIn.clone(cloneMap))
                 } else {
-                    insns.insert(newIn.clone(cloneMap))
+                    outInstructions.insert(newIn.clone(cloneMap))
                 }
                 position++
                 offset++
@@ -170,13 +162,13 @@ public class PatchMethod(public val owner: PatchClass, mCommand: Command, reader
 
             val pos = insnMap?.get(patchInstruction)!!
             if (patchInstruction.mode == Mode.REMOVE) {
-                insns.remove(insns.get(pos))
+                outInstructions.remove(outInstructions.get(pos))
                 offset--
             }
             position = pos + offset + 1
         }
 
-        methodNode.instructions = insns
+        methodNode.instructions = outInstructions
     }
 
     public fun check(logger: StateLogger, classSet: ClassSet, scope: PatchScope?, methodNode: MethodNode): Boolean {
@@ -188,7 +180,7 @@ public class PatchMethod(public val owner: PatchClass, mCommand: Command, reader
                 return false
             }
 
-            val patchDesc = getDesc()
+            val patchDesc = desc
             val desc = Type.getMethodType(methodNode.desc)
 
             if (patchDesc.getArgumentTypes().size != desc.getArgumentTypes().size) {

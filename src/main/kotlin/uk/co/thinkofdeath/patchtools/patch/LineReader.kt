@@ -28,4 +28,13 @@ public class LineReader(inst: Reader) : BufferedReader(inst) {
         lineNumber++
         return super.readLine()
     }
+
+    fun whileHasLine(f: (String) -> Boolean) {
+        while (true) {
+            val line = readLine()
+            if (line == null || f(line)) {
+                break
+            }
+        }
+    }
 }

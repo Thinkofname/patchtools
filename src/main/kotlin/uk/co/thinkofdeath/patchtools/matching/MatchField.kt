@@ -27,7 +27,7 @@ import uk.co.thinkofdeath.patchtools.wrappers.ClassSet
 import java.util.*
 
 public class MatchField(public val owner: MatchClass, public val name: String, public val desc: String) {
-    public var `type`: Type? = null
+    public var type: Type? = null
 
     private val matchedFields = ArrayList<FieldPair>()
     private val checkedFields = HashSet<FieldPair>()

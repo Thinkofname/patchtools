@@ -46,10 +46,10 @@ public class PatchClass(clCommand: Command, reader: LineReader) {
         type = ClassType.valueOf(clCommand.name.toUpperCase())
         ident = Ident(clCommand.args[0])
         mode = clCommand.mode
-        var line: String? = null
-        while ({ line = reader.readLine(); line != null }()) {
-            val l = line!!.trim()
-            if (l.startsWith("//") || l.length() == 0) continue
+        reader.whileHasLine {
+            (it: String): Boolean ->
+            val l = it.trim()
+            if (l.startsWith("//") || l.length() == 0) return@whileHasLine false
 
             val command = Command.from(l)
             if (mode == Mode.ADD && command.mode != Mode.ADD) {
@@ -78,9 +78,10 @@ public class PatchClass(clCommand: Command, reader: LineReader) {
                     if (!command.name.endsWith("end-" + type.name().toLowerCase())) {
                         throw ValidateException(command.toString()).setLineNumber(reader.lineNumber)
                     }
-                    break
+                    return@whileHasLine true
                 }
             }
+            return@whileHasLine false
         }
     }
 
@@ -165,11 +166,11 @@ public class PatchClass(clCommand: Command, reader: LineReader) {
                     classWrapper.node.fields.remove(classWrapper.getFieldNode(fieldWrapper))
                 } else {
                     val mappedDesc = StringBuilder()
-                    val desc = it.getDesc()
+                    val desc = it.desc
                     updatedTypeString(classSet, scope, mappedDesc, desc)
 
-                    val access = (if (it.isPrivate()) Opcodes.ACC_PRIVATE else Opcodes.ACC_PUBLIC) or
-                        (if (it.isStatic()) Opcodes.ACC_STATIC else 0)
+                    val access = (if (it.isPrivate) Opcodes.ACC_PRIVATE else Opcodes.ACC_PUBLIC) or
+                        (if (it.isStatic) Opcodes.ACC_STATIC else 0)
 
                     var name = it.ident.name
                     if (it.ident.isWeak()) {
@@ -188,15 +189,15 @@ public class PatchClass(clCommand: Command, reader: LineReader) {
         methods.forEach {
             if (it.mode == Mode.ADD) {
                 val mappedDesc = StringBuilder("(")
-                val desc = it.getDesc()
+                val desc = it.desc
                 for (type in desc.getArgumentTypes()) {
                     updatedTypeString(classSet, scope, mappedDesc, type)
                 }
                 mappedDesc.append(")")
                 updatedTypeString(classSet, scope, mappedDesc, desc.getReturnType())
 
-                val access = (if (it.isPrivate()) Opcodes.ACC_PRIVATE else Opcodes.ACC_PUBLIC) or
-                    (if (it.isStatic()) Opcodes.ACC_STATIC else 0)
+                val access = (if (it.isPrivate) Opcodes.ACC_PRIVATE else Opcodes.ACC_PUBLIC) or
+                    (if (it.isStatic) Opcodes.ACC_STATIC else 0)
                 var methodWrapper: MethodWrapper? = null
 
                 if (((access and Opcodes.ACC_PUBLIC) != 0
@@ -213,12 +214,12 @@ public class PatchClass(clCommand: Command, reader: LineReader) {
                 } else {
                     methodWrapper!!.add(classWrapper)
                 }
-                scope.putMethod(methodWrapper!!, it.ident.name, it.descRaw!!)
+                scope.putMethod(methodWrapper!!, it.ident.name, it.descRaw)
                 classWrapper.methods.add(methodWrapper!!)
                 classWrapper.node.methods.add(node)
             }
 
-            val methodWrapper = scope.getMethod(classWrapper, it.ident.name, it.descRaw!!)!!
+            val methodWrapper = scope.getMethod(classWrapper, it.ident.name, it.descRaw)!!
 
             it.apply(classSet, scope, classWrapper.getMethodNode(methodWrapper)!!)
         }
@@ -359,7 +360,7 @@ public class PatchClass(clCommand: Command, reader: LineReader) {
                     return false
                 }
 
-                val patchDesc = f.getDesc()
+                val patchDesc = f.desc
                 val desc = Type.getType(fieldWrapper.desc)
 
                 if (!checkTypes(classSet, scope, patchDesc, desc)) {
@@ -369,12 +370,12 @@ public class PatchClass(clCommand: Command, reader: LineReader) {
 
                 val fieldNode = classWrapper.getFieldNode(fieldWrapper)!!
 
-                if (((fieldNode.access and Opcodes.ACC_STATIC) == 0) == f.isStatic()) {
-                    logger.println(if (f.isStatic()) "Required static" else "Required non-static")
+                if (((fieldNode.access and Opcodes.ACC_STATIC) == 0) == f.isStatic) {
+                    logger.println(if (f.isStatic) "Required static" else "Required non-static")
                     return false
                 }
-                if (((fieldNode.access and Opcodes.ACC_PRIVATE) == 0) == f.isPrivate()) {
-                    logger.println(if (f.isPrivate()) "Required private" else "Required non-private")
+                if (((fieldNode.access and Opcodes.ACC_PRIVATE) == 0) == f.isPrivate) {
+                    logger.println(if (f.isPrivate) "Required private" else "Required non-private")
                     return false
                 }
 
@@ -399,7 +400,7 @@ public class PatchClass(clCommand: Command, reader: LineReader) {
             for (m in methods) {
                 if (m.mode == Mode.ADD) continue
 
-                val methodWrapper = scope.getMethod(classWrapper, m.ident.name, m.descRaw!!)!!
+                val methodWrapper = scope.getMethod(classWrapper, m.ident.name, m.descRaw)!!
 
                 logger.println("- " + m.ident + m.descRaw)
                 logger.println(" testing " + methodWrapper.name + methodWrapper.desc)
@@ -409,7 +410,7 @@ public class PatchClass(clCommand: Command, reader: LineReader) {
                     return false
                 }
 
-                val patchDesc = m.getDesc()
+                val patchDesc = m.desc
                 val desc = Type.getMethodType(methodWrapper.desc)
 
                 if (patchDesc.getArgumentTypes().size != desc.getArgumentTypes().size) {
@@ -447,7 +448,7 @@ public class PatchClass(clCommand: Command, reader: LineReader) {
             for (m in methods) {
                 if (m.mode == Mode.ADD) continue
 
-                val methodWrapper = scope.getMethod(classWrapper, m.ident.name, m.descRaw!!)!!
+                val methodWrapper = scope.getMethod(classWrapper, m.ident.name, m.descRaw)!!
 
                 logger.println("- " + m.ident + m.descRaw + " testing " + methodWrapper.name + methodWrapper.desc + " instructions")
 

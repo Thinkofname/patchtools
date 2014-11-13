@@ -16,4 +16,7 @@
 
 package uk.co.thinkofdeath.patchtools.patch
 
-data class ModifierClass(public val ident: Ident, public val mode: Mode)
+data class ModifierClass(
+    public val ident: Ident,
+    public val mode: Mode
+)

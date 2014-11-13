@@ -17,7 +17,6 @@
 package uk.co.thinkofdeath.patchtools.patch
 
 import java.util.Arrays
-import kotlin.platform.platformStatic
 
 class Command private(
     internal val mode: Mode,
@@ -31,8 +30,7 @@ class Command private(
 
     class object {
 
-        // TODO: Remove
-        platformStatic public fun from(line: String): Command {
+        public fun from(line: String): Command {
             val args = line.split(" ")
             if (args.size < 1) throw IllegalArgumentException()
             val mode = args[0].charAt(0)
