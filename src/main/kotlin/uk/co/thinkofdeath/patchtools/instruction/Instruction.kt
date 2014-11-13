@@ -18,6 +18,11 @@ package uk.co.thinkofdeath.patchtools.instruction
 
 import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.MethodNode
+import org.objectweb.asm.Opcodes
+import uk.co.thinkofdeath.patchtools.instruction.instructions.*
+
+private val _intellijSucks = javaClass<LabelInstruction>();
+private val _intellijOptimizesImportsBadlyForKotlin = Opcodes.AALOAD
 
 public enum class Instruction(
     public val handler: InstructionHandler?,
