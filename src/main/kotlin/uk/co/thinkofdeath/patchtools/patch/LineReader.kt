@@ -29,7 +29,7 @@ public class LineReader(inst: Reader) : BufferedReader(inst) {
         return super.readLine()
     }
 
-    fun whileHasLine(f: (String) -> Boolean) {
+    inline fun whileHasLine(f: (String) -> Boolean) {
         while (true) {
             val line = readLine()
             if (line == null || f(line)) {
