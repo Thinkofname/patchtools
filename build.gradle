@@ -69,29 +69,35 @@ dependencies {
 uploadArchives {
     repositories {
         mavenDeployer {
-
             repository(url: "http://repo.thinkofdeath.co.uk/content/repositories/snapshots/") {
                 authentication(userName: thinkUsername, password: thinkPassword)
             }
 
             pom.project {
-                name 'Patch Tools'
-                packaging 'jar'
-                description ''
-                url 'https://github.com/thinkofdeath/patchtools'
+                name "Patch Tools"
+                packaging "jar"
+                description ""
+                url "https://github.com/thinkofdeath/patchtools"
 
                 licenses {
                     license {
-                        name 'The Apache Software License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                        distribution 'repo'
+                        name "The Apache Software License, Version 2.0"
+                        url "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                        distribution "repo"
+                    }
+                }
+
+                repositories {
+                    repository {
+                        id "sonatype"
+                        url "http://oss.sonatype.org/content/repositories/snapshots"
                     }
                 }
 
                 developers {
                     developer {
-                        id 'thinkofdeath'
-                        name 'Thinkofdeath'
+                        id "thinkofdeath"
+                        name "Thinkofdeath"
                     }
                 }
             }
