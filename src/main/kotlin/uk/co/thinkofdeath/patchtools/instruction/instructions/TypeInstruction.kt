@@ -16,7 +16,6 @@
 
 package uk.co.thinkofdeath.patchtools.instruction.instructions
 
-import com.google.common.collect.ImmutableList
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 import org.objectweb.asm.tree.AbstractInsnNode
@@ -85,13 +84,13 @@ public class TypeInstruction(private val opcode: Int) : InstructionHandler {
         val className = instruction.params[0]
 
         if (className == "*") {
-            return ImmutableList.of<MatchClass>()
+            return listOf()
         }
 
-        val `type` = MatchGenerator.getRootType(Type.getObjectType(className))
-        if (`type`.getSort() != Type.OBJECT) {
-            return ImmutableList.of<MatchClass>()
+        val type = MatchGenerator.getRootType(Type.getObjectType(className))
+        if (type.getSort() != Type.OBJECT) {
+            return listOf()
         }
-        return Arrays.asList<MatchClass>(MatchClass(Ident(`type`.getInternalName()).name))
+        return Arrays.asList<MatchClass>(MatchClass(Ident(type.getInternalName()).name))
     }
 }

@@ -16,7 +16,6 @@
 
 package uk.co.thinkofdeath.patchtools.instruction
 
-import com.google.common.collect.ImmutableList
 import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.MethodNode
 import uk.co.thinkofdeath.patchtools.PatchScope
@@ -37,14 +36,14 @@ public trait InstructionHandler {
     public fun validate(instruction: PatchInstruction)
 
     public fun getReferencedClasses(instruction: PatchInstruction): List<MatchClass> {
-        return ImmutableList.of<MatchClass>()
+        return listOf()
     }
 
     public fun getReferencedMethods(instruction: PatchInstruction): List<MatchMethod> {
-        return ImmutableList.of<MatchMethod>()
+        return listOf()
     }
 
     public fun getReferencedFields(instruction: PatchInstruction): List<MatchField> {
-        return ImmutableList.of<MatchField>()
+        return listOf()
     }
 }

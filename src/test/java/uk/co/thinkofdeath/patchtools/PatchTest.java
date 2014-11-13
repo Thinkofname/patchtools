@@ -16,7 +16,6 @@
 
 package uk.co.thinkofdeath.patchtools;
 
-import com.google.common.io.ByteStreams;
 import org.junit.Test;
 import uk.co.thinkofdeath.patchtools.testcode.InterfaceTestInterface;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassPathWrapper;
@@ -25,6 +24,7 @@ import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 import java.io.IOException;
 import java.io.InputStream;
 
+import static kotlin.io.IoPackage.readBytes;
 import static org.junit.Assert.*;
 
 public class PatchTest {
@@ -181,7 +181,7 @@ public class PatchTest {
 
     public static byte[] getClass(String name) {
         try (InputStream inputStream = PatchTest.class.getResourceAsStream("/" + name + ".class")) {
-            return ByteStreams.toByteArray(inputStream);
+            return readBytes(inputStream, 64 * 1024);
         } catch (IOException e) {
             e.printStackTrace();
         }

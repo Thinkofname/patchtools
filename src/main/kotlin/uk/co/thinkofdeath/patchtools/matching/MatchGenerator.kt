@@ -80,8 +80,7 @@ public class MatchGenerator(private val classSet: ClassSet, private val patchCla
 
     private fun reduceGroups() {
         for (group in groups) {
-
-            val first = group.first!!
+            val first = group.first
 
             // Add every class as a match to the first
             // patch class in the set

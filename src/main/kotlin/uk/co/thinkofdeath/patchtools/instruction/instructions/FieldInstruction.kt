@@ -16,7 +16,6 @@
 
 package uk.co.thinkofdeath.patchtools.instruction.instructions
 
-import com.google.common.collect.ImmutableList
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 import org.objectweb.asm.tree.AbstractInsnNode
@@ -170,6 +169,6 @@ public class FieldInstruction(private val opcode: Int) : InstructionHandler {
             mmc.`type` = desc
             return Arrays.asList<MatchField>(mmc)
         }
-        return ImmutableList.of<MatchField>()
+        return listOf()
     }
 }

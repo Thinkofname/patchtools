@@ -23,8 +23,6 @@ import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.commons.Remapper
 import java.util.HashMap
 import java.util.ArrayList
-import com.google.common.io.ByteStreams
-import com.google.common.io.Closeables
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.commons.RemappingClassAdapter
@@ -129,10 +127,10 @@ public class ClassSet(private val classPath: ClassPathWrapper) : Iterable<String
 
     public fun add(clazz: InputStream, close: Boolean) {
         try {
-            add(ByteStreams.toByteArray(clazz))
+            add(clazz.readBytes())
         } finally {
             if (close) {
-                Closeables.closeQuietly(clazz)
+                clazz.close()
             }
         }
     }

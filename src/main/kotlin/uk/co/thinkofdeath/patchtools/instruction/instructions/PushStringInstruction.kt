@@ -16,7 +16,6 @@
 
 package uk.co.thinkofdeath.patchtools.instruction.instructions
 
-import com.google.common.base.Joiner
 import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.LdcInsnNode
 import org.objectweb.asm.tree.MethodNode
@@ -32,7 +31,7 @@ public class PushStringInstruction : InstructionHandler {
         if (insn !is LdcInsnNode) {
             return false
         }
-        var cst = Joiner.on(' ').join(instruction.params)
+        var cst = instruction.params.join(" ");
 
         if (insn.cst is String) {
             if (cst == "*") {
@@ -53,7 +52,7 @@ public class PushStringInstruction : InstructionHandler {
     }
 
     override fun create(classSet: ClassSet, scope: PatchScope, instruction: PatchInstruction, method: MethodNode): AbstractInsnNode {
-        val cst = Joiner.on(' ').join(instruction.params)
+        val cst = instruction.params.join(" ");
         return LdcInsnNode(Utils.parseConstant(cst))
     }
 
@@ -67,7 +66,7 @@ public class PushStringInstruction : InstructionHandler {
     }
 
     override fun validate(instruction: PatchInstruction) {
-        val cst = Joiner.on(' ').join(instruction.params)
+        val cst = instruction.params.join(" ");
         if (cst == "*") {
             return
         }

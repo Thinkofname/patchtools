@@ -16,17 +16,15 @@
 
 package uk.co.thinkofdeath.patchtools.matching
 
-import com.google.common.collect.Maps
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet
 
 public class MatchGroup(private val classSet: ClassSet) {
 
-    private val classes = Maps.newHashMap<String, MatchClass>()
-    public var first: MatchClass? = null
-        private set
+    private val classes = hashMapOf<String, MatchClass>()
+    public val first: MatchClass
+        get() = classes.values().first()
 
     public fun add(cls: MatchClass) {
-        if (first == null) first = cls
         val wrp = classSet.getClassWrapper(cls.name)
         if (cls.name == "*" || (wrp != null && wrp.isHidden())) {
             return

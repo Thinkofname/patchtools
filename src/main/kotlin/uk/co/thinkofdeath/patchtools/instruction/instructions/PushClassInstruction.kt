@@ -16,7 +16,6 @@
 
 package uk.co.thinkofdeath.patchtools.instruction.instructions
 
-import com.google.common.collect.ImmutableList
 import org.objectweb.asm.Type
 import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.LdcInsnNode
@@ -81,12 +80,12 @@ public class PushClassInstruction : InstructionHandler {
         val className = instruction.params[0]
 
         if (className == "*") {
-            return ImmutableList.of<MatchClass>()
+            return listOf()
         }
 
         val `type` = MatchGenerator.getRootType(Type.getType(className))
         if (`type`.getSort() != Type.OBJECT) {
-            return ImmutableList.of<MatchClass>()
+            return listOf()
         }
         return Arrays.asList<MatchClass>(MatchClass(Ident(`type`.getInternalName()).name))
     }

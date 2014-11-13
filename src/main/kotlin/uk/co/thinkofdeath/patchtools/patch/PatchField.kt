@@ -16,7 +16,6 @@
 
 package uk.co.thinkofdeath.patchtools.patch
 
-import com.google.common.base.Joiner
 import org.objectweb.asm.Type
 import uk.co.thinkofdeath.patchtools.instruction.instructions.Utils
 
@@ -55,7 +54,7 @@ public class PatchField(public val owner: PatchClass, mCommand: Command) {
             val parts = arrayOfNulls<String>(mCommand.args.size - i)
             if (parts.size != 0) {
                 System.arraycopy(mCommand.args, i, parts, 0, parts.size)
-                v = Utils.parseConstant(Joiner.on(' ').join(parts))
+                v = Utils.parseConstant(parts.requireNoNulls().join(" "))
             }
         }
         isStatic = isS

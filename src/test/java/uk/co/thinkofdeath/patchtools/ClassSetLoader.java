@@ -16,15 +16,15 @@
 
 package uk.co.thinkofdeath.patchtools;
 
-import com.google.common.collect.Maps;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class ClassSetLoader extends ClassLoader {
 
     private final ClassSet classSet;
-    private final Map<String, Class<?>> classes = Maps.newHashMap();
+    private final Map<String, Class<?>> classes = new HashMap<>();
 
     public ClassSetLoader(ClassSet classSet) {
         this.classSet = classSet;

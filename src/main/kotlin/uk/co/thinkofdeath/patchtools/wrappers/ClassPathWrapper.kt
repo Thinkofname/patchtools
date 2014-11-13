@@ -16,7 +16,6 @@
 
 package uk.co.thinkofdeath.patchtools.wrappers
 
-import com.google.common.io.ByteStreams
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.ClassNode
@@ -55,8 +54,9 @@ public class ClassPathWrapper(vararg libs: File) : Closeable {
                 return null
             }
         }
-        inStr!!.use { ignored ->
-            val data = ByteStreams.toByteArray(inStr)
+        val stream = inStr!!;
+        stream.use { ignored ->
+            val data = stream.readBytes()
             val node = ClassNode(Opcodes.ASM5)
             val reader = ClassReader(data)
             reader.accept(node, 0)

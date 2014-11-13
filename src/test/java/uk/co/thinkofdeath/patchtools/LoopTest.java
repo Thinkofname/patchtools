@@ -16,7 +16,6 @@
 
 package uk.co.thinkofdeath.patchtools;
 
-import com.google.common.io.ByteStreams;
 import org.junit.Test;
 import uk.co.thinkofdeath.patchtools.disassemble.Disassembler;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassPathWrapper;
@@ -26,13 +25,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 
+import static kotlin.io.IoPackage.readBytes;
+
 public class LoopTest {
 
     @Test
     public void loop() {
         ClassSet classSet = new ClassSet(new ClassPathWrapper());
         classSet.add(
-            getClass("uk/co/thinkofdeath/patchtools/testcode/LoopTestClass")
+                getClass("uk/co/thinkofdeath/patchtools/testcode/LoopTestClass")
         );
 
         Disassembler disassembler = new Disassembler(classSet);
@@ -44,7 +45,7 @@ public class LoopTest {
 
     public static byte[] getClass(String name) {
         try (InputStream inputStream = PatchTest.class.getResourceAsStream("/" + name + ".class")) {
-            return ByteStreams.toByteArray(inputStream);
+            return readBytes(inputStream, 64 * 1024);
         } catch (IOException e) {
             e.printStackTrace();
         }

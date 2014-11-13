@@ -16,7 +16,6 @@
 
 package uk.co.thinkofdeath.patchtools.instruction.instructions
 
-import com.google.common.collect.ImmutableList
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 import org.objectweb.asm.tree.AbstractInsnNode
@@ -212,6 +211,6 @@ public class InvokeInstruction(private val opcode: Int) : InstructionHandler {
             mmc.setReturn(`type`)
             return Arrays.asList<MatchMethod>(mmc)
         }
-        return ImmutableList.of<MatchMethod>()
+        return listOf()
     }
 }
