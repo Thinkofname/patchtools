@@ -68,10 +68,10 @@ public class PatchMethod(public val owner: PatchClass, mCommand: Command, reader
 
         var line: String? = null
         while ({ line = reader.readLine();line != null }()) {
-            val line = line!!.trim()
-            if (line.startsWith("//") || line.length() == 0) continue
+            val l = line!!.trim()
+            if (l.startsWith("//") || l.length() == 0) continue
 
-            val command = Command.from(line)
+            val command = Command.from(l)
             if (mode == Mode.ADD && command.mode != Mode.ADD) {
                 throw ValidateException("In added methods everything must be +").setLineNumber(reader.lineNumber)
             } else if (mode == Mode.REMOVE && command.mode != Mode.REMOVE) {
@@ -310,8 +310,8 @@ public class PatchMethod(public val owner: PatchClass, mCommand: Command, reader
                 }
             }
 
-            for (position in position..insns.size() - 1) {
-                val insn = insns.get(position)
+            for (pos in position..insns.size() - 1) {
+                val insn = insns.get(pos)
                 if (insn is LineNumberNode || insn is LabelNode) {
                     continue
                 }

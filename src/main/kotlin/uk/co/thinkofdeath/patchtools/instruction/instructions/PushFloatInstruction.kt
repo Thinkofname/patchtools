@@ -67,9 +67,8 @@ public class PushFloatInstruction : InstructionHandler {
 
     override fun print(instruction: Instruction, patch: StringBuilder, method: MethodNode, insn: AbstractInsnNode): Boolean {
         if (insn is LdcInsnNode) {
-            val ldcInsnNode = insn as LdcInsnNode
-            if (ldcInsnNode.cst is Float) {
-                patch.append("push-float ").append(ldcInsnNode.cst as Float)
+            if (insn.cst is Float) {
+                patch.append("push-float ").append(insn.cst as Float)
                 return true
             }
         } else if (insn is InsnNode) {

@@ -39,12 +39,12 @@ import java.util.Arrays
 
 public class InvokeInstruction(private val opcode: Int) : InstructionHandler {
 
-    override fun check(classSet: ClassSet, scope: PatchScope?, patchInstruction: PatchInstruction, method: MethodNode, insn: AbstractInsnNode): Boolean {
+    override fun check(classSet: ClassSet, scope: PatchScope?, instruction: PatchInstruction, method: MethodNode, insn: AbstractInsnNode): Boolean {
         if (insn !is MethodInsnNode || insn.getOpcode() != opcode) {
             return false
         }
 
-        val cls = Ident(patchInstruction.params[0])
+        val cls = Ident(instruction.params[0])
         var clsName = cls.name
         if (clsName != "*") {
             if (scope != null || !cls.isWeak()) {
@@ -64,16 +64,16 @@ public class InvokeInstruction(private val opcode: Int) : InstructionHandler {
             }
         }
 
-        val methodIdent = Ident(patchInstruction.params[1])
+        val methodIdent = Ident(instruction.params[1])
         var methodName = methodIdent.name
         if (methodName != "*") {
             if (scope != null || !methodIdent.isWeak()) {
                 if (methodIdent.isWeak()) {
                     val owner = classSet.getClassWrapper(insn.owner)!!
-                    val ptMethod = scope!!.getMethod(owner, methodName, patchInstruction.params[2])
+                    val ptMethod = scope!!.getMethod(owner, methodName, instruction.params[2])
                     if (ptMethod == null) {
                         // Assume true
-                        scope.putMethod(classSet.getClassWrapper(insn.owner)!!.getMethod(insn.name, insn.desc)!!, methodName, patchInstruction.params[2])
+                        scope.putMethod(classSet.getClassWrapper(insn.owner)!!.getMethod(insn.name, insn.desc)!!, methodName, instruction.params[2])
                         methodName = insn.name
                     } else {
                         methodName = ptMethod.name
@@ -85,7 +85,7 @@ public class InvokeInstruction(private val opcode: Int) : InstructionHandler {
             }
         }
 
-        val patchDesc = Type.getMethodType(patchInstruction.params[2])
+        val patchDesc = Type.getMethodType(instruction.params[2])
         val desc = Type.getMethodType(insn.desc)
 
         if (desc.getArgumentTypes().size != patchDesc.getArgumentTypes().size) {
@@ -103,21 +103,21 @@ public class InvokeInstruction(private val opcode: Int) : InstructionHandler {
         return PatchClass.checkTypes(classSet, scope, patchDesc.getReturnType(), desc.getReturnType())
     }
 
-    override fun create(classSet: ClassSet, scope: PatchScope, patchInstruction: PatchInstruction, method: MethodNode): AbstractInsnNode {
-        val ownerId = Ident(patchInstruction.params[0])
+    override fun create(classSet: ClassSet, scope: PatchScope, instruction: PatchInstruction, method: MethodNode): AbstractInsnNode {
+        val ownerId = Ident(instruction.params[0])
         var owner = ownerId.name
         if (ownerId.isWeak()) {
             owner = scope.getClass(owner)!!.node.name
         }
-        val nameId = Ident(patchInstruction.params[1])
+        val nameId = Ident(instruction.params[1])
         var name = nameId.name
         if (nameId.isWeak()) {
             val cls = classSet.getClassWrapper(owner)!!
-            name = scope.getMethod(cls, name, patchInstruction.params[2])!!.name
+            name = scope.getMethod(cls, name, instruction.params[2])!!.name
         }
 
         val mappedDesc = StringBuilder("(")
-        val desc = Type.getMethodType(patchInstruction.params[2])
+        val desc = Type.getMethodType(instruction.params[2])
         for (`type` in desc.getArgumentTypes()) {
             PatchClass.updatedTypeString(classSet, scope, mappedDesc, `type`)
         }
@@ -127,19 +127,24 @@ public class InvokeInstruction(private val opcode: Int) : InstructionHandler {
     }
 
     override fun print(instruction: Instruction, patch: StringBuilder, method: MethodNode, insn: AbstractInsnNode): Boolean {
-        if (!(insn is MethodInsnNode)) {
+        if (insn !is MethodInsnNode) {
             return false
         }
-        val methodInsnNode = insn as MethodInsnNode
         patch.append("invoke-")
-        when (methodInsnNode.getOpcode()) {
+        when (insn.getOpcode()) {
             Opcodes.INVOKESTATIC -> patch.append("static")
             Opcodes.INVOKEVIRTUAL -> patch.append("virtual")
             Opcodes.INVOKESPECIAL -> patch.append("special")
             Opcodes.INVOKEINTERFACE -> patch.append("interface")
-            else -> throw IllegalArgumentException("Invoke opcode: " + methodInsnNode.getOpcode())
+            else -> throw IllegalArgumentException("Invoke opcode: " + insn.getOpcode())
         }
-        patch.append(' ').append(methodInsnNode.owner).append(' ').append(methodInsnNode.name).append(' ').append(methodInsnNode.desc)
+        patch
+            .append(' ')
+            .append(insn.owner)
+            .append(' ')
+            .append(insn.name)
+            .append(' ')
+            .append(insn.desc)
         return true
     }
 

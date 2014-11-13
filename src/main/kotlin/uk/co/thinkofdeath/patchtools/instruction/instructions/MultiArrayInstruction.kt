@@ -36,15 +36,15 @@ import java.util.Arrays
 
 public class MultiArrayInstruction : InstructionHandler {
 
-    override fun check(classSet: ClassSet, scope: PatchScope?, patchInstruction: PatchInstruction, method: MethodNode, insn: AbstractInsnNode): Boolean {
+    override fun check(classSet: ClassSet, scope: PatchScope?, instruction: PatchInstruction, method: MethodNode, insn: AbstractInsnNode): Boolean {
         if (insn !is MultiANewArrayInsnNode) {
             return false
         }
 
-        val pType = Type.getType(patchInstruction.params[0])
-        val dims = if (patchInstruction.params[1] == "*") -1 else Integer.parseInt(patchInstruction.params[1])
+        val pType = Type.getType(instruction.params[0])
+        val dims = if (instruction.params[1] == "*") -1 else Integer.parseInt(instruction.params[1])
 
-        if (patchInstruction.params[0] == "*") {
+        if (instruction.params[0] == "*") {
             return (dims == -1 || dims == insn.dims)
         }
         return PatchClass.checkTypes(classSet, scope, pType, Type.getType(insn.desc))
@@ -61,7 +61,7 @@ public class MultiArrayInstruction : InstructionHandler {
 
     override fun print(instruction: Instruction, patch: StringBuilder, method: MethodNode, insn: AbstractInsnNode): Boolean {
         if (insn is MultiANewArrayInsnNode) {
-            patch.append("new-array-multi ").append((insn as MultiANewArrayInsnNode).desc).append(' ').append((insn as MultiANewArrayInsnNode).dims)
+            patch.append("new-array-multi ").append(insn.desc).append(' ').append(insn.dims)
             return true
         }
         return false

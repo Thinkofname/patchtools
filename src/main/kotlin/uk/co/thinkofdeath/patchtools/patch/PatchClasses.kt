@@ -25,10 +25,10 @@ public class PatchClasses(reader: LineReader) {
         ;{
         var line: String? = null
         while ({ line = reader.readLine(); line != null }()) {
-            val line = line!!.trim()
-            if (line.startsWith("//") || line.length() == 0) continue
+            val l = line!!.trim()
+            if (l.startsWith("//") || l.length() == 0) continue
 
-            val command = Command.from(line)
+            val command = Command.from(l)
             when (command.name) {
                 "interface", "enum", "class" -> classes.add(PatchClass(command, reader))
                 else -> throw ValidateException("Unexpected " + command.name).setLineNumber(reader.lineNumber)

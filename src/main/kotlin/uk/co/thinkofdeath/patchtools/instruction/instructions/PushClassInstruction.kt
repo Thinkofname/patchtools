@@ -35,11 +35,11 @@ import uk.co.thinkofdeath.patchtools.wrappers.ClassSet
 import java.util.Arrays
 
 public class PushClassInstruction : InstructionHandler {
-    override fun check(classSet: ClassSet, scope: PatchScope?, patchInstruction: PatchInstruction, method: MethodNode, insn: AbstractInsnNode): Boolean {
+    override fun check(classSet: ClassSet, scope: PatchScope?, instruction: PatchInstruction, method: MethodNode, insn: AbstractInsnNode): Boolean {
         if (insn !is LdcInsnNode) {
             return false
         }
-        val className = patchInstruction.params[0]
+        val className = instruction.params[0]
 
         if (insn.cst is Type) {
             if (className == "*") {

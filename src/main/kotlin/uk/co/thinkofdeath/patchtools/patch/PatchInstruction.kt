@@ -36,14 +36,14 @@ public class PatchInstruction(command: Command, reader: BufferedReader) {
         if (instruction.isMetaRequired()) {
             var line: String? = null
             while ({ line = reader.readLine(); line != null }()) {
-                val line = line!!.trim()
-                if (line.startsWith("//") || line.length() == 0) continue
+                val l = line!!.trim()
+                if (l.startsWith("//") || l.length() == 0) continue
 
-                if (line.equalsIgnoreCase(".-+".charAt(mode.ordinal()) + "end-" + command.name.toLowerCase())) {
+                if (l.equalsIgnoreCase(".-+".charAt(mode.ordinal()) + "end-" + command.name.toLowerCase())) {
                     break
                 }
 
-                meta.add(line)
+                meta.add(l)
             }
         }
     }

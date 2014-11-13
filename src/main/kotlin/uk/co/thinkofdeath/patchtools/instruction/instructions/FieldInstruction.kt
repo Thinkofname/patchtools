@@ -39,12 +39,12 @@ import java.util.Arrays
 
 public class FieldInstruction(private val opcode: Int) : InstructionHandler {
 
-    override fun check(classSet: ClassSet, scope: PatchScope?, patchInstruction: PatchInstruction, method: MethodNode, insn: AbstractInsnNode): Boolean {
+    override fun check(classSet: ClassSet, scope: PatchScope?, instruction: PatchInstruction, method: MethodNode, insn: AbstractInsnNode): Boolean {
         if (insn !is FieldInsnNode || insn.getOpcode() != opcode) {
             return false
         }
 
-        val cls = Ident(patchInstruction.params[0])
+        val cls = Ident(instruction.params[0])
         var clsName = cls.name
         if (clsName != "*") {
             if (scope != null || !cls.isWeak()) {
@@ -64,16 +64,16 @@ public class FieldInstruction(private val opcode: Int) : InstructionHandler {
             }
         }
 
-        val fieldIdent = Ident(patchInstruction.params[1])
+        val fieldIdent = Ident(instruction.params[1])
         var fieldName = fieldIdent.name
         if (fieldName != "*") {
             if (scope != null || !fieldIdent.isWeak()) {
                 if (fieldIdent.isWeak()) {
                     val owner = classSet.getClassWrapper(insn.owner)!!
-                    val ptField = scope!!.getField(owner, fieldName, patchInstruction.params[2])
+                    val ptField = scope!!.getField(owner, fieldName, instruction.params[2])
                     if (ptField == null) {
                         // Assume true
-                        scope.putField(classSet.getClassWrapper(insn.owner)!!.getField(insn.name, insn.desc)!!, fieldName, patchInstruction.params[2])
+                        scope.putField(classSet.getClassWrapper(insn.owner)!!.getField(insn.name, insn.desc)!!, fieldName, instruction.params[2])
                         fieldName = insn.name
                     } else {
                         fieldName = ptField.name
@@ -85,30 +85,30 @@ public class FieldInstruction(private val opcode: Int) : InstructionHandler {
             }
         }
 
-        val patchDesc = Type.getType(patchInstruction.params[2])
+        val patchDesc = Type.getType(instruction.params[2])
         val desc = Type.getType(insn.desc)
 
         return PatchClass.checkTypes(classSet, scope, patchDesc, desc)
     }
 
-    override fun create(classSet: ClassSet, scope: PatchScope, patchInstruction: PatchInstruction, method: MethodNode): AbstractInsnNode {
-        val ownerId = Ident(patchInstruction.params[0])
+    override fun create(classSet: ClassSet, scope: PatchScope, instruction: PatchInstruction, method: MethodNode): AbstractInsnNode {
+        val ownerId = Ident(instruction.params[0])
         var owner = ownerId.name
         if (ownerId.isWeak()) {
             owner = scope.getClass(owner)!!.node.name
         }
-        val nameId = Ident(patchInstruction.params[1])
+        val nameId = Ident(instruction.params[1])
         var name = nameId.name
         if (nameId.isWeak()) {
             val cls = classSet.getClassWrapper(owner)!!
-            val wrapper = scope.getField(cls, name, patchInstruction.params[2])
+            val wrapper = scope.getField(cls, name, instruction.params[2])
             if (wrapper != null) {
                 name = wrapper.name
             }
         }
 
         val mappedDesc = StringBuilder()
-        val desc = Type.getType(patchInstruction.params[2])
+        val desc = Type.getType(instruction.params[2])
         PatchClass.updatedTypeString(classSet, scope, mappedDesc, desc)
         return FieldInsnNode(opcode, owner, name, mappedDesc.toString())
     }

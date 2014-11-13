@@ -28,11 +28,11 @@ import uk.co.thinkofdeath.patchtools.patch.ValidateException
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet
 
 public class PushStringInstruction : InstructionHandler {
-    override fun check(classSet: ClassSet, scope: PatchScope?, patchInstruction: PatchInstruction, method: MethodNode, insn: AbstractInsnNode): Boolean {
+    override fun check(classSet: ClassSet, scope: PatchScope?, instruction: PatchInstruction, method: MethodNode, insn: AbstractInsnNode): Boolean {
         if (insn !is LdcInsnNode) {
             return false
         }
-        var cst = Joiner.on(' ').join(patchInstruction.params)
+        var cst = Joiner.on(' ').join(instruction.params)
 
         if (insn.cst is String) {
             if (cst == "*") {

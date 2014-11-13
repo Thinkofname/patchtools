@@ -48,10 +48,10 @@ public class PatchClass(clCommand: Command, reader: LineReader) {
         mode = clCommand.mode
         var line: String? = null
         while ({ line = reader.readLine(); line != null }()) {
-            val line = line!!.trim()
-            if (line.startsWith("//") || line.length() == 0) continue
+            val l = line!!.trim()
+            if (l.startsWith("//") || l.length() == 0) continue
 
-            val command = Command.from(line)
+            val command = Command.from(l)
             if (mode == Mode.ADD && command.mode != Mode.ADD) {
                 throw ValidateException("In added classes everything must be +").setLineNumber(reader.lineNumber)
             } else if (mode == Mode.REMOVE && command.mode != Mode.REMOVE) {
@@ -235,7 +235,7 @@ public class PatchClass(clCommand: Command, reader: LineReader) {
             if (name.isWeak()) {
                 val wrapper = scope.getMethod(classWrapper, pName, desc)
                 if (wrapper == null) throw IllegalStateException()
-                pName = wrapper!!.name
+                pName = wrapper.name
             }
             val mappedDesc = StringBuilder("(")
             val pDesc = Type.getMethodType(desc)
@@ -252,7 +252,7 @@ public class PatchClass(clCommand: Command, reader: LineReader) {
         }
 
         if (mw == null) {
-            mw = searchParent(classSet, scope, classSet.getClassWrapper(classWrapper!!.node.superName), name, desc)
+            mw = searchParent(classSet, scope, classSet.getClassWrapper(classWrapper.node.superName), name, desc)
             if (mw == null) {
                 for (inter in classWrapper.node.interfaces) {
                     mw = searchParent(classSet, scope, classSet.getClassWrapper(inter), name, desc)

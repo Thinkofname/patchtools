@@ -37,11 +37,11 @@ import java.util.Arrays
 
 public class TypeInstruction(private val opcode: Int) : InstructionHandler {
 
-    override fun check(classSet: ClassSet, scope: PatchScope?, patchInstruction: PatchInstruction, method: MethodNode, insn: AbstractInsnNode): Boolean {
+    override fun check(classSet: ClassSet, scope: PatchScope?, instruction: PatchInstruction, method: MethodNode, insn: AbstractInsnNode): Boolean {
         if (insn !is TypeInsnNode || insn.getOpcode() != opcode) {
             return false
         }
-        val className = patchInstruction.params[0]
+        val className = instruction.params[0]
 
         if (className == "*") {
             return true

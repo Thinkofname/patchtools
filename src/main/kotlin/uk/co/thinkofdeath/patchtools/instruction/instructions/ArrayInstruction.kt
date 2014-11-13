@@ -38,12 +38,12 @@ import java.util.Arrays
 
 public class ArrayInstruction : InstructionHandler {
 
-    override fun check(classSet: ClassSet, scope: PatchScope?, patchInstruction: PatchInstruction, method: MethodNode, insn: AbstractInsnNode): Boolean {
-        if (patchInstruction.params[0] == "*") {
+    override fun check(classSet: ClassSet, scope: PatchScope?, instruction: PatchInstruction, method: MethodNode, insn: AbstractInsnNode): Boolean {
+        if (instruction.params[0] == "*") {
             return (insn is TypeInsnNode && insn.getOpcode() == Opcodes.ANEWARRAY) || (insn is IntInsnNode && insn.getOpcode() == Opcodes.NEWARRAY)
         }
 
-        val pType = Type.getType(patchInstruction.params[0])
+        val pType = Type.getType(instruction.params[0])
 
         if (pType.getSort() == Type.OBJECT || pType.getSort() == Type.ARRAY) {
             if (insn !is TypeInsnNode) {

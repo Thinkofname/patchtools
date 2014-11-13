@@ -46,7 +46,7 @@ public class LabelInstruction : InstructionHandler {
         if (insn !is LabelNode) {
             return false
         }
-        patch.append("label ~").append(Utils.printLabel(method, insn as LabelNode))
+        patch.append("label ~").append(Utils.printLabel(method, insn))
         return true
     }
 
