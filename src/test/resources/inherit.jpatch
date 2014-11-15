@@ -1,7 +1,9 @@
 
+import java.lang.String;
+
 public class ~A {
 
-    public java.lang.String ~myMethod() {
+    public String ~myMethod() {
         .push-string "testing"
         .return
     }
@@ -9,7 +11,7 @@ public class ~A {
 
 public class ~B extends ~A {
 
-    add public java.lang.String ~myMethod() {
+    add public String ~myMethod() {
         +push-string "abc"
         +return
     }

@@ -1,12 +1,15 @@
 
-public class ~Test implements +uk.co.thinkofdeath.patchtools.testcode.InterfaceTestInterface {
+import uk.co.thinkofdeath.patchtools.testcode.InterfaceTestInterface;
+import java.lang.String;
 
-    public java.lang.String getName() {
+public class ~Test implements +InterfaceTestInterface {
+
+    public String getName() {
         .push-string "Bob"
         .return
     }
 
-    add public java.lang.String getMessage() {
+    add public String getMessage() {
         +push-string "Hello world"
         +return
     }

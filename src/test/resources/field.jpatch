@@ -1,12 +1,14 @@
 
+import java.lang.String;
+
 public class ~FieldTest {
 
-    public static final java.lang.String ~initField = "Hello";
-    private static final java.lang.String ~privField = "World";
+    public static final String ~initField = "Hello";
+    private static final String ~privField = "World";
 
-    remove public java.lang.String ~strField;
+    remove public String ~strField;
     private int ~intField;
     public ~FieldTest ~self;
 
-    add public java.lang.String addedField;
+    add public String addedField;
 }

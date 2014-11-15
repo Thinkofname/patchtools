@@ -1,15 +1,17 @@
 
+import java.lang.String;
+
 public class ~Invoke {
 
     // func1 is worked out from its usage
     // in ~test
 
-    public static java.lang.String ~func2() {
+    public static String ~func2() {
         .push-string "Bye"
         .return
     }
 
-    public static java.lang.String ~test() {
+    public static String ~test() {
         .any
         -invoke-static ~Invoke ~func1 ()Ljava/lang/String;
         +invoke-static ~Invoke ~func2 ()Ljava/lang/String;

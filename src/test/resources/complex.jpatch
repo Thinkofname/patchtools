@@ -1,7 +1,9 @@
 
+import java.lang.String;
+
 public class ~Complex {
 
-    public static java.lang.String ~msg() {
+    public static String ~msg() {
         .any
         -push-string "Hello"
         +push-string "ABC"
