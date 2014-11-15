@@ -21,6 +21,7 @@ import uk.co.thinkofdeath.patchtools.wrappers.ClassSet
 import org.objectweb.asm.Opcodes
 import uk.co.thinkofdeath.patchtools.instruction.instructions.Utils
 import uk.co.thinkofdeath.patchtools.instruction.Instruction
+import uk.co.thinkofdeath.patchtools.instruction.Instructions
 
 public class Disassembler(private val classSet: ClassSet) {
 
@@ -104,7 +105,7 @@ public class Disassembler(private val classSet: ClassSet) {
                     patch.append("    ")
                         .append("    ")
                         .append('.')
-                    if (!Instruction.print(patch, m, it)) {
+                    if (!Instructions.print(patch, m, it)) {
                         // TODO: throw new UnsupportedOperationException(i.toString());
                         patch.append("unsupported ")
                             .append(it.getOpcode())

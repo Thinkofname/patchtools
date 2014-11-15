@@ -20,6 +20,8 @@ import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.MethodNode
 import org.objectweb.asm.Opcodes
 import uk.co.thinkofdeath.patchtools.instruction.instructions.*
+import kotlin.platform.platformStatic
+import uk.co.thinkofdeath.patchtools.instruction.Instruction.values
 
 private val _intellijSucks = javaClass<LabelInstruction>();
 private val _intellijOptimizesImportsBadlyForKotlin = Opcodes.AALOAD
@@ -246,21 +248,22 @@ public enum class Instruction(
     NEW_ARRAY_MULTI : Instruction(MultiArrayInstruction())
     IF_NULL : Instruction(JumpInstruction(Opcodes.IFNULL))
     IF_NOT_NULL : Instruction(JumpInstruction(Opcodes.IFNONNULL))
+    // goto_w
+    // jsr_w
+    // breakpoint
 
     public fun isMetaRequired(): Boolean {
         return requiresMeta
     }
+}
 
-    class object {
-        public fun print(patch: StringBuilder, method: MethodNode, insn: AbstractInsnNode): Boolean {
-            for (i in values()) {
-                if (i.handler != null && i.handler!!.print(i, patch, method, insn)) {
-                    return true
-                }
+object Instructions {
+    platformStatic public fun print(patch: StringBuilder, method: MethodNode, insn: AbstractInsnNode): Boolean {
+        for (i in values()) {
+            if (i.handler != null && i.handler!!.print(i, patch, method, insn)) {
+                return true
             }
-            return false
         }
+        return false
     }
-}// goto_w
-// jsr_w
-// breakpoint
+}
