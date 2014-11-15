@@ -31,7 +31,8 @@ import uk.co.thinkofdeath.patchtools.lexer.Token
 import uk.co.thinkofdeath.patchtools.lexer.TokenType
 import uk.co.thinkofdeath.patchtools.instruction.instructions.Utils
 
-public class PatchClass(val type: ClassType,
+public class PatchClass(internal val classes: PatchClasses,
+                        val type: ClassType,
                         it: Iterator<Token>,
                         modifiers: Set<String>,
                         public val patchAnnotations: List<String>
@@ -47,7 +48,10 @@ public class PatchClass(val type: ClassType,
     val fields = arrayListOf<PatchField>()
 
         ;{
-        ident = Ident(it.next().expect(TokenType.IDENT).value.replace('.', '/'))
+        val name = it.next().expect(TokenType.IDENT).value
+        ident = Ident(name.replace('.', '/'))
+        classes.import(name)
+
         mode = if ("add" in modifiers) Mode.ADD
         else if ("remove" in modifiers) Mode.REMOVE
         else Mode.MATCH
@@ -76,7 +80,7 @@ public class PatchClass(val type: ClassType,
                         value = value.substring(1)
                     }
                     superModifiers.add(ModifierClass(
-                        Ident(value.replace('.', '/')),
+                        classes.scanImports(value),
                         m
                     ))
                     token = it.next()
@@ -98,7 +102,7 @@ public class PatchClass(val type: ClassType,
                         value = value.substring(1)
                     }
                     interfaceModifiers.add(ModifierClass(
-                        Ident(value.replace('.', '/')),
+                        classes.scanImports(value),
                         m
                     ))
                     token = it.next()
@@ -128,7 +132,7 @@ public class PatchClass(val type: ClassType,
                 modifiers.add(token.value)
             } else if (token.type == TokenType.IDENT) {
                 if (type == null) {
-                    type = Ident(token.value)
+                    type = classes.scanImports(token.value)
 
                     while (true) {
                         token = it.next()
@@ -137,7 +141,7 @@ public class PatchClass(val type: ClassType,
                     }
                     continue
                 } else {
-                    ident = Ident(token.value)
+                    ident = classes.scanImports(token.value)
                 }
             } else if (token.type == TokenType.ARGUMENT_LIST) {
                 methods.add(PatchMethod(this, it, type!!, dimCount, ident!!, modifiers, patchAnnotations))

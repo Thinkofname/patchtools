@@ -71,7 +71,7 @@ public class PatchMethod(public val owner: PatchClass,
             for (i in 1..dims) {
                 descBuilder.append('[')
             }
-            PatchClass.appendType(descBuilder, type)
+            PatchClass.appendType(descBuilder, owner.classes.scanImports(type).toString())
 
             dims = 0
             if (token.type == TokenType.ARGUMENT_LIST_NEXT) {

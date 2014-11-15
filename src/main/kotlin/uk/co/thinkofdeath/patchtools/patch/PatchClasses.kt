@@ -16,14 +16,14 @@
 
 package uk.co.thinkofdeath.patchtools.patch
 
-import java.util.ArrayList
 import uk.co.thinkofdeath.patchtools.lexer.Lexer
 import uk.co.thinkofdeath.patchtools.lexer.TokenType
 import uk.co.thinkofdeath.patchtools.lexer.Token
 
 public class PatchClasses(reader: Lexer) {
 
-    public val classes: MutableList<PatchClass> = ArrayList()
+    public val classes: MutableList<PatchClass> = arrayListOf()
+    private val importedClasses = hashMapOf<String, String>()
 
         ;{
 
@@ -44,8 +44,13 @@ public class PatchClasses(reader: Lexer) {
                 continue
             }
 
+            if (token.type == TokenType.IMPORT) {
+                import(it.next().expect(TokenType.IDENT).value)
+                continue
+            }
+
             if (token.type == TokenType.CLASS) {
-                classes.add(PatchClass(ClassType.CLASS, it, modifiers, patchAnnotations))
+                classes.add(PatchClass(this, ClassType.CLASS, it, modifiers, patchAnnotations))
                 modifiers.clear()
                 patchAnnotations.clear()
                 continue
@@ -61,6 +66,20 @@ public class PatchClasses(reader: Lexer) {
         return classes
             .filter { it.ident.name == name }
             .first
+    }
+
+    internal fun import(cls: String) {
+        val pos = cls.lastIndexOf('.')
+        val short = cls.substring(pos + 1)
+        importedClasses[short] = cls.replace('.', '/')
+    }
+
+    internal fun scanImports(cls: String): Ident {
+        val c = cls.replace('.', '/')
+        if (c in importedClasses) {
+            return Ident(importedClasses[c])
+        }
+        return Ident(c)
     }
 }
 

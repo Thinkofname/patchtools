@@ -45,4 +45,5 @@ enum class TokenType {
     REMOVE_INSTRUCTION
     FIELD_END
     FIELD_VALUE
+    IMPORT
 }

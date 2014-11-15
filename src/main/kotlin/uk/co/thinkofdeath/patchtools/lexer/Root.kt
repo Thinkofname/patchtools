@@ -45,6 +45,22 @@ private fun Lexer.lexRoot(): StateFunc? {
             )
             , requireOne = true)
     }
+    if (nextWordMatches("import")) {
+        emit(TokenType.IMPORT)
+        return skipWhitespace(
+            ident(
+                skipWhitespace(toStateFunc {
+                    if (peekChar() != ';') {
+                        throw UnexpectedCharacterException(this, peekChar())
+                    }
+                    skip()
+                    drop()
+                    skipWhitespace(toStateFunc(::lexRoot))
+                }),
+                allowDot = true
+            ), requireOne = true
+        )
+    }
     throw UnexpectedCharacterException(this, peekChar())
 }
 

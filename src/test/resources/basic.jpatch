@@ -1,19 +1,20 @@
 // Test basic patch
 // Patching BasicClass
 
-// . == detect
+import java.lang.String;
 
 public class ~Basic {
 
-    public java.lang.String ~sayHello() {
+    public String ~sayHello() {
         // - == remove
         -push-string "Hello bob"
         // + == add
         +push-string "Hello jim"
+        // . == detect
         .return
     }
 
-    add public java.lang.String addedMethod() {
+    add public String addedMethod() {
         +push-string "Hello world"
         +return
     }
