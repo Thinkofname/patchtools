@@ -47,6 +47,7 @@ public class PatchClasses(reader: Lexer) {
             if (token.type == TokenType.CLASS) {
                 classes.add(PatchClass(ClassType.CLASS, it, modifiers, patchAnnotations))
                 modifiers.clear()
+                patchAnnotations.clear()
                 continue
             }
 
