@@ -32,10 +32,17 @@ public class PatchField(public val owner: PatchClass,
     public val desc: Type
         get() = Type.getMethodType(descRaw)
     public val mode: Mode
-    public val isStatic: Boolean
-    public val isPrivate: Boolean
+    val access: Int
 
     {
+        var access = 0
+        for (modifier in modifiers) {
+            if (modifier in modifierAccess) {
+                access = access or modifierAccess[modifier]!!
+            }
+        }
+        this.access = access and fieldModifiers
+
         mode = if ("add" in modifiers) Mode.ADD
         else if ("remove" in modifiers) Mode.REMOVE
         else Mode.MATCH
@@ -47,8 +54,5 @@ public class PatchField(public val owner: PatchClass,
         PatchClass.appendType(descBuilder, type.toString())
         descRaw = descBuilder.toString()
 
-        // TODO: Rewrite
-        isPrivate = "private" in modifiers
-        isStatic = "static" in modifiers
     }
 }

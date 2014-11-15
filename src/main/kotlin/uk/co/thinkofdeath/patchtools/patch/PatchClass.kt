@@ -41,6 +41,7 @@ public class PatchClass(val type: ClassType,
     val mode: Mode
     val superModifiers = arrayListOf<ModifierClass>()
     val interfaceModifiers = arrayListOf<ModifierClass>()
+    val access: Int
 
     val methods = arrayListOf<PatchMethod>()
     val fields = arrayListOf<PatchField>()
@@ -50,6 +51,14 @@ public class PatchClass(val type: ClassType,
         mode = if ("add" in modifiers) Mode.ADD
         else if ("remove" in modifiers) Mode.REMOVE
         else Mode.MATCH
+
+        var access = 0
+        for (modifier in modifiers) {
+            if (modifier in modifierAccess) {
+                access = access or modifierAccess[modifier]!!
+            }
+        }
+        this.access = access and classModifiers
 
         var token = it.next()
         while (true) {
@@ -163,7 +172,7 @@ public class PatchClass(val type: ClassType,
         } else if (mode == Mode.ADD) {
             val classNode = ClassNode(Opcodes.ASM5)
             classNode.version = Opcodes.V1_7
-            classNode.access = Opcodes.ACC_PUBLIC
+            classNode.access = access
             classNode.name = ident.name
             classNode.superName = "java/lang/Object"
             when (type) {
@@ -240,8 +249,7 @@ public class PatchClass(val type: ClassType,
                     val desc = it.desc
                     updatedTypeString(classSet, scope, mappedDesc, desc)
 
-                    val access = (if (it.isPrivate) Opcodes.ACC_PRIVATE else Opcodes.ACC_PUBLIC) or
-                        (if (it.isStatic) Opcodes.ACC_STATIC else 0)
+                    val access = it.access
 
                     var name = it.ident.name
                     if (it.ident.isWeak()) {
@@ -267,8 +275,7 @@ public class PatchClass(val type: ClassType,
                 mappedDesc.append(")")
                 updatedTypeString(classSet, scope, mappedDesc, desc.getReturnType())
 
-                val access = (if (it.isPrivate) Opcodes.ACC_PRIVATE else Opcodes.ACC_PUBLIC) or
-                    (if (it.isStatic) Opcodes.ACC_STATIC else 0)
+                val access = it.access
                 var methodWrapper: MethodWrapper? = null
 
                 if (((access and Opcodes.ACC_PUBLIC) != 0
@@ -361,6 +368,13 @@ public class PatchClass(val type: ClassType,
                 return false
             }
 
+            if (classWrapper.node.access and classModifiers != access) {
+                logger.println("Incorrect access modifiers " +
+                    "${Integer.toBinaryString(classWrapper.node.access and classModifiers)} != " +
+                    "${Integer.toBinaryString(access)}")
+                return false
+            }
+
             for (superModifier in superModifiers) {
                 if (superModifier.mode != Mode.ADD) {
                     val name = superModifier.ident
@@ -441,17 +455,15 @@ public class PatchClass(val type: ClassType,
 
                 val fieldNode = classWrapper.getFieldNode(fieldWrapper)!!
 
-                if (((fieldNode.access and Opcodes.ACC_STATIC) == 0) == f.isStatic) {
-                    logger.println(if (f.isStatic) "Required static" else "Required non-static")
-                    return false
-                }
-                if (((fieldNode.access and Opcodes.ACC_PRIVATE) == 0) == f.isPrivate) {
-                    logger.println(if (f.isPrivate) "Required private" else "Required non-private")
+                if (fieldNode.access and fieldModifiers != f.access) {
+                    logger.println("Incorrect access modifiers " +
+                        "${Integer.toBinaryString(fieldNode.access and fieldModifiers)} != " +
+                        "${Integer.toBinaryString(f.access)}")
                     return false
                 }
 
                 if (fieldNode.value != f.value) {
-                    logger.println(fieldNode.value.toString() + " != " + f.value)
+                    logger.println("${fieldNode.value} != ${f.value}")
                     return false
                 }
                 logger.println("ok")

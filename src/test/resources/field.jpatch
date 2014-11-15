@@ -1,5 +1,5 @@
 
-class ~FieldTest {
+public class ~FieldTest {
 
     public static final java.lang.String ~initField = "Hello";
     private static final java.lang.String ~privField = "World";

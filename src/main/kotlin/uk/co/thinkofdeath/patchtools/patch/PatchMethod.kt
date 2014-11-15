@@ -16,7 +16,6 @@
 
 package uk.co.thinkofdeath.patchtools.patch
 
-import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 import org.objectweb.asm.tree.*
 import uk.co.thinkofdeath.patchtools.PatchScope
@@ -41,9 +40,7 @@ public class PatchMethod(public val owner: PatchClass,
     public val desc: Type
         get() = Type.getMethodType(descRaw)
     public val mode: Mode
-    public val isStatic: Boolean
-    public val isPrivate: Boolean
-    public val isProtected: Boolean
+    val access: Int
 
     public val instructions: MutableList<PatchInstruction> = ArrayList()
 
@@ -51,6 +48,14 @@ public class PatchMethod(public val owner: PatchClass,
     var dimCount = 0
 
     {
+        var access = 0
+        for (modifier in modifiers) {
+            if (modifier in modifierAccess) {
+                access = access or modifierAccess[modifier]!!
+            }
+        }
+        this.access = access and methodModifiers
+
         val descBuilder = StringBuilder("(")
         var token = it.next()
         var dims = 0
@@ -85,11 +90,6 @@ public class PatchMethod(public val owner: PatchClass,
         mode = if ("add" in modifiers) Mode.ADD
         else if ("remove" in modifiers) Mode.REMOVE
         else Mode.MATCH
-
-        // TODO: Rewrite
-        isProtected = "protected" in modifiers
-        isPrivate = "private" in modifiers
-        isStatic = "static" in modifiers
 
         token = it.next()
 
@@ -138,17 +138,7 @@ public class PatchMethod(public val owner: PatchClass,
     }
 
     public fun apply(classSet: ClassSet, scope: PatchScope, methodNode: MethodNode) {
-        methodNode.access = methodNode.access and (Opcodes.ACC_STATIC or Opcodes.ACC_PRIVATE or Opcodes.ACC_PUBLIC).inv()
-        if (isStatic) {
-            methodNode.access = methodNode.access or Opcodes.ACC_STATIC
-        }
-        if (isPrivate) {
-            methodNode.access = methodNode.access or Opcodes.ACC_PRIVATE
-        } else if (isProtected) {
-            methodNode.access = methodNode.access or Opcodes.ACC_PROTECTED
-        } else {
-            methodNode.access = methodNode.access or Opcodes.ACC_PUBLIC
-        }
+        methodNode.access = access
         val outInstructions = InsnList()
         val cloneMap = LabelCloneMap()
         for (insnNode in methodNode.instructions.toArray()) {
@@ -241,16 +231,10 @@ public class PatchMethod(public val owner: PatchClass,
             var position = 0
             val insns = methodNode.instructions
 
-            if (((methodNode.access and Opcodes.ACC_STATIC) == 0) == isStatic) {
-                logger.println(if (isStatic) "Required static" else "Required non-static")
-                return false
-            }
-            if (((methodNode.access and Opcodes.ACC_PRIVATE) == 0) == isPrivate) {
-                logger.println(if (isPrivate) "Required private" else "Required non-private")
-                return false
-            }
-            if (((methodNode.access and Opcodes.ACC_PROTECTED) == 0) == isProtected) {
-                logger.println(if (isProtected) "Required protected" else "Required non-protected")
+            if (methodNode.access and methodModifiers != access) {
+                logger.println("Incorrect access modifiers " +
+                    "${Integer.toBinaryString(methodNode.access and methodModifiers)} != " +
+                    "${Integer.toBinaryString(access)}")
                 return false
             }
 
