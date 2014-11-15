@@ -44,15 +44,16 @@ private fun Lexer.classBody(): StateFunc? {
         if (nextWordMatches(modifier)) {
             revert()
             return modifierList(
-                ident(
+                ident(toStateFunc {
+                    val isArray = handleArrayType(this)
+
                     skipWhitespace(
                         ident(
                             skipWhitespace(toStateFunc(::methodOrField))
                         ),
-                        requireOne = true
-                    ),
-                    true
-                )
+                        requireOne = !isArray
+                    )
+                }, allowDot = true)
             )
         }
     }

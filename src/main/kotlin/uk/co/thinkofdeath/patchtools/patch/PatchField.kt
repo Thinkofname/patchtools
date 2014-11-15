@@ -22,8 +22,10 @@ import uk.co.thinkofdeath.patchtools.lexer.Token
 public class PatchField(public val owner: PatchClass,
                         it: Iterator<Token>,
                         type: Ident,
+                        dimCount: Int,
                         public val ident: Ident,
                         modifiers: Set<String>,
+                        public val patchAnnotations: List<String>,
                         public val value: Any? = null
 ) {
     public val descRaw: String
@@ -39,6 +41,9 @@ public class PatchField(public val owner: PatchClass,
         else Mode.MATCH
 
         val descBuilder = StringBuilder()
+        for (i in 1..dimCount) {
+            descBuilder.append('[')
+        }
         PatchClass.appendType(descBuilder, type.toString())
         descRaw = descBuilder.toString()
 

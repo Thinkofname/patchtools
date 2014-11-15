@@ -1,7 +1,7 @@
 
-+class think/TestClass
+add public class think.TestClass {
 
-    +method doMagic ()I static
+    add public static int doMagic() {
         +push-int 5
         +push-int 6
         +mul-int
@@ -10,27 +10,27 @@
         +push-int 2
         +add-int
         +return
-    +end-method
+    }
 
-    +method arrayInt ()[I static
+    add public static int[] arrayInt() {
         +push-int 10
         +new-array I
         +return
-    +end-method
+    }
 
-    +method arrayObject ()[Ljava/lang/Object; static
+    add public static java.lang.Object[] arrayObject() {
         +push-int 20
         +new-array Ljava/lang/Object;
         +return
-    +end-method
+    }
 
-    +method castTest (Ljava/lang/Object;)V static
+    add public static void castTest(java.lang.Object a) {
         +load-object 0
         +check-cast [Ljava/lang/String;
         +return
-    +end-method
+    }
 
-    +method branch (Ljava/lang/Object;)Ljava/lang/String; static
+    add public static java.lang.String branch(java.lang.Object a) {
         +load-object 0
         +if-null ~retNull
         +push-string "not-null"
@@ -38,17 +38,16 @@
         +label ~retNull
         +push-string "null"
         +return
-    +end-method
+    }
 
-    +method switch (I)I static
+    add public static int switch(int a) {
         +load-int 0
         +switch-table 0 4 ~def
-            ~A
-            ~B
-            ~C
-            ~D
-            ~E
-        +end-switch-table
+            # ~A
+            # ~B
+            # ~C
+            # ~D
+            # ~E
         +label ~A
         +push-int 5
         +return
@@ -67,17 +66,16 @@
         +label ~def
         +push-int -1
         +return
-    +end-method
+    }
 
-    +method switchL (I)I static
+    add public static int switchL(int a) {
         +load-int 0
         +switch-lookup ~def
-            1:~A
-            10:~B
-            100:~C
-            1000:~D
-            10000:~E
-        +end-switch-lookup
+            # 1:~A
+            # 10:~B
+            # 100:~C
+            # 1000:~D
+            # 10000:~E
         +label ~A
         +push-int 5
         +return
@@ -96,9 +94,9 @@
         +label ~def
         +push-int -1
         +return
-    +end-method
+    }
 
-    +method exception ()I static
+    add public static int exception() {
         +try-catch ~start ~end ~handle java/lang/RuntimeException
         +label ~start
         +new java/lang/RuntimeException
@@ -112,5 +110,5 @@
         +label ~handle
         +push-int 5
         +return
-    +end-method
-+end-class
+    }
+}

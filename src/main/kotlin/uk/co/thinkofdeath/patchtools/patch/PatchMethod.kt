@@ -32,8 +32,10 @@ import uk.co.thinkofdeath.patchtools.lexer.TokenType
 public class PatchMethod(public val owner: PatchClass,
                          it: Iterator<Token>,
                          type: Ident,
+                         retDimCount: Int,
                          public val ident: Ident,
-                         modifiers: Set<String>
+                         modifiers: Set<String>,
+                         public val patchAnnotations: List<String>
 ) {
     public val descRaw: String
     public val desc: Type
@@ -72,6 +74,9 @@ public class PatchMethod(public val owner: PatchClass,
             }
         }
         descBuilder.append(")")
+        for (i in 1..retDimCount) {
+            descBuilder.append('[')
+        }
         PatchClass.appendType(descBuilder, type.toString())
         descRaw = descBuilder.toString()
 
@@ -88,10 +93,21 @@ public class PatchMethod(public val owner: PatchClass,
 
         token = it.next()
 
+        var patchAnnotations: MutableList<String>? = null
         while (token.type != TokenType.EXIT_BLOCK) {
             var mode: Mode
             when (token.type) {
                 TokenType.COMMENT -> {
+                    token = it.next()
+                    continue
+                }
+                TokenType.PATCH_ANNOTATION -> {
+                    if (patchAnnotations == null) {
+                        throw ValidateException("Unexpected patch annotation")
+                            .setLineNumber(token.lineNumber)
+                            .setLineOffset(token.lineOffset)
+                    }
+                    patchAnnotations?.add(token.value.trim())
                     token = it.next()
                     continue
                 }
@@ -106,70 +122,10 @@ public class PatchMethod(public val owner: PatchClass,
             if (insn.instruction.handler != null) {
                 insn.instruction.handler!!.validate(insn)
             }
+            patchAnnotations = insn.meta
             instructions.add(insn)
             token = it.next()
         }
-        /*
-        if (mCommand.args.size < 2) {
-            throw ValidateException("Incorrect number of arguments for method").setLineNumber(reader.lineNumber)
-        }
-        ident = Ident(mCommand.args[0])
-        mode = mCommand.mode
-        try {
-            $descRaw = mCommand.args[1]
-            Utils.validateMethodType(descRaw)
-        } catch (e: ValidateException) {
-            throw e.setLineNumber(reader.lineNumber)
-        }
-
-        var isS = false
-        var isP = false
-        var isPo = false
-        if (mCommand.args.size >= 3) {
-            for (i in 2..mCommand.args.size - 1) {
-                if (mCommand.args[i].equalsIgnoreCase("static")) {
-                    isS = true
-                } else if (mCommand.args[i].equalsIgnoreCase("private")) {
-                    isP = true
-                } else if (mCommand.args[i].equalsIgnoreCase("protected")) {
-                    isPo = true
-                } else {
-                    throw ValidateException("Unexpected " + mCommand.args[i]).setLineNumber(reader.lineNumber)
-                }
-            }
-        }
-        isStatic = isS
-        isPrivate = isP
-        isProtected = isPo
-
-        reader.whileHasLine {
-            (it: String): Boolean ->
-            val l = it.trim()
-            if (l.startsWith("//") || l.length() == 0) return@whileHasLine false
-
-            val command = Command.from(l)
-            if (mode == Mode.ADD && command.mode != Mode.ADD) {
-                throw ValidateException("In added methods everything must be +").setLineNumber(reader.lineNumber)
-            } else if (mode == Mode.REMOVE && command.mode != Mode.REMOVE) {
-                throw ValidateException("In removed methods everything must be -").setLineNumber(reader.lineNumber)
-            }
-            if (command.name.equalsIgnoreCase("end-method")) {
-                return@whileHasLine true
-            }
-            val lineNo = reader.lineNumber
-            try {
-                val insn = PatchInstruction(command, reader)
-                if (insn.instruction.handler != null) {
-                    insn.instruction.handler!!.validate(insn)
-                }
-                instructions.add(insn)
-            } catch (e: ValidateException) {
-                throw e.setLineNumber(lineNo)
-            }
-
-            return@whileHasLine false
-        }
-        */
     }
 
     fun countArrayTypes(it: Iterator<Token>): Token {

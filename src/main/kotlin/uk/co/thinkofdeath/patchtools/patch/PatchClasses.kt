@@ -29,8 +29,13 @@ public class PatchClasses(reader: Lexer) {
 
         val it = reader.iterator()
         val modifiers = hashSetOf<String>()
+        val patchAnnotations = arrayListOf<String>()
         for (token in it) {
             if (token.type == TokenType.COMMENT) {
+                continue
+            }
+            if (token.type == TokenType.PATCH_ANNOTATION) {
+                patchAnnotations.add(token.value)
                 continue
             }
 
@@ -40,7 +45,7 @@ public class PatchClasses(reader: Lexer) {
             }
 
             if (token.type == TokenType.CLASS) {
-                classes.add(PatchClass(ClassType.CLASS, it, modifiers))
+                classes.add(PatchClass(ClassType.CLASS, it, modifiers, patchAnnotations))
                 modifiers.clear()
                 continue
             }
@@ -49,19 +54,6 @@ public class PatchClasses(reader: Lexer) {
                 .setLineNumber(token.lineNumber)
                 .setLineOffset(token.lineOffset)
         }
-        /*
-        var line: String? = null
-        while ({ line = reader.readLine(); line != null }()) {
-            val l = line!!.trim()
-            if (l.startsWith("//") || l.length() == 0) continue
-
-            val command = Command.from(l)
-            when (command.name) {
-                "interface", "enum", "class" -> classes.add(PatchClass(command, reader))
-                else -> throw ValidateException("Unexpected " + command.name).setLineNumber(reader.lineNumber)
-            }
-        }
-        */
     }
 
     public fun getClass(name: String): PatchClass? {

@@ -40,7 +40,8 @@ private fun Lexer.lexRoot(): StateFunc? {
         emit(TokenType.CLASS)
         return skipWhitespace(
             ident(
-                skipWhitespace(toStateFunc(::enterClass), requireOne = true)
+                skipWhitespace(toStateFunc(::enterClass), requireOne = true),
+                allowDot = true
             )
             , requireOne = true)
     }

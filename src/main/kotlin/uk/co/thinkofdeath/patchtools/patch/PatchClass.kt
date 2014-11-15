@@ -31,7 +31,11 @@ import uk.co.thinkofdeath.patchtools.lexer.Token
 import uk.co.thinkofdeath.patchtools.lexer.TokenType
 import uk.co.thinkofdeath.patchtools.instruction.instructions.Utils
 
-public class PatchClass(val type: ClassType, it: Iterator<Token>, modifiers: Set<String>) {
+public class PatchClass(val type: ClassType,
+                        it: Iterator<Token>,
+                        modifiers: Set<String>,
+                        public val patchAnnotations: List<String>
+) {
 
     val ident: Ident
     val mode: Mode
@@ -42,15 +46,10 @@ public class PatchClass(val type: ClassType, it: Iterator<Token>, modifiers: Set
     val fields = arrayListOf<PatchField>()
 
         ;{
-        var mode = Mode.MATCH
-        ident = Ident(it.next().expect(TokenType.IDENT).value)
-        for (modifier in modifiers) {
-            when (modifier) {
-                "add" -> mode = Mode.ADD
-                "remove" -> mode = Mode.REMOVE
-            }
-        }
-        this.mode = mode
+        ident = Ident(it.next().expect(TokenType.IDENT).value.replace('.', '/'))
+        mode = if ("add" in modifiers) Mode.ADD
+        else if ("remove" in modifiers) Mode.REMOVE
+        else Mode.MATCH
 
         var token = it.next()
         while (true) {
@@ -105,88 +104,56 @@ public class PatchClass(val type: ClassType, it: Iterator<Token>, modifiers: Set
         }
         token.expect(TokenType.ENTER_BLOCK)
         token = it.next()
+        val patchAnnotations = arrayListOf<String>()
         val modifiers = hashSetOf<String>()
         var type: Ident? = null
         var ident: Ident? = null
+        var dimCount = 0
         while (token.type != TokenType.EXIT_BLOCK) {
+            var clear = false
             if (token.type == TokenType.COMMENT) {
 
+            } else if (token.type == TokenType.PATCH_ANNOTATION) {
+                patchAnnotations.add(token.value)
             } else if (token.type == TokenType.MODIFIER) {
                 modifiers.add(token.value)
             } else if (token.type == TokenType.IDENT) {
                 if (type == null) {
                     type = Ident(token.value)
+
+                    while (true) {
+                        token = it.next()
+                        if (token.type != TokenType.ARRAY_TYPE) break
+                        dimCount++
+                    }
+                    continue
                 } else {
                     ident = Ident(token.value)
                 }
             } else if (token.type == TokenType.ARGUMENT_LIST) {
-                methods.add(PatchMethod(this, it, type!!, ident!!, modifiers))
-                modifiers.clear()
-                type = null
-                ident = null
+                methods.add(PatchMethod(this, it, type!!, dimCount, ident!!, modifiers, patchAnnotations))
+                clear = true
             } else if (token.type == TokenType.FIELD_END) {
-                fields.add(PatchField(this, it, type!!, ident!!, modifiers))
-                modifiers.clear()
-                type = null
-                ident = null
+                fields.add(PatchField(this, it, type!!, dimCount, ident!!, modifiers, patchAnnotations))
+                clear = true
             } else if (token.type == TokenType.FIELD_VALUE) {
-                fields.add(PatchField(this, it, type!!, ident!!, modifiers, Utils.parseConstant(token.value)))
-                modifiers.clear()
-                type = null
-                ident = null
+                fields.add(PatchField(this, it, type!!, dimCount, ident!!, modifiers, patchAnnotations, Utils.parseConstant(token.value)))
+                clear = true
             } else {
                 throw ValidateException("Unexpected ${token.type}")
                     .setLineNumber(token.lineNumber)
                     .setLineOffset(token.lineOffset)
             }
 
+            if (clear) {
+                modifiers.clear()
+                dimCount = 0
+                type = null
+                ident = null
+                patchAnnotations.clear()
+            }
             token = it.next()
         }
-        /*
-        if (clCommand.args.size != 1) {
-            throw ValidateException("Incorrect number of arguments for class").setLineNumber(reader.lineNumber)
-        }
-        type = ClassType.valueOf(clCommand.name.toUpperCase())
-        ident = Ident(clCommand.args[0])
-        mode = clCommand.mode
-        reader.whileHasLine {
-            (it: String): Boolean ->
-            val l = it.trim()
-            if (l.startsWith("//") || l.length() == 0) return@whileHasLine false
-
-            val command = Command.from(l)
-            if (mode == Mode.ADD && command.mode != Mode.ADD) {
-                throw ValidateException("In added classes everything must be +").setLineNumber(reader.lineNumber)
-            } else if (mode == Mode.REMOVE && command.mode != Mode.REMOVE) {
-                throw ValidateException("In removed classes everything must be -").setLineNumber(reader.lineNumber)
-            }
-            when (command.name) {
-                "super" -> {
-                    if (command.args.size != 1) throw IllegalArgumentException("super requires 1 parameter")
-                    superModifiers.add(ModifierClass(Ident(command.args[0]), command.mode))
-                }
-                "interface" -> {
-                    if (command.args.size != 1)
-                        throw IllegalArgumentException("interface requires 1 parameter")
-                    interfaceModifiers.add(ModifierClass(Ident(command.args[0]), command.mode))
-                }
-                "method" -> methods.add(PatchMethod(this, command, reader))
-                "field" -> try {
-                    fields.add(PatchField(this, command))
-                } catch (e: ValidateException) {
-                    throw e.setLineNumber(reader.lineNumber)
-                }
-
-                else -> {
-                    if (!command.name.endsWith("end-" + type.name().toLowerCase())) {
-                        throw ValidateException(command.toString()).setLineNumber(reader.lineNumber)
-                    }
-                    return@whileHasLine true
-                }
-            }
-            return@whileHasLine false
-        }
-        */
     }
 
     public fun apply(scope: PatchScope, classSet: ClassSet) {
@@ -626,6 +593,7 @@ public class PatchClass(val type: ClassType, it: Iterator<Token>, modifiers: Set
 
         fun appendType(descBuilder: StringBuilder, type: String) {
             when (type) {
+                "void" -> descBuilder.append('V')
                 "byte" -> descBuilder.append('B')
                 "char" -> descBuilder.append('C')
                 "double" -> descBuilder.append('D')

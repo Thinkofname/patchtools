@@ -35,22 +35,6 @@ public class PatchInstruction(
         val args = token.value.split(' ')
         instruction = Instruction.valueOf(args[0].toUpperCase().replace('-', '_'))
         params = args.copyOfRange(1, args.size)
-        if (instruction.isMetaRequired()) {
-            /*reader.whileHasLine {
-                (it: String): Boolean ->
-                val l = it.trim()
-                if (l.startsWith("//") || l.length() == 0) {
-                    return@whileHasLine false
-                }
-
-                if (l.equalsIgnoreCase(".-+".charAt(mode.ordinal()) + "end-" + command.name.toLowerCase())) {
-                    return@whileHasLine true
-                }
-
-                meta.add(l)
-                return@whileHasLine false
-            }*/
-        }
     }
 
     override fun toString(): String {
