@@ -22,14 +22,19 @@ import org.objectweb.asm.tree.*
 import uk.co.thinkofdeath.patchtools.PatchScope
 import uk.co.thinkofdeath.patchtools.instruction.Instruction
 import uk.co.thinkofdeath.patchtools.instruction.instructions.TryCatchInstruction
-import uk.co.thinkofdeath.patchtools.instruction.instructions.Utils
 import uk.co.thinkofdeath.patchtools.logging.StateLogger
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet
 
 import java.util.*
+import uk.co.thinkofdeath.patchtools.lexer.Token
+import uk.co.thinkofdeath.patchtools.lexer.TokenType
 
-public class PatchMethod(public val owner: PatchClass, mCommand: Command, reader: LineReader) {
-    public val ident: Ident
+public class PatchMethod(public val owner: PatchClass,
+                         it: Iterator<Token>,
+                         type: Ident,
+                         public val ident: Ident,
+                         modifiers: Set<String>
+) {
     public val descRaw: String
     public val desc: Type
         get() = Type.getMethodType(descRaw)
@@ -40,7 +45,71 @@ public class PatchMethod(public val owner: PatchClass, mCommand: Command, reader
 
     public val instructions: MutableList<PatchInstruction> = ArrayList()
 
-        ;{
+    // Used by countArrayTypes
+    var dimCount = 0
+
+    {
+        val descBuilder = StringBuilder("(")
+        var token = it.next()
+        var dims = 0
+        while (token.type != TokenType.ARGUMENT_LIST_END) {
+            val type = token.expect(TokenType.IDENT).value
+            token = countArrayTypes(it)
+            dims += dimCount
+            token.expect(TokenType.IDENT)
+
+            token = countArrayTypes(it)
+            dims += dimCount
+
+            for (i in 1..dims) {
+                descBuilder.append('[')
+            }
+            PatchClass.appendType(descBuilder, type)
+
+            dims = 0
+            if (token.type == TokenType.ARGUMENT_LIST_NEXT) {
+                token = it.next()
+            }
+        }
+        descBuilder.append(")")
+        PatchClass.appendType(descBuilder, type.toString())
+        descRaw = descBuilder.toString()
+
+        it.next().expect(TokenType.ENTER_BLOCK)
+
+        mode = if ("add" in modifiers) Mode.ADD
+        else if ("remove" in modifiers) Mode.REMOVE
+        else Mode.MATCH
+
+        // TODO: Rewrite
+        isProtected = "protected" in modifiers
+        isPrivate = "private" in modifiers
+        isStatic = "static" in modifiers
+
+        token = it.next()
+
+        while (token.type != TokenType.EXIT_BLOCK) {
+            var mode: Mode
+            when (token.type) {
+                TokenType.COMMENT -> {
+                    token = it.next()
+                    continue
+                }
+                TokenType.REMOVE_INSTRUCTION -> mode = Mode.REMOVE
+                TokenType.ADD_INSTRUCTION -> mode = Mode.ADD
+                TokenType.MATCH_INSTRUCTION -> mode = Mode.MATCH
+                else -> throw ValidateException("Unexpected ${token.type}")
+                    .setLineNumber(token.lineNumber)
+                    .setLineOffset(token.lineOffset)
+            }
+            val insn = PatchInstruction(mode, it)
+            if (insn.instruction.handler != null) {
+                insn.instruction.handler!!.validate(insn)
+            }
+            instructions.add(insn)
+            token = it.next()
+        }
+        /*
         if (mCommand.args.size < 2) {
             throw ValidateException("Incorrect number of arguments for method").setLineNumber(reader.lineNumber)
         }
@@ -99,6 +168,16 @@ public class PatchMethod(public val owner: PatchClass, mCommand: Command, reader
             }
 
             return@whileHasLine false
+        }
+        */
+    }
+
+    fun countArrayTypes(it: Iterator<Token>): Token {
+        dimCount = 0
+        while (true) {
+            val token = it.next()
+            if (token.type != TokenType.ARRAY_TYPE) return token
+            dimCount++
         }
     }
 

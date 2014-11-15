@@ -14,27 +14,35 @@
  * limitations under the License.
  */
 
-package uk.co.thinkofdeath.patchtools.patch
+package uk.co.thinkofdeath.patchtools.lexer
 
-import java.io.BufferedReader
-import java.io.Reader
+data class Token(
+    val lineNumber: Int,
+    val lineOffset: Int,
+    val type: TokenType,
+    val value: String
+)
 
-public class LineReader(inst: Reader) : BufferedReader(inst) {
-
-    public var lineNumber: Int = 0
-        private set
-
-    override fun readLine(): String? {
-        lineNumber++
-        return super.readLine()
-    }
-
-    inline fun whileHasLine(f: (String) -> Boolean) {
-        while (true) {
-            val line = readLine()
-            if (line == null || f(line)) {
-                break
-            }
-        }
-    }
+enum class TokenType {
+    COMMENT
+    PATCH_ANNOTATION
+    CLASS
+    IDENT
+    ENTER_BLOCK
+    EXIT_BLOCK
+    EXTENDS_LIST
+    IMPLEMENTS_LIST
+    IDENT_LIST_NEXT
+    IDENT_LIST_END
+    MODIFIER
+    ARGUMENT_LIST
+    ARGUMENT_LIST_END
+    ARGUMENT_LIST_NEXT
+    ARRAY_TYPE
+    INSTRUCTION
+    MATCH_INSTRUCTION
+    ADD_INSTRUCTION
+    REMOVE_INSTRUCTION
+    FIELD_END
+    FIELD_VALUE
 }

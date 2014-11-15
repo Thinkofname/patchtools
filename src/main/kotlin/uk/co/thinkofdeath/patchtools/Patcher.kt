@@ -19,11 +19,11 @@ package uk.co.thinkofdeath.patchtools
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet
 import java.io.InputStream
 import java.io.Reader
-import uk.co.thinkofdeath.patchtools.patch.LineReader
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import uk.co.thinkofdeath.patchtools.patch.PatchClasses
 import uk.co.thinkofdeath.patchtools.matching.MatchGenerator
+import uk.co.thinkofdeath.patchtools.lexer.Lexer
 
 class Patcher(val classes: ClassSet) {
     {
@@ -35,16 +35,12 @@ class Patcher(val classes: ClassSet) {
     }
 
     fun apply(reader: Reader): PatchScope {
-        return apply(LineReader(reader))
-    }
-
-    fun apply(reader: LineReader): PatchScope {
         return apply(reader, PatchScope())
     }
 
-    fun apply(reader: LineReader, patchScope: PatchScope): PatchScope {
+    fun apply(reader: Reader, patchScope: PatchScope): PatchScope {
         reader.use {
-            return apply(PatchClasses(reader), patchScope)
+            return apply(PatchClasses(Lexer(reader.readText())), patchScope)
         }
     }
 

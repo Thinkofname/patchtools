@@ -1,27 +1,20 @@
 
-.class ~Invoke
+public class ~Invoke {
 
-    // This is worked out from its usage
+    // func1 is worked out from its usage
     // in ~test
-    //.method ~func1 ()Ljava/lang/String; static
-    //    .any
-    //    .push-string "Hello"
-    //    .return
-    //    .any
-    //.end-method
 
-    .method ~func2 ()Ljava/lang/String; static
+    public static java.lang.String ~func2() {
         .push-string "Bye"
         .return
-    .end-method
+    }
 
-    .method ~test ()Ljava/lang/String; static
+    public static java.lang.String ~test() {
         .any
         -invoke-static ~Invoke ~func1 ()Ljava/lang/String;
         +invoke-static ~Invoke ~func2 ()Ljava/lang/String;
         .any
         .push-string " jim"
         .any
-    .end-method
-
-.end-class
+    }
+}

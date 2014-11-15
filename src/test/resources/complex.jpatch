@@ -1,7 +1,7 @@
 
-.class ~Complex
+public class ~Complex {
 
-    .method ~msg ()Ljava/lang/String; static
+    public static java.lang.String ~msg() {
         .any
         -push-string "Hello"
         +push-string "ABC"
@@ -9,5 +9,5 @@
         .push-string "Testing"
         .invoke-virtual java/lang/StringBuilder append (Ljava/lang/String;)Ljava/lang/StringBuilder;
         .any
-    .end-method
-.end-class
+    }
+}

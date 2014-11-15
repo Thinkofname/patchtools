@@ -2,26 +2,27 @@
 // Patching BasicClass
 
 // . == detect
-.class ~Basic
 
-    .method ~sayHello ()Ljava/lang/String;
+public class ~Basic {
+
+    public java.lang.String ~sayHello() {
         // - == remove
         -push-string "Hello bob"
         // + == add
         +push-string "Hello jim"
         .return
-    .end-method
+    }
 
-    +method addedMethod ()Ljava/lang/String;
+    add public java.lang.String addedMethod() {
         +push-string "Hello world"
         +return
-    +end-method
+    }
 
-    .method ~staticCreate ()L~Basic; static
+    public static ~Basic ~staticCreate() {
         .any
         -push-string "Testing"
         +push-string "Cake"
         .any
         .return
-    .end-method
-.end-class
+    }
+}

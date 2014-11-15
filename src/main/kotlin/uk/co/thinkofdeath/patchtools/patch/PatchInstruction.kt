@@ -19,20 +19,24 @@ package uk.co.thinkofdeath.patchtools.patch
 import uk.co.thinkofdeath.patchtools.instruction.Instruction
 
 import java.util.Arrays
+import uk.co.thinkofdeath.patchtools.lexer.Token
+import uk.co.thinkofdeath.patchtools.lexer.TokenType
 
-public class PatchInstruction(command: Command, reader: LineReader) {
+public class PatchInstruction(
+    public val mode: Mode,
+    it: Iterator<Token>) {
 
-    public var mode: Mode
     public var instruction: Instruction
     public var params: Array<String>
     public var meta: MutableList<String> = arrayListOf()
 
         ;{
-        mode = command.mode
-        instruction = Instruction.valueOf(command.name.toUpperCase().replace('-', '_'))
-        params = command.args
+        val token = it.next().expect(TokenType.INSTRUCTION)
+        val args = token.value.split(' ')
+        instruction = Instruction.valueOf(args[0].toUpperCase().replace('-', '_'))
+        params = args.copyOfRange(1, args.size)
         if (instruction.isMetaRequired()) {
-            reader.whileHasLine {
+            /*reader.whileHasLine {
                 (it: String): Boolean ->
                 val l = it.trim()
                 if (l.startsWith("//") || l.length() == 0) {
@@ -45,7 +49,7 @@ public class PatchInstruction(command: Command, reader: LineReader) {
 
                 meta.add(l)
                 return@whileHasLine false
-            }
+            }*/
         }
     }
 

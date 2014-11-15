@@ -27,10 +27,12 @@ import uk.co.thinkofdeath.patchtools.wrappers.MethodWrapper
 import org.objectweb.asm.tree.MethodNode
 import uk.co.thinkofdeath.patchtools.wrappers.ClassWrapper
 import uk.co.thinkofdeath.patchtools.logging.StateLogger
+import uk.co.thinkofdeath.patchtools.lexer.Token
+import uk.co.thinkofdeath.patchtools.lexer.TokenType
+import uk.co.thinkofdeath.patchtools.instruction.instructions.Utils
 
-public class PatchClass(clCommand: Command, reader: LineReader) {
+public class PatchClass(val type: ClassType, it: Iterator<Token>, modifiers: Set<String>) {
 
-    val type: ClassType
     val ident: Ident
     val mode: Mode
     val superModifiers = arrayListOf<ModifierClass>()
@@ -40,6 +42,107 @@ public class PatchClass(clCommand: Command, reader: LineReader) {
     val fields = arrayListOf<PatchField>()
 
         ;{
+        var mode = Mode.MATCH
+        ident = Ident(it.next().expect(TokenType.IDENT).value)
+        for (modifier in modifiers) {
+            when (modifier) {
+                "add" -> mode = Mode.ADD
+                "remove" -> mode = Mode.REMOVE
+            }
+        }
+        this.mode = mode
+
+        var token = it.next()
+        while (true) {
+            if (token.type == TokenType.EXTENDS_LIST) {
+                token = it.next()
+                while (token.type != TokenType.IDENT_LIST_END) {
+                    token.expect(TokenType.IDENT)
+                    var m = Mode.MATCH
+                    var value = token.value
+                    if (value[0] == '+') {
+                        m = Mode.ADD
+                        value = value.substring(1)
+                    } else if (value[0] == '-') {
+                        m = Mode.REMOVE
+                        value = value.substring(1)
+                    }
+                    superModifiers.add(ModifierClass(
+                        Ident(value.replace('.', '/')),
+                        m
+                    ))
+                    token = it.next()
+                    if (token.type == TokenType.IDENT_LIST_NEXT) {
+                        token = it.next()
+                    }
+                }
+            } else if (token.type == TokenType.IMPLEMENTS_LIST) {
+                token = it.next()
+                while (token.type != TokenType.IDENT_LIST_END) {
+                    token.expect(TokenType.IDENT)
+                    var m = Mode.MATCH
+                    var value = token.value
+                    if (value[0] == '+') {
+                        m = Mode.ADD
+                        value = value.substring(1)
+                    } else if (value[0] == '-') {
+                        m = Mode.REMOVE
+                        value = value.substring(1)
+                    }
+                    interfaceModifiers.add(ModifierClass(
+                        Ident(value.replace('.', '/')),
+                        m
+                    ))
+                    token = it.next()
+                    if (token.type == TokenType.IDENT_LIST_NEXT) {
+                        token = it.next()
+                    }
+                }
+            } else {
+                break
+            }
+            token = it.next()
+        }
+        token.expect(TokenType.ENTER_BLOCK)
+        token = it.next()
+        val modifiers = hashSetOf<String>()
+        var type: Ident? = null
+        var ident: Ident? = null
+        while (token.type != TokenType.EXIT_BLOCK) {
+            if (token.type == TokenType.COMMENT) {
+
+            } else if (token.type == TokenType.MODIFIER) {
+                modifiers.add(token.value)
+            } else if (token.type == TokenType.IDENT) {
+                if (type == null) {
+                    type = Ident(token.value)
+                } else {
+                    ident = Ident(token.value)
+                }
+            } else if (token.type == TokenType.ARGUMENT_LIST) {
+                methods.add(PatchMethod(this, it, type!!, ident!!, modifiers))
+                modifiers.clear()
+                type = null
+                ident = null
+            } else if (token.type == TokenType.FIELD_END) {
+                fields.add(PatchField(this, it, type!!, ident!!, modifiers))
+                modifiers.clear()
+                type = null
+                ident = null
+            } else if (token.type == TokenType.FIELD_VALUE) {
+                fields.add(PatchField(this, it, type!!, ident!!, modifiers, Utils.parseConstant(token.value)))
+                modifiers.clear()
+                type = null
+                ident = null
+            } else {
+                throw ValidateException("Unexpected ${token.type}")
+                    .setLineNumber(token.lineNumber)
+                    .setLineOffset(token.lineOffset)
+            }
+
+            token = it.next()
+        }
+        /*
         if (clCommand.args.size != 1) {
             throw ValidateException("Incorrect number of arguments for class").setLineNumber(reader.lineNumber)
         }
@@ -83,6 +186,7 @@ public class PatchClass(clCommand: Command, reader: LineReader) {
             }
             return@whileHasLine false
         }
+        */
     }
 
     public fun apply(scope: PatchScope, classSet: ClassSet) {
@@ -518,6 +622,23 @@ public class PatchClass(clCommand: Command, reader: LineReader) {
                 }
             }
             return true
+        }
+
+        fun appendType(descBuilder: StringBuilder, type: String) {
+            when (type) {
+                "byte" -> descBuilder.append('B')
+                "char" -> descBuilder.append('C')
+                "double" -> descBuilder.append('D')
+                "float" -> descBuilder.append('F')
+                "int" -> descBuilder.append('I')
+                "long" -> descBuilder.append('J')
+                "short" -> descBuilder.append('S')
+                "boolean" -> descBuilder.append('Z')
+                else -> descBuilder
+                    .append("L")
+                    .append(type.replace('.', '/'))
+                    .append(";")
+            }
         }
     }
 }

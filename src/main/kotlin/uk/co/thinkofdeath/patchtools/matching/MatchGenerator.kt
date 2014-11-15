@@ -82,6 +82,7 @@ public class MatchGenerator(private val classSet: ClassSet, private val patchCla
         for (group in groups) {
             val first = group.first
 
+
             // Add every class as a match to the first
             // patch class in the set
             classSet.classes(true)

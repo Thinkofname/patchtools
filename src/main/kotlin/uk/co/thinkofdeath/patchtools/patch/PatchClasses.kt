@@ -17,12 +17,39 @@
 package uk.co.thinkofdeath.patchtools.patch
 
 import java.util.ArrayList
+import uk.co.thinkofdeath.patchtools.lexer.Lexer
+import uk.co.thinkofdeath.patchtools.lexer.TokenType
+import uk.co.thinkofdeath.patchtools.lexer.Token
 
-public class PatchClasses(reader: LineReader) {
+public class PatchClasses(reader: Lexer) {
 
     public val classes: MutableList<PatchClass> = ArrayList()
 
         ;{
+
+        val it = reader.iterator()
+        val modifiers = hashSetOf<String>()
+        for (token in it) {
+            if (token.type == TokenType.COMMENT) {
+                continue
+            }
+
+            if (token.type == TokenType.MODIFIER) {
+                modifiers.add(token.value)
+                continue
+            }
+
+            if (token.type == TokenType.CLASS) {
+                classes.add(PatchClass(ClassType.CLASS, it, modifiers))
+                modifiers.clear()
+                continue
+            }
+
+            throw ValidateException("Unexpected ${token.type}")
+                .setLineNumber(token.lineNumber)
+                .setLineOffset(token.lineOffset)
+        }
+        /*
         var line: String? = null
         while ({ line = reader.readLine(); line != null }()) {
             val l = line!!.trim()
@@ -34,6 +61,7 @@ public class PatchClasses(reader: LineReader) {
                 else -> throw ValidateException("Unexpected " + command.name).setLineNumber(reader.lineNumber)
             }
         }
+        */
     }
 
     public fun getClass(name: String): PatchClass? {
@@ -41,5 +69,14 @@ public class PatchClasses(reader: LineReader) {
             .filter { it.ident.name == name }
             .first
     }
+}
+
+fun Token.expect(type: TokenType): Token {
+    if (this.type != type) {
+        throw ValidateException("Expected $type but found ${this.type}")
+            .setLineNumber(lineNumber)
+            .setLineOffset(lineOffset)
+    }
+    return this
 }
 

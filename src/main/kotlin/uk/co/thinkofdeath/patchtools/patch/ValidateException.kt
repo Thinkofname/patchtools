@@ -19,13 +19,19 @@ package uk.co.thinkofdeath.patchtools.patch
 public class ValidateException(msg: String) : RuntimeException(msg) {
 
     private var lineNumber = -1
+    private var lineOffset = -1
 
     public fun setLineNumber(lineNumber: Int): ValidateException {
         this.lineNumber = lineNumber
         return this
     }
 
+    fun setLineOffset(lineOffset: Int): ValidateException {
+        this.lineOffset = lineOffset
+        return this
+    }
+
     fun getLocalizedMessage(): String? {
-        return (if (lineNumber == -1) "??" else lineNumber).toString() + ":" + super.getMessage()
+        return "${super.getMessage()} at $lineNumber:$lineOffset"
     }
 }

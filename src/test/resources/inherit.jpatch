@@ -1,18 +1,16 @@
 
-.class ~A
+public class ~A {
 
-    .method ~myMethod ()Ljava/lang/String;
+    public java.lang.String ~myMethod() {
         .push-string "testing"
         .return
-    .end-method
+    }
+}
 
-.end-class
+public class ~B extends ~A {
 
-.class ~B
-    .super ~A
-
-    +method ~myMethod ()Ljava/lang/String;
+    add public java.lang.String ~myMethod() {
         +push-string "abc"
         +return
-    +end-method
-.end-class
+    }
+}
