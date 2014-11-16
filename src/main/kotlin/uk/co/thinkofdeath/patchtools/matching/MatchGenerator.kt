@@ -16,7 +16,6 @@
 
 package uk.co.thinkofdeath.patchtools.matching
 
-import gnu.trove.map.hash.TObjectIntHashMap
 import org.objectweb.asm.Type
 import uk.co.thinkofdeath.patchtools.PatchScope
 import uk.co.thinkofdeath.patchtools.logging.LoggableException
@@ -29,7 +28,7 @@ import java.util.*
 public class MatchGenerator(private val classSet: ClassSet, private val patchClasses: PatchClasses, private val scope: PatchScope) {
     private val groups = ArrayList<MatchGroup>()
 
-    private val state = TObjectIntHashMap<Any>()
+    private val state = hashMapOf<Any, Int>()
 
     private val logger = StateLogger()
 
