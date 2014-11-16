@@ -16,7 +16,6 @@
 
 package uk.co.thinkofdeath.patchtools;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import uk.co.thinkofdeath.patchtools.disassemble.Disassembler;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassPathWrapper;
@@ -28,7 +27,6 @@ import java.io.StringReader;
 
 import static kotlin.io.IoPackage.readBytes;
 
-@Ignore // FIXME
 public class LoopTest {
 
     @Test

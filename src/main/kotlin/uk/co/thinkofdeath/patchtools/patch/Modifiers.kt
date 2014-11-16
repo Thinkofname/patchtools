@@ -18,7 +18,7 @@ package uk.co.thinkofdeath.patchtools.patch
 
 import org.objectweb.asm.Opcodes
 
-private val modifierAccess = mapOf(
+internal val modifierAccess = mapOf(
     "private" to Opcodes.ACC_PRIVATE,
     "public" to Opcodes.ACC_PUBLIC,
     "protected" to Opcodes.ACC_PROTECTED,
@@ -27,20 +27,20 @@ private val modifierAccess = mapOf(
     "synchronized" to Opcodes.ACC_SYNCHRONIZED
 )
 
-private val classModifiers =
+internal val classModifiers =
     Opcodes.ACC_PUBLIC or
         Opcodes.ACC_PRIVATE or
         Opcodes.ACC_PROTECTED or
         Opcodes.ACC_FINAL
 
-private val fieldModifiers =
+internal val fieldModifiers =
     Opcodes.ACC_PUBLIC or
         Opcodes.ACC_PRIVATE or
         Opcodes.ACC_PROTECTED or
         Opcodes.ACC_FINAL or
         Opcodes.ACC_STATIC
 
-private val methodModifiers =
+internal val methodModifiers =
     Opcodes.ACC_PUBLIC or
         Opcodes.ACC_PRIVATE or
         Opcodes.ACC_PROTECTED or

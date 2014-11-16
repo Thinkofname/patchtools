@@ -79,13 +79,13 @@ public class LookupSwitchInstruction : InstructionHandler {
                 .append("    ")
                 .append("    ")
                 .append("    ")
+                .append("# ")
                 .append(Integer.toString(key))
                 .append(':')
                 .append('~')
                 .append(Utils.printLabel(method, label))
                 .append('\n')
         }
-        patch.append("    ").append("    ").append(".end-switch-lookup")
         return true
     }
 

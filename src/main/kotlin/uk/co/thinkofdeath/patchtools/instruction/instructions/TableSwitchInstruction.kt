@@ -74,13 +74,10 @@ public class TableSwitchInstruction : InstructionHandler {
                 .append("    ")
                 .append("    ")
                 .append("    ")
-                .append('~')
+                .append("# ~")
                 .append(Utils.printLabel(method, label))
                 .append('\n')
         }
-        patch.append("    ")
-            .append("    ")
-            .append(".end-switch-table")
         return true
     }
 
