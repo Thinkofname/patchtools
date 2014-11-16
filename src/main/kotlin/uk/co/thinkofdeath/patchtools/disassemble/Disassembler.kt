@@ -120,7 +120,7 @@ public class Disassembler(private val classSet: ClassSet) {
                         .append("    ")
                         .append('.')
                     if (!Instructions.print(patch, m, it)) {
-                        // TODO: throw new UnsupportedOperationException(i.toString());
+                        println("Warning: unsupported instruction ${it.getOpcode()}")
                         patch.append("unsupported ")
                             .append(it.getOpcode())
                             .append(' ')
