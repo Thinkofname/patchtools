@@ -270,9 +270,11 @@ public class ClassSet(private val classPath: ClassPathWrapper) : Iterable<String
         override fun mapMethodName(owner: String, name: String, desc: String): String {
             val cls = getClassWrapper(owner)
             if (cls != null) {
-                val methodWrapper = cls.getMethod(name, desc)!!
-                val nName = scope.getMethod(methodWrapper)
-                return if (nName == null) name else nName.split("\\(")[0]
+                val methodWrapper = cls.getMethod(name, desc)
+                if (methodWrapper != null) {
+                    val nName = scope.getMethod(methodWrapper)
+                    return if (nName == null) name else nName.split("\\(")[0]
+                }
             }
             return name
         }
@@ -280,9 +282,11 @@ public class ClassSet(private val classPath: ClassPathWrapper) : Iterable<String
         override fun mapFieldName(owner: String, name: String, desc: String): String {
             val cls = getClassWrapper(owner)
             if (cls != null) {
-                val fieldWrapper = cls.getField(name, desc)!!
-                val nName = scope.getField(fieldWrapper)
-                return if (nName == null) name else nName.split("::")[0]
+                val fieldWrapper = cls.getField(name, desc)
+                if (fieldWrapper != null) {
+                    val nName = scope.getField(fieldWrapper)
+                    return if (nName == null) name else nName.split("::")[0]
+                }
             }
             return name
         }
