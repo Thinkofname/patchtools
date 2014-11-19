@@ -138,4 +138,8 @@ public class MatchClass(public val name: String) {
 
         logger.unindent()
     }
+
+    override fun toString(): String {
+        return "MatchClass($name)"
+    }
 }

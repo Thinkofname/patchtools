@@ -46,7 +46,6 @@ public class MatchGroup(private val classSet: ClassSet) {
         var o = classes.values()
             .filter { it == owner }
             .first ?: owner
-        add(o)
         return o
     }
 }

@@ -286,10 +286,12 @@ public class MatchGenerator(private val classSet: ClassSet, private val patchCla
                                 }
                                 insn.handler!!.getReferencedMethods(instruction).forEach {
                                     val owner = group.getClass(it.owner)
+                                    addToVisited(visited, visitList, owner, group)
                                     owner.addMethod(it)
                                 }
                                 insn.handler!!.getReferencedFields(instruction).forEach {
                                     val owner = group.getClass(it.owner)
+                                    addToVisited(visited, visitList, owner, group)
                                     owner.addField(it)
                                 }
                             }

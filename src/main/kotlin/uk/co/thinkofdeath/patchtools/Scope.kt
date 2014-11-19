@@ -140,5 +140,9 @@ class PatchScope(private val parent: PatchScope? = null) {
     fun clearInstructions(node: MethodNode) {
         methodInstructionMap.remove(node)
     }
+
+    override fun toString(): String {
+        return "PatchScope(cm=$classMappings, fm=$fieldMappings, mm=$methodMappings)"
+    }
 }
 
