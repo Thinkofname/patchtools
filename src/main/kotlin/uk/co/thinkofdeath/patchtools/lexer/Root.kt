@@ -80,6 +80,7 @@ private fun Lexer.ident(cb: StateFunc, allowDot: Boolean = false): StateFunc {
                 || peekChar() == '~'
                 || peekChar() == '+'
                 || peekChar() == '-'
+                || peekChar() == '*'
                 || peekChar() == '<' // TODO: Shouldn't really do it this way
                 || peekChar() == '>'
             ) {
