@@ -30,8 +30,9 @@ public class MatchMethod(public val owner: MatchClass, public val name: String, 
     public var returnType: Type? = null
         private set
 
-    private val matchedMethods = ArrayList<MethodPair>()
-    private val checkedMethods = HashSet<MethodPair>()
+    private val matchedMethods = hashSetOf<MethodPair>()
+    private val matchedMethodsByOwner = hashMapOf<ClassNode, MutableSet<MethodPair>>()
+    private val checkedMethods = hashSetOf<MethodPair>()
 
     public fun addArgument(type: Type) {
         arguments.add(type)
@@ -42,22 +43,36 @@ public class MatchMethod(public val owner: MatchClass, public val name: String, 
     }
 
     public fun addMatch(owner: ClassNode, methodNode: MethodNode) {
-        if (!checkedMethods.contains(MethodPair(owner, methodNode))) {
+        val pair = MethodPair(owner, methodNode)
+        if (!checkedMethods.contains(pair) &&
+            !(matchedMethodsByOwner[owner]?.contains(pair) ?: false)) {
             matchedMethods.add(MethodPair(owner, methodNode))
+            val ms = matchedMethodsByOwner[owner]
+            if (ms == null) {
+                matchedMethodsByOwner[owner] = hashSetOf(pair)
+            } else {
+                ms.add(pair)
+            }
         }
     }
 
     public fun removeMatch(owner: ClassNode, methodNode: MethodNode) {
-        matchedMethods.remove(MethodPair(owner, methodNode))
+        val pair = MethodPair(owner, methodNode)
+        matchedMethods.remove(pair)
+        val ms = matchedMethodsByOwner[owner]
+        if (ms != null) {
+            ms.remove(pair)
+            if (ms.empty) {
+                matchedMethodsByOwner.remove(owner)
+            }
+        }
     }
 
     public fun removeMatch(clazz: ClassNode) {
-        val it = matchedMethods.listIterator()
-        while (it.hasNext()) {
-            val pair = it.next()
-            if (pair.owner == clazz) {
-                it.remove()
-            }
+        val ms = matchedMethodsByOwner[clazz]
+        if (ms != null) {
+            matchedMethods.removeAll(ms)
+            matchedMethodsByOwner.remove(clazz)
         }
     }
 
@@ -81,13 +96,11 @@ public class MatchMethod(public val owner: MatchClass, public val name: String, 
     }
 
     public fun getMatches(owner: ClassNode): List<MethodNode> {
-        return matchedMethods
-            .filter { it.owner == owner }
-            .map { it.node }
+        return matchedMethodsByOwner[owner].map { it.node }
     }
 
     public fun usesNode(clazz: ClassNode): Boolean {
-        return matchedMethods.any { it.owner == clazz }
+        return clazz in matchedMethodsByOwner
     }
 
     public fun check(logger: StateLogger, classSet: ClassSet, patchClasses: PatchClasses, group: MatchGroup, pair: MethodPair) {

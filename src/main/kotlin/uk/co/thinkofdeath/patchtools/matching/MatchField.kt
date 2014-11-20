@@ -24,31 +24,44 @@ import uk.co.thinkofdeath.patchtools.logging.StateLogger
 import uk.co.thinkofdeath.patchtools.patch.Ident
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet
 
-import java.util.*
-
 public class MatchField(public val owner: MatchClass, public val name: String, public val desc: String) {
     public var type: Type? = null
 
-    private val matchedFields = ArrayList<FieldPair>()
-    private val checkedFields = HashSet<FieldPair>()
+    private val matchedFields = hashSetOf<FieldPair>()
+    private val matchedFieldsByOwner = hashMapOf<ClassNode, MutableSet<FieldPair>>()
+    private val checkedFields = hashSetOf<FieldPair>()
 
     public fun addMatch(owner: ClassNode, fieldNode: FieldNode) {
-        if (!checkedFields.contains(FieldPair(owner, fieldNode))) {
-            matchedFields.add(FieldPair(owner, fieldNode))
+        val pair = FieldPair(owner, fieldNode)
+        if (!checkedFields.contains(pair) &&
+            !(matchedFieldsByOwner[owner]?.contains(pair) ?: false)) {
+            matchedFields.add(pair)
+            val fs = matchedFieldsByOwner[owner]
+            if (fs == null) {
+                matchedFieldsByOwner[owner] = hashSetOf(pair)
+            } else {
+                fs.add(pair)
+            }
         }
     }
 
     public fun removeMatch(owner: ClassNode, fieldNode: FieldNode) {
-        matchedFields.remove(FieldPair(owner, fieldNode))
+        val pair = FieldPair(owner, fieldNode)
+        matchedFields.remove(pair)
+        val fs = matchedFieldsByOwner[owner]
+        if (fs != null) {
+            fs.remove(pair)
+            if (fs.empty) {
+                matchedFieldsByOwner.remove(owner)
+            }
+        }
     }
 
     public fun removeMatch(clazz: ClassNode) {
-        val it = matchedFields.listIterator()
-        while (it.hasNext()) {
-            val pair = it.next()
-            if (pair.owner == clazz) {
-                it.remove()
-            }
+        val fs = matchedFieldsByOwner[clazz]
+        if (fs != null) {
+            matchedFields.removeAll(fs)
+            matchedFieldsByOwner.remove(clazz)
         }
     }
 
@@ -72,13 +85,11 @@ public class MatchField(public val owner: MatchClass, public val name: String, p
     }
 
     public fun getMatches(owner: ClassNode): List<FieldNode> {
-        return matchedFields
-            .filter { it.owner == owner }
-            .map { it.node }
+        return matchedFieldsByOwner[owner].map { it.node }
     }
 
     public fun usesNode(clazz: ClassNode): Boolean {
-        return matchedFields.any { it.owner == clazz }
+        return clazz in matchedFieldsByOwner
     }
 
     public fun check(logger: StateLogger, classSet: ClassSet, group: MatchGroup, pair: FieldPair) {
