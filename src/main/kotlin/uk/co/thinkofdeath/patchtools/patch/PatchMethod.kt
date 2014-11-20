@@ -284,7 +284,7 @@ public class PatchMethod(public val owner: PatchClass,
                             && insn !is FrameNode
                             && (insn !is LabelNode || allowLabel)) {
                             if (patchInstruction.instruction.handler!!.check(classSet, scope, patchInstruction, methodNode, insn)) {
-                                logger.println(i.toString() + ": " + patchInstruction + " succeeded on " + insn)
+                                logger.println { i.toString() + ": " + patchInstruction + " succeeded on " + insn }
                                 if (patchInstruction.instruction == Instruction.TRY_CATCH) continue@checkLoop
                                 if (wildcard) {
                                     wildcardPosition = position
@@ -296,7 +296,7 @@ public class PatchMethod(public val owner: PatchClass,
                                 position++
                                 continue@checkLoop
                             } else {
-                                logger.println(i.toString() + ": " + patchInstruction + " failed on " + insn)
+                                logger.println { i.toString() + ": " + patchInstruction + " failed on " + insn }
                                 if (!wildcard) {
                                     if (wildcardPosition != -1) {
                                         logger.println("Failed")
