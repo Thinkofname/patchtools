@@ -25,12 +25,12 @@ import java.util.zip.ZipFile
 
 public class ClassPathWrapper(vararg libs: File) : Closeable {
 
-    private val searchFiles: Array<ZipFile>
+    private val searchFiles: Array<out ZipFile>
 
     {
         try {
-            val tmp = arrayOfNulls<ZipFile>(libs.size)
-            for (i in libs.indices) {
+            val tmp = arrayOfNulls<ZipFile>(libs.size())
+            for (i in 0..libs.size() - 1) {
                 tmp[i] = ZipFile(libs[i])
             }
             searchFiles = tmp.requireNoNulls()

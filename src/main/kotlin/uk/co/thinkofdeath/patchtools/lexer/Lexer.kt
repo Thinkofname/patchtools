@@ -44,7 +44,7 @@ class Lexer(private val data: String) : Iterable<Token> {
     }
 
     internal fun isEOF(): Boolean {
-        return readOffset == data.length
+        return readOffset == data.size
     }
 
     internal fun nextChar(): Char {
@@ -69,18 +69,18 @@ class Lexer(private val data: String) : Iterable<Token> {
     }
 
     internal fun skip(count: Int = 1) {
-        if (readOffset + count > data.length) throw IllegalStateException()
+        if (readOffset + count > data.size) throw IllegalStateException()
         readOffset += count
     }
 
     internal fun nextWordMatches(word: String): Boolean {
-        if (readOffset + word.length > data.length) return false
-        for (i in 0..word.length - 1) {
+        if (readOffset + word.size > data.size) return false
+        for (i in 0..word.size - 1) {
             if (data.charAt(readOffset + i) != word.charAt(i)) {
                 return false
             }
         }
-        readOffset += word.length
+        readOffset += word.size
         return true
     }
 
