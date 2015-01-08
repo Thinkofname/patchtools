@@ -65,7 +65,7 @@ public class PatchClasses(reader: Lexer) {
     public fun getClass(name: String): PatchClass? {
         return classes
             .filter { it.ident.name == name }
-            .first
+            .first()
     }
 
     internal fun import(cls: String) {

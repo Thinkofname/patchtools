@@ -55,7 +55,7 @@ class PatchScope(private val parent: PatchScope? = null) {
         return classMappings
             .filterValues { it == cls }
             .map { it.getKey() }
-            .first
+            .first()
     }
 
     fun putMethod(mw: MethodWrapper, name: String, desc: String): Boolean {
@@ -71,7 +71,7 @@ class PatchScope(private val parent: PatchScope? = null) {
         return methodMappings.keySet()
             .filter { it.has(owner) }
             .filter { getMethodDesc(it).equals(joined) }
-            .first ?: parent?.getMethod(owner, name, desc)
+            .first() ?: parent?.getMethod(owner, name, desc)
     }
 
     private fun getMethodDesc(mw: MethodWrapper): String? {
@@ -95,7 +95,7 @@ class PatchScope(private val parent: PatchScope? = null) {
         return fieldMappings.keySet()
             .filter { it.has(owner) }
             .filter { getFieldDesc(it).equals(joined) }
-            .first ?: parent?.getField(owner, name, desc)
+            .first() ?: parent?.getField(owner, name, desc)
     }
 
     private fun getFieldDesc(mw: FieldWrapper): String? {

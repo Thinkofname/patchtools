@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets
 import uk.co.thinkofdeath.patchtools.patch.PatchClasses
 import uk.co.thinkofdeath.patchtools.matching.MatchGenerator
 import uk.co.thinkofdeath.patchtools.lexer.Lexer
+import uk.co.thinkofdeath.patchtools.logging.StateLogger
 
 class Patcher(val classes: ClassSet) {
     {
@@ -51,5 +52,18 @@ class Patcher(val classes: ClassSet) {
             it.apply(foundScope, classes)
         }
         return foundScope
+    }
+
+    fun reapply(patchClasses: PatchClasses, patchScope: PatchScope) {
+        val logger = StateLogger()
+        // Slightly faster to do it this way since the instruction checking is the heaviest
+        patchClasses.classes.all { it.checkAttributes(logger, patchScope, classes) }
+            && patchClasses.classes.all { it.checkFields(logger, patchScope, classes) }
+            && patchClasses.classes.all { it.checkMethods(logger, patchScope, classes) }
+            && patchClasses.classes.all { it.checkMethodsInstructions(logger, patchScope, classes) }
+
+        patchClasses.classes.forEach {
+            it.apply(patchScope, classes)
+        }
     }
 }
