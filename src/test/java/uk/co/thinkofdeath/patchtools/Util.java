@@ -16,22 +16,19 @@
 
 package uk.co.thinkofdeath.patchtools;
 
-import org.junit.Test;
-import uk.co.thinkofdeath.patchtools.disassemble.Disassembler;
-import uk.co.thinkofdeath.patchtools.wrappers.ClassPathWrapper;
-import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
+import java.io.IOException;
+import java.io.InputStream;
 
-public class DisassembleTest {
+import static kotlin.io.IoPackage.readBytes;
 
-    @Test
-    public void test1() {
-        ClassSet classSet = new ClassSet(new ClassPathWrapper());
-        classSet.add(
-                Util.getClass("uk/co/thinkofdeath/patchtools/testcode/DisassembleClass")
-        );
+public class Util {
 
-        Disassembler disassembler = new Disassembler(classSet);
-
-        disassembler.disassemble("uk/co/thinkofdeath/patchtools/testcode/DisassembleClass");
+    public static byte[] getClass(String name) {
+        try (InputStream inputStream = PatchTest.class.getResourceAsStream("/" + name + ".class")) {
+            return readBytes(inputStream, 64 * 1024);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

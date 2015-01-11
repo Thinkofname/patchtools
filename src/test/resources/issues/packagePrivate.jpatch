@@ -1,0 +1,16 @@
+// Test basic patch
+// Patching BasicClass
+
+import java.lang.String;
+
+public class ~PackagePrivate {
+
+    String ~sayHello() {
+        // - == remove
+        -push-string "Hello bob"
+        // + == add
+        +push-string "Hello jim"
+        // . == detect
+        .return
+    }
+}

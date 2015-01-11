@@ -57,7 +57,16 @@ private fun Lexer.classBody(): StateFunc? {
             )
         }
     }
-    throw UnexpectedCharacterException(this, peekChar())
+    return ident(toStateFunc {
+        val isArray = handleArrayType(this)
+
+        skipWhitespace(
+            ident(
+                skipWhitespace(toStateFunc(::methodOrField))
+            ),
+            requireOne = !isArray
+        )
+    }, allowDot = true)
 }
 
 private fun Lexer.argumentList(): StateFunc? {

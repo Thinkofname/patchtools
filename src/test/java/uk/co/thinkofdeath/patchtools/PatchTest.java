@@ -22,9 +22,7 @@ import uk.co.thinkofdeath.patchtools.wrappers.ClassPathWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;
 
 import java.io.IOException;
-import java.io.InputStream;
 
-import static kotlin.io.IoPackage.readBytes;
 import static org.junit.Assert.*;
 
 public class PatchTest {
@@ -33,10 +31,10 @@ public class PatchTest {
     public void classSetBasic() throws IOException {
         ClassSet classSet = new ClassSet(new ClassPathWrapper());
         classSet.add(
-                getClass("uk/co/thinkofdeath/patchtools/testcode/BasicClass")
+                Util.getClass("uk/co/thinkofdeath/patchtools/testcode/BasicClass")
         );
         classSet.add(
-                getClass("uk/co/thinkofdeath/patchtools/testcode/Basic2Class")
+                Util.getClass("uk/co/thinkofdeath/patchtools/testcode/Basic2Class")
         );
 
         for (String clazz : classSet) {
@@ -51,10 +49,10 @@ public class PatchTest {
     public void basicPatch() throws Exception {
         ClassSet classSet = new ClassSet(new ClassPathWrapper());
         classSet.add(
-                getClass("uk/co/thinkofdeath/patchtools/testcode/BasicClass")
+                Util.getClass("uk/co/thinkofdeath/patchtools/testcode/BasicClass")
         );
         classSet.add(
-                getClass("uk/co/thinkofdeath/patchtools/testcode/Basic2Class")
+                Util.getClass("uk/co/thinkofdeath/patchtools/testcode/Basic2Class")
         );
 
         Patcher patcher = new Patcher(classSet);
@@ -79,7 +77,7 @@ public class PatchTest {
     public void invoke() throws Exception {
         ClassSet classSet = new ClassSet(new ClassPathWrapper());
         classSet.add(
-                getClass("uk/co/thinkofdeath/patchtools/testcode/InvokeTest")
+                Util.getClass("uk/co/thinkofdeath/patchtools/testcode/InvokeTest")
         );
 
         Patcher patcher = new Patcher(classSet);
@@ -97,8 +95,8 @@ public class PatchTest {
     @Test
     public void inherit() throws Exception {
         ClassSet classSet = new ClassSet(new ClassPathWrapper());
-        classSet.add(getClass("uk/co/thinkofdeath/patchtools/testcode/InheritTestA"));
-        classSet.add(getClass("uk/co/thinkofdeath/patchtools/testcode/InheritTestB"));
+        classSet.add(Util.getClass("uk/co/thinkofdeath/patchtools/testcode/InheritTestA"));
+        classSet.add(Util.getClass("uk/co/thinkofdeath/patchtools/testcode/InheritTestB"));
 
         Patcher patcher = new Patcher(classSet);
 
@@ -115,7 +113,7 @@ public class PatchTest {
     @Test
     public void interTest() throws Exception {
         ClassSet classSet = new ClassSet(new ClassPathWrapper());
-        classSet.add(getClass("uk/co/thinkofdeath/patchtools/testcode/InterfaceTestClass"));
+        classSet.add(Util.getClass("uk/co/thinkofdeath/patchtools/testcode/InterfaceTestClass"));
 
         Patcher patcher = new Patcher(classSet);
 
@@ -138,7 +136,7 @@ public class PatchTest {
     @Test
     public void fieldTest() throws Exception {
         ClassSet classSet = new ClassSet(new ClassPathWrapper());
-        classSet.add(getClass("uk/co/thinkofdeath/patchtools/testcode/BasicField"));
+        classSet.add(Util.getClass("uk/co/thinkofdeath/patchtools/testcode/BasicField"));
 
         Patcher patcher = new Patcher(classSet);
 
@@ -165,7 +163,7 @@ public class PatchTest {
     @Test
     public void complex() throws Exception {
         ClassSet classSet = new ClassSet(new ClassPathWrapper());
-        classSet.add(getClass("uk/co/thinkofdeath/patchtools/testcode/ComplexInstruction"));
+        classSet.add(Util.getClass("uk/co/thinkofdeath/patchtools/testcode/ComplexInstruction"));
 
         Patcher patcher = new Patcher(classSet);
 
@@ -177,14 +175,5 @@ public class PatchTest {
         Class<?> res = loader.loadClass("uk.co.thinkofdeath.patchtools.testcode.ComplexInstruction");
 
         assertEquals("HelloABCTesting", res.getMethod("message").invoke(null));
-    }
-
-    public static byte[] getClass(String name) {
-        try (InputStream inputStream = PatchTest.class.getResourceAsStream("/" + name + ".class")) {
-            return readBytes(inputStream, 64 * 1024);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 }
